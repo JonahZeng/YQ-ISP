@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<pipeline_config>
+  <component>
+    <inst_name>fileRead</inst_name>
+    <bayer_type>RGGB</bayer_type>
+    <bit_depth>14</bit_depth>
+    <file_type>RAW</file_type>
+    <file_name>../raw_image/D700FAR4256convert.raw</file_name>
+  </component>
+
+  <component>
+    <inst_name>fileWrite</inst_name>
+    <bayer_type>RGGB</bayer_type>
+    <bit_depth>14</bit_depth>
+    <file_type>RAW</file_type>
+    <file_name>../raw_image/D700FAR4256convert_copy.raw</file_name>
+  </component>
+</pipeline_config>
