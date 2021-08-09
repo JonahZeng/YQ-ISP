@@ -1,0 +1,5 @@
+*.ipch
+*.db
+*.pdb
+*.exe
+isp_emulation/.vs
