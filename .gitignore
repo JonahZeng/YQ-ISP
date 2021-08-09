@@ -3,3 +3,8 @@
 *.pdb
 *.exe
 isp_emulation/.vs
+isp_emulation/x64
+*.obj
+*.tlog
+*.iobj
+*.log

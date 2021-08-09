@@ -6,7 +6,7 @@
 class fileRead :public hw_base {
 public:
     fileRead()=delete;
-    fileRead(uint32_t outpins, char* inst_name);
+    fileRead(uint32_t outpins, const char* inst_name);
     void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt);
     void init();
     ~fileRead();

@@ -9,14 +9,15 @@ using std::vector;
 class hw_base {
 public:
     hw_base() = delete;
-    hw_base(uint32_t inpins, uint32_t outpins, char* inst_name);
+    hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name);
     void connect_port(uint32_t out_port, hw_base* next_hw, uint32_t in_port);
     virtual void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) = 0;
     virtual void init() = 0;
     virtual ~hw_base();
 
+    char* name;
+
 protected:
-    char name[64];
     uint32_t inpins;
     vector<hw_base*> previous_hw;
     vector<uint32_t> outport_of_previous_hw;

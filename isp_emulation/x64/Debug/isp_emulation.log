@@ -1,9 +1,0 @@
-﻿  pipe_main.cpp
-pipe_main.obj : error LNK2019: 无法解析的外部符号 __imp_xmlCheckVersion，该符号在函数 main 中被引用
-pipe_main.obj : error LNK2019: 无法解析的外部符号 __imp_xmlFreeDoc，该符号在函数 "void __cdecl exampleFunc(char const *)" (?exampleFunc@@YAXPEBD@Z) 中被引用
-pipe_main.obj : error LNK2019: 无法解析的外部符号 __imp_xmlMemoryDump，该符号在函数 main 中被引用
-pipe_main.obj : error LNK2019: 无法解析的外部符号 __imp_xmlCleanupParser，该符号在函数 main 中被引用
-pipe_main.obj : error LNK2019: 无法解析的外部符号 __imp_xmlNewParserCtxt，该符号在函数 "void __cdecl exampleFunc(char const *)" (?exampleFunc@@YAXPEBD@Z) 中被引用
-pipe_main.obj : error LNK2019: 无法解析的外部符号 __imp_xmlFreeParserCtxt，该符号在函数 "void __cdecl exampleFunc(char const *)" (?exampleFunc@@YAXPEBD@Z) 中被引用
-pipe_main.obj : error LNK2019: 无法解析的外部符号 __imp_xmlCtxtReadFile，该符号在函数 "void __cdecl exampleFunc(char const *)" (?exampleFunc@@YAXPEBD@Z) 中被引用
-D:\yqzeng\github_repo\YQ_ISP\isp_emulation\x64\Debug\isp_emulation.exe : fatal error LNK1120: 7 个无法解析的外部命令

@@ -1,20 +1,22 @@
 #include "hw_base.h"
 #include <stdexcept>
 
-hw_base::hw_base(uint32_t inpins, uint32_t outpins, char* inst_name):
-    in(inpins), out(outpins), previous_hw(inpins), outport_of_previous_hw(inpins), next_hw_of_outport(outpins)
+hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name):
+    in(inpins), out(outpins), previous_hw(inpins), outport_of_previous_hw(inpins), next_hw_of_outport(outpins), name(new char[64])
 {
     this->inpins = inpins;
     this->outpins = outpins;
     size_t namelen = strlen(inst_name);
-    if (namelen > 63)
-    {
-        strcpy_s(this->name, 63, inst_name);
-        this->name[63] = '\0';
-    }
-    else {
-        strcpy_s(this->name, namelen, inst_name);
-        this->name[namelen] = '\0';
+    if (name != nullptr) {
+        if (namelen > 63)
+        {
+            memcpy_s(this->name, 63, inst_name, 63);
+            this->name[63] = '\0';
+        }
+        else {
+            memcpy_s(this->name, namelen, inst_name, namelen);
+            this->name[namelen] = '\0';
+        }
     }
     for (uint32_t i = 0; i < outpins; i++)
     {
@@ -47,5 +49,9 @@ void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
 hw_base::~hw_base()
 {
+    if (name != nullptr)
+    {
+        delete[] name;
+    }
     return;
 }
