@@ -2,6 +2,10 @@
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <string>
+#include <list>
+
+using std::list;
 
 pipeline_manager::pipeline_manager()
 {
@@ -10,7 +14,7 @@ pipeline_manager::pipeline_manager()
     stat_addr = new statistic_info_t;
     if (stat_addr == nullptr)
     {
-        fprintf(stderr, "[waring] alloc memory for statistc_info fail\n");
+        spdlog::error("alloc memory for statistc_info fail");
     }
 }
 
@@ -56,43 +60,66 @@ static bool xmlHasChildElementByName(xmlNodePtr parent, const xmlChar* tagName, 
     return false;
 }
 
+static void delete_space_in_string(xmlChar* str)
+{
+    int str_len = xmlStrlen(str);
+    int i = 0, j = 0;
+    for (; j < str_len; j++)
+    {
+        if (str[j] == ' ')
+        {
+            while (str[j] == ' ' && j < str_len)
+            {
+                j++;
+            }
+            str[i] = str[j];
+            i++;
+        }
+        else {
+            str[i] = str[j];
+            i++;
+        }
+    }
+    str[i] = '\0';
+}
+
 static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
     xmlParserCtxtPtr ctxt;
     xmlDocPtr doc;
 
     ctxt = xmlNewParserCtxt();
     if (ctxt == NULL) {
-        fprintf(stderr, "Failed to allocate parser context\n");
+        spdlog::error("Failed to allocate parser context");
         return;
     }
     doc = xmlCtxtReadFile(ctxt, filename, NULL, XML_PARSE_NOBLANKS);
 
     if (doc == NULL) {
-        fprintf(stderr, "Failed to parse %s\n", filename);
+        spdlog::error("Failed to parse {}", filename);
         xmlFreeParserCtxt(ctxt);
         return;
     }
 
     if (ctxt->valid == 0)
     {
-        fprintf(stderr, "Failed to validate %s\n", filename);
+        spdlog::error("Failed to validate {}", filename);
         xmlFreeParserCtxt(ctxt);
         return;
     }
     xmlNodePtr rootNode = xmlDocGetRootElement(doc);
     if (rootNode == NULL)
     {
-        fprintf(stderr, "empty document\n");
+        spdlog::error("empty document\n");
         xmlFreeDoc(doc);
         xmlFreeParserCtxt(ctxt);
         return;
     }
 
-    fprintf(stdout, "root node name: %s, type:%d\n", rootNode->name, rootNode->type); //pipeline_config
+    spdlog::info("root node name: {0}, type:{1}", rootNode->name, rootNode->type); //pipeline_config
     xmlNodePtr component = rootNode->children;
     while (component != NULL)
     {
-        fprintf(stdout, "component name %s, type:%d\n", component->name, component->type); //component
+        spdlog::info("component name {0}, type:{1}", component->name, component->type); //component
 
         xmlChar* inst_name;
         xmlChar tagName[10] = "inst_name";
@@ -120,10 +147,86 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
         }
 
         xmlNodePtr detail_node = component->children;
-        while (detail_node != NULL) {
+        while (detail_node != NULL) 
+        {
             if (xmlChildElementCount(detail_node) == 0) { //leaf node
                 xmlChar* text = xmlNodeGetContent(detail_node);
-                fprintf(stdout, "tag name:%s text:%s\n", detail_node->name, text);
+                delete_space_in_string(text);
+                spdlog::info("tag name:{0} text:{1}", detail_node->name, text);
+                size_t cfg_len = module_array->at(i)->cfgList.size();
+                size_t j = 0;
+                for (; j < cfg_len; j++)
+                {
+                    if (xmlStrcmp(detail_node->name, (const xmlChar*)module_array->at(i)->cfgList[j].tagName) == 0)
+                    {
+                        int res_bool;
+                        int str_len;
+                        int dst_len;
+                        int res_int;
+                        long int res_li;
+                        int m;
+                        const char s[2] = ",";
+                        char *token;
+                        char *next_token = NULL;
+                        switch (module_array->at(i)->cfgList[j].type)
+                        {
+                        case BOOL_T:
+                            res_bool = std::stoi((char*)text);
+                            if (res_bool == 0) {
+                                *(bool*)module_array->at(i)->cfgList[j].targetAddr = false;
+                            }
+                            else {
+                                *(bool*)module_array->at(i)->cfgList[j].targetAddr = true;
+                            }
+                            break;
+                        case STRING:
+                            str_len = xmlStrlen(text);
+                            dst_len = (int)module_array->at(i)->cfgList[j].max_len-1;
+                            if (str_len > dst_len)
+                            {
+                                memcpy_s(module_array->at(i)->cfgList[j].targetAddr, dst_len, text, dst_len);
+                                ((char*)(module_array->at(i)->cfgList[j].targetAddr))[dst_len] = '\0';
+                            }
+                            else {
+                                memcpy_s(module_array->at(i)->cfgList[j].targetAddr, str_len, text, str_len);
+                                ((char*)(module_array->at(i)->cfgList[j].targetAddr))[str_len] = '\0';
+                            }
+                            break;
+                        case INT_32:
+                            res_int = std::stoi((char*)text);
+                            *(int*)module_array->at(i)->cfgList[j].targetAddr = res_int;
+                            break;
+                        case UINT_32:
+                            res_li = std::stol((char*)text);
+                            *(uint32_t*)module_array->at(i)->cfgList[j].targetAddr = (uint32_t)res_li;
+                            break;
+                        case VECT_INT32:
+                            token = strtok_s((char*)text, s, &next_token);
+                            m = 0;
+                            while (token != NULL && m< (module_array->at(i)->cfgList[j].max_len)) {
+                                int vect_int = std::stoi(token);
+                                ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back(vect_int);
+                                m++;
+                                token = strtok_s(NULL, s, &next_token);
+                            }
+                            break;
+                        case VECT_UINT32:
+                            token = strtok_s((char*)text, s, &next_token);
+                            m = 0;
+                            while (token != NULL && m < (module_array->at(i)->cfgList[j].max_len)) {
+                                long int vect_lint = std::stol(token);
+                                ((vector<uint32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back((uint32_t)vect_lint);
+                                m++;
+                                token = strtok_s(NULL, s, &next_token);
+                            }
+                            break;
+                        default:
+                            break;
+                        }
+                        break;
+                    }
+                }
+                
                 xmlFree(text);
             }
             detail_node = detail_node->next;
@@ -175,5 +278,37 @@ void pipeline_manager::read_xml_cfg(char* xmlFileName)
 
 void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
+    size_t md_size = modules_list.size();
+    list<hw_base*> not_run_list(modules_list.begin(), modules_list.end());
+    
+    for (size_t i = 0; i < md_size; i++)
+    {
+        modules_list.at(i)->reset_hw_cnt_of_outport();
+    }
 
+    size_t cycle_time = 0;
+    while (not_run_list.size() != 0)
+    {
+        for (list<hw_base*>::iterator it = not_run_list.begin(); it != not_run_list.end(); it++)
+        {
+            if ((*it)->prepare_input())
+            {
+                (*it)->hw_run(stat_out, frame_cnt);
+                not_run_list.remove(*it);
+                break;
+            }
+        }
+
+        cycle_time++;
+        if (cycle_time > 2 * md_size)
+        {
+            spdlog::error("can't find module to run");
+            exit(1);
+        }
+    }
+
+    for (size_t i = 0; i < md_size; i++)
+    {
+        modules_list.at(i)->release_output_memory();
+    }
 }

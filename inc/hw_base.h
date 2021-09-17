@@ -16,6 +16,18 @@ public:
     virtual ~hw_base();
 
     char* name;
+    vector<cfgEntry_t> cfgList;
+    bool xmlConfigValid;
+    bool write_pic;
+    vector<uint32_t> write_pic_src_pin;
+    char write_pic_format[16];
+    char write_pic_path[256];
+    uint32_t write_pic_bits;
+    
+    void reset_hw_cnt_of_outport();
+    void release_output_memory();
+    
+    void write_pic_for_output();
 
 protected:
     uint32_t inpins;
@@ -24,8 +36,11 @@ protected:
 
     uint32_t outpins;
     vector<vector<hw_base*>> next_hw_of_outport;
+    vector<uint32_t> next_hw_cnt_of_outport;
 
     vector<data_buffer*> in;
     vector<data_buffer*> out;
-    vector<cfgEntry_t> cfgList;
+
+public:
+    bool prepare_input();
 };

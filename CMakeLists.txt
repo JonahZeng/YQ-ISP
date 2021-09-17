@@ -1,0 +1,66 @@
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+project(isp_emulation LANGUAGES CXX C)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 11)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(CMAKE_CONFIGURATION_TYPE Release;Debug)
+elseif(NOT CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+file(GLOB_RECURSE INC_FILES "${CMAKE_SOURCE_DIR}/inc/*.h")
+file(GLOB_RECURSE SRC_FILES "${CMAKE_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE PIPELINE_FILES "${CMAKE_SOURCE_DIR}/pipeline/*.cpp")
+file(GLOB_RECURSE CFG_FILES "${CMAKE_SOURCE_DIR}/cfg/*.xml")
+message(STATUS "${INC_FILES} ${SRC_FILES} ${PIPELINE_FILES} ${CFG_FILES}")
+source_group("header" FILES ${INC_FILES})
+source_group("src" FILES ${SRC_FILES})
+source_group("pipeline" FILES ${PIPELINE_FILES})
+source_group("cfg" FILES ${CFG_FILES})
+add_executable(isp_emulation ${SRC_FILES} ${INC_FILES} ${PIPELINE_FILES} ${CFG_FILES})
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
+    set(DNG_SDK_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Release.lib")
+    set(DNG_SDK_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Debug.lib")
+    set(XMP_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPCoreStaticRelease.lib" "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPFilesStaticRelease.lib")
+    set(XMP_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPCoreStaticDebug.lib" "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPFilesStaticDebug.lib")
+    set(JPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9b/include")
+    set(JPEG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9b/lib/libjpeg.lib")
+    set(JPEG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9b/lib/libjpeg_d.lib")
+    set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2")
+    set(XML_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2.lib" 
+    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a.lib" 
+    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dll.lib")
+    set(XML_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2d.lib" 
+    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib" 
+    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dlld.lib")
+    set(SPDLOG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include")
+    set(SPDLOG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlog.lib")
+    set(SPDLOG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlogd.lib")
+endif()
+include_directories(${CMAKE_SOURCE_DIR}/Inc ${DNG_SDK_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${XML_INCLUDE_DIR} ${SPDLOG_INCLUDE_DIR})
+target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;" "WIN64;" 
+"$<$<CONFIG:Debug>:"
+"qDNGDebug=1;"
+">"
+"$<$<CONFIG:Release>:"
+"qDNGDebug=0;"
+">"
+"$<$<CONFIG:Debug>:"
+"_DEBUG;"
+">"
+"$<$<CONFIG:Release>:"
+"NDEBUG;"
+">"
+"_CONSOLE;"
+"WIN32;"
+"qWinOS=1;"
+"qMacOS=0;"
+"qVisualC=1;"
+"_WINDOWS=1;"
+"BIB_MULTI_THREAD=1;"
+"_MBCS;"
+"_VC80_UPGRADE=0x0710;")
+
+target_link_libraries(isp_emulation 
+optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} ${SPDLOG_LIBRARIES_RELEASE}
+debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} ${SPDLOG_LIBRARIES_DEBUG})

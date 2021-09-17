@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "spdlog/spdlog.h"
+
 enum bayer_type_t {
     BAYER_UNSUPPORT = -1,
     RGGB = 0,
@@ -24,16 +26,20 @@ enum data_type_t {
 };
 
 enum file_type_t {
-    RGB = 0,
-    YUV444 = 1,
-    YUV422 = 2,
-    YUV420 =3,
+    RGB_FORMAT = 0,
+    YUV444_FORMAT = 1,
+    YUV422_FORMAT = 2,
+    YUV420_FORMAT =3,
     RAW_FORMAT = 4,
+    DNG_FORMAT = 5,
     FILE_TYPE_UNSUPPORT = -1
 };
 
 struct data_buffer {
-    data_buffer(uint32_t w, uint32_t h, data_type_t tp, const char* buf_name)
+    data_buffer(const data_buffer& src) = delete;
+    data_buffer() = delete;
+    data_buffer& operator=(const data_buffer& src) = delete;
+    data_buffer(uint32_t w, uint32_t h, data_type_t tp, bayer_type_t by, const char* buf_name)
     {
         data_ptr = new uint16_t[w*h];
         if (data_ptr != nullptr)
@@ -46,23 +52,24 @@ struct data_buffer {
             height = 0;
         }
         data_type = tp;
+        bayer_pattern = by;
 
         size_t len = strlen(buf_name) + 1;
         buffer_name = new char[len];
         memcpy_s(buffer_name, len - 1, buf_name, len - 1);
         buffer_name[len - 1] = '\0';
 
-        fprintf(stdout, "alloc buffer %s memory\n", buffer_name);
+        spdlog::info("alloc buffer {0:s} memory {1}", buffer_name, fmt::ptr(data_ptr));
     }
     ~data_buffer()
     {
         if (data_ptr != nullptr)
         {
+            spdlog::info("free buffer {0:s} memory {1}", buffer_name, fmt::ptr(data_ptr));
             delete[] data_ptr;
         }
         if (buffer_name != nullptr)
         {
-            fprintf(stdout, "free buffer %s memory\n", buffer_name);
             delete[] buffer_name;
         }
     }
@@ -71,10 +78,11 @@ struct data_buffer {
     uint16_t* data_ptr;
     data_type_t data_type;
     char* buffer_name;
+    bayer_type_t bayer_pattern;
 };
 
 enum cfg_data_type {
-    BOOL,
+    BOOL_T,
     INT_32,
     UINT_32,
     VECT_INT32,
@@ -86,4 +94,5 @@ typedef struct cfgEntry_s {
     const char* tagName;
     cfg_data_type type;
     void* targetAddr;
+    size_t max_len;
 }cfgEntry_t;

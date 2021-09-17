@@ -14,6 +14,8 @@ private:
     bayer_type_t bayer;
     uint32_t bit_depth;
     file_type_t file_type;
+    uint32_t img_width;
+    uint32_t img_height;
     char file_name[256];
     char file_type_string[32];
     char bayer_string[32];
