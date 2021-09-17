@@ -101,7 +101,10 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
     void* p_raw = (*out0)->data_ptr;
     dng_pixel_buffer raw_buf(dng_rect(stage1->Height(), stage1->Width()), 0, stage1->Planes(), stage1->PixelType(), pcPlanar, p_raw);
     stage1->Get(raw_buf);
-    negative->SynchronizeMetadata();
+    negative->SynchronizeMetadata(); //xmp focus distance
+    dng_exif* exif = negative->GetExif();
+    double focus_dist = exif->fApproxFocusDistance.As_real64();
+
     *bit_depth = info.fIFD[info.fMainIndex]->fBitsPerSample[0];
 
     uint32_t white_level = negative->WhiteLevel();
