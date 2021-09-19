@@ -1,9 +1,57 @@
 # YQ-ISP
+-------
 tiny ISP simulation
 
 我手上的相机是NIKON D610，镜头有两个sigma 35 F1.4和NIKON 85 F1.8，考虑到FOV和shading，畸变存在的多少，后续只使用sigma 35 F1.4拍摄NEF，转换到DNG后做仿真；
 
-**第一个难题 今天的vignette校正参数**
+## 规划
+<input type="checkbox" checked>DNG/RAW支持</input>
+
+<input type="checkbox" checked>ubuntu/wsl2/windows跨平台支持</input>
+
+<input type="checkbox" checked>cmake支持</input>
+
+<input type="checkbox">opencl支持</input>
+
+<input type="checkbox">多stripe支持</input>
+
+## 使用方法
+采用cmake进行跨平台构建，已在VS2017 c++工具集v141，WSL2 ubuntu20.04 gcc 9.3.0下测试通过;
+windows生成VS工程方法：
+```bat
+cd build
+cmake -G "Visual Studio 15 2017 Win64" ..
+```
+打开.sln文件使用vs编译运行；
+
+ubuntu生成makefile:
+```sh
+cd build
+cmake ..
+cmake --build .
+```
+运行示例：
+```sh
+$> ./isp_emulation -p 0 -cfg ../cfg/V1_config.xml -f 0 1
+[2021-09-19 18:29:19.009] [info] run command:
+[2021-09-19 18:29:19.010] [info] ./isp_emulation -p 0 -cfg ../cfg/V1_config.xml -f 0 1
+[2021-09-19 18:29:19.010] [info] init run start
+[2021-09-19 18:29:19.010] [info] init run end
+[2021-09-19 18:29:19.011] [info] root node name: pipeline_config, type:1
+[2021-09-19 18:29:19.011] [info] component name component, type:1
+[2021-09-19 18:29:19.011] [info] tag name:inst_name text:raw_in
+[2021-09-19 18:29:19.011] [info] tag name:bayer_type text:RGGB
+[2021-09-19 18:29:19.011] [info] tag name:bit_depth text:14
+[2021-09-19 18:29:19.012] [info] tag name:file_type text:DNG
+[2021-09-19 18:29:19.012] [info] tag name:file_name text:../raw_image/D700FAR4256convert.dng
+[2021-09-19 18:29:19.012] [info] tag name:img_width text:4284
+[2021-09-19 18:29:19.012] [info] tag name:img_height text:2844
+[2021-09-19 18:29:19.012] [info] component name component, type:1
+[2021-09-19 18:29:19.012] [info] ~fileRead deinit end
+[2021-09-19 18:29:19.012] [info] deinit module raw_in
+```
+
+## **第一个难题 镜头的vignette校正参数**
 首先是没有均匀灯箱，所以不可能自己测试各个光圈下的vignette，只能采用别人已经测量好的参数，adobe的lcp（lens correction profile)不知是二进制还是文本方式，如果是文本方式可以打开看一下；
 google到一个比较有意思的github repo：
 https://github.com/lensfun/lensfun/blob/master/data/db/slr-sigma.xml
