@@ -12,11 +12,19 @@ hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name):
     if (name != nullptr) {
         if (namelen > 63)
         {
+#ifdef _MSC_VER
             memcpy_s(this->name, 63, inst_name, 63);
+#else
+            memcpy(this->name, inst_name, 63);
+#endif
             this->name[63] = '\0';
         }
         else {
+#ifdef _MSC_VER
             memcpy_s(this->name, namelen, inst_name, namelen);
+#else
+            memcpy(this->name, inst_name, namelen);
+#endif
             this->name[namelen] = '\0';
         }
     }

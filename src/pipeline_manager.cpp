@@ -9,7 +9,7 @@ using std::list;
 
 pipeline_manager::pipeline_manager()
 {
-    //需要构造一个statistic_info_t
+    //锟斤拷要锟斤拷锟斤拷一锟斤拷statistic_info_t
     //
     stat_addr = new statistic_info_t;
     if (stat_addr == nullptr)
@@ -24,7 +24,7 @@ pipeline_manager::~pipeline_manager()
     {
         delete (*it);
     }
-    //需要释放一个statistic_info_t
+    //锟斤拷要锟酵凤拷一锟斤拷statistic_info_t
     if (stat_addr != nullptr)
     {
         delete stat_addr;
@@ -184,11 +184,19 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                             dst_len = (int)module_array->at(i)->cfgList[j].max_len-1;
                             if (str_len > dst_len)
                             {
+#ifdef _MSC_VER
                                 memcpy_s(module_array->at(i)->cfgList[j].targetAddr, dst_len, text, dst_len);
+#else
+                                memcpy(module_array->at(i)->cfgList[j].targetAddr, text, dst_len);
+#endif
                                 ((char*)(module_array->at(i)->cfgList[j].targetAddr))[dst_len] = '\0';
                             }
                             else {
+#ifdef _MSC_VER
                                 memcpy_s(module_array->at(i)->cfgList[j].targetAddr, str_len, text, str_len);
+#else
+                                memcpy(module_array->at(i)->cfgList[j].targetAddr, text, str_len);
+#endif
                                 ((char*)(module_array->at(i)->cfgList[j].targetAddr))[str_len] = '\0';
                             }
                             break;
@@ -201,23 +209,39 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                             *(uint32_t*)module_array->at(i)->cfgList[j].targetAddr = (uint32_t)res_li;
                             break;
                         case VECT_INT32:
+#ifdef _MSC_VER
                             token = strtok_s((char*)text, s, &next_token);
+#else
+                            token = strtok((char*)text, s);
+#endif
                             m = 0;
                             while (token != NULL && m< (module_array->at(i)->cfgList[j].max_len)) {
                                 int vect_int = std::stoi(token);
                                 ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back(vect_int);
                                 m++;
+#ifdef _MSC_VER
                                 token = strtok_s(NULL, s, &next_token);
+#else
+                                token = strtok(NULL, s);
+#endif
                             }
                             break;
                         case VECT_UINT32:
+#ifdef _MSC_VER
                             token = strtok_s((char*)text, s, &next_token);
+#else
+                            token = strtok((char*)text, s);
+#endif
                             m = 0;
                             while (token != NULL && m < (module_array->at(i)->cfgList[j].max_len)) {
                                 long int vect_lint = std::stol(token);
                                 ((vector<uint32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back((uint32_t)vect_lint);
                                 m++;
+#ifdef _MSC_VER
                                 token = strtok_s(NULL, s, &next_token);
+#else
+                                token = strtok(NULL, s);
+#endif
                             }
                             break;
                         default:

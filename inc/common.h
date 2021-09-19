@@ -56,7 +56,11 @@ struct data_buffer {
 
         size_t len = strlen(buf_name) + 1;
         buffer_name = new char[len];
+#ifdef _MSC_VER
         memcpy_s(buffer_name, len - 1, buf_name, len - 1);
+#else
+        memcpy(buffer_name, buf_name, len - 1);
+#endif
         buffer_name[len - 1] = '\0';
 
         spdlog::info("alloc buffer {0:s} memory {1}", buffer_name, fmt::ptr(data_ptr));

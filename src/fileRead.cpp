@@ -157,7 +157,11 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         out[0] = out0;
 
         FILE* input_f;
+#ifdef _MSC_VER
         fopen_s(&input_f, file_name, "rb");
+#else
+        input_f = fopen(file_name, "rb");
+#endif
         if (input_f != nullptr)
         {
             if (bit_depth > 8 && bit_depth <= 16)

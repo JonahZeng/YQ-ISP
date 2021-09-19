@@ -4,7 +4,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CONFIGURATION_TYPE Release;Debug)
-elseif(NOT CMAKE_BUILD_TYPE Release)
+elseif(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 file(GLOB_RECURSE INC_FILES "${CMAKE_SOURCE_DIR}/inc/*.h")
@@ -36,31 +36,84 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(SPDLOG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include")
     set(SPDLOG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlog.lib")
     set(SPDLOG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlogd.lib")
+    target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;" 
+        "qDNGValidateTarget=1;"
+        "WIN64;" 
+        "$<$<CONFIG:Debug>:"
+        "qDNGDebug=1;"
+        ">"
+        "$<$<CONFIG:Release>:"
+        "qDNGDebug=0;"
+        ">"
+        "$<$<CONFIG:Debug>:"
+        "_DEBUG;"
+        ">"
+        "$<$<CONFIG:Release>:"
+        "NDEBUG;"
+        ">"
+        "_CONSOLE;"
+        "WIN32;"
+        "qWinOS=1;"
+        "qMacOS=0;"
+        "qVisualC=1;"
+        "_WINDOWS=1;"
+        "BIB_MULTI_THREAD=1;"
+        "_MBCS;"
+        "_VC80_UPGRADE=0x0710;")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
+    set(DNG_SDK_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_release.a")
+    set(DNG_SDK_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_debug.a")
+    set(XMP_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreRelease.ar" "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesRelease.ar")
+    set(XMP_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreDebug.ar" "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesDebug.ar")
+    set(JPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9b/include_linux")
+    set(JPEG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9b/lib_linux/libjpeg.a")
+    set(JPEG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9b/lib_linux/libjpeg.a")
+    set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2_linux")
+    set(XML_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_release.a" 
+    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_release.a")
+    set(XML_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_debug.a" 
+    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_debug.a")
+    set(SPDLOG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include")
+    set(SPDLOG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/libspdlog.a")
+    set(SPDLOG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/libspdlogd.a")
+    target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;"
+        "qDNGValidateTarget=1;"
+        "$<$<CONFIG:Debug>:"
+        "qDNGDebug=1;"
+        ">"
+        "$<$<CONFIG:Release>:"
+        "qDNGDebug=0;"
+        ">"
+        "$<$<CONFIG:Debug>:"
+        "_DEBUG;"
+        ">"
+        "$<$<CONFIG:Release>:"
+        "NDEBUG;"
+        ">"
+        "_CONSOLE;"
+        "_UNICODE;"
+        "qiPhone=0;"
+        "qAndroid=0;"
+        "qWinOS=0;"
+        "qMacOS=0;"
+        "qVisualC=0;"
+        "qWeb=0;"
+        "qWinRT=0;"
+        "qLinux=1;"
+        "_WINDOWS=0;"
+        "qDNG64Bit=1;"
+        "qDNGXMPFiles=0;"
+        "qDNGXMPDocOps=0;")
 endif()
-include_directories(${CMAKE_SOURCE_DIR}/Inc ${DNG_SDK_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${XML_INCLUDE_DIR} ${SPDLOG_INCLUDE_DIR})
-target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;" "WIN64;" 
-"$<$<CONFIG:Debug>:"
-"qDNGDebug=1;"
-">"
-"$<$<CONFIG:Release>:"
-"qDNGDebug=0;"
-">"
-"$<$<CONFIG:Debug>:"
-"_DEBUG;"
-">"
-"$<$<CONFIG:Release>:"
-"NDEBUG;"
-">"
-"_CONSOLE;"
-"WIN32;"
-"qWinOS=1;"
-"qMacOS=0;"
-"qVisualC=1;"
-"_WINDOWS=1;"
-"BIB_MULTI_THREAD=1;"
-"_MBCS;"
-"_VC80_UPGRADE=0x0710;")
 
+include_directories(${CMAKE_SOURCE_DIR}/inc ${DNG_SDK_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${XML_INCLUDE_DIR} ${SPDLOG_INCLUDE_DIR})
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_link_libraries(isp_emulation 
+        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} ${SPDLOG_LIBRARIES_RELEASE}
+        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} ${SPDLOG_LIBRARIES_DEBUG})
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 target_link_libraries(isp_emulation 
-optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} ${SPDLOG_LIBRARIES_RELEASE}
-debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} ${SPDLOG_LIBRARIES_DEBUG})
+        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} ${SPDLOG_LIBRARIES_RELEASE} z lzma
+        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} ${SPDLOG_LIBRARIES_DEBUG} z lzma)
+endif()
