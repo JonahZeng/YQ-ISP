@@ -22,13 +22,21 @@ windows生成VS工程方法：
 cd build
 cmake -G "Visual Studio 15 2017 Win64" ..
 ```
-打开.sln文件使用vs编译运行；
+打开.sln文件使用vs编译, 设置isp_emulation为启动项目，双击build目录下的copy_dll_release/debug.bat拷贝必需的dll至exe生成目录；
+vs设置启动参数：
 
-ubuntu生成makefile:
+>>-p [pipe_number] -cfg [xml_file] -f [frame_end]
+
+
+ubuntu生成makefile并编译:
 ```sh
 cd build
 cmake ..
 cmake --build .
+```
+ubuntu上编译运行以来libz, liblzma
+```sh
+sudo apt-get install libz-dev liblzma-dev
 ```
 运行示例：
 ```sh

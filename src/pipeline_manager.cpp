@@ -1,5 +1,5 @@
 #include "pipeline_manager.h"
-
+#include "meta_data.h"
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <string>
@@ -7,10 +7,10 @@
 
 using std::list;
 
+dng_md_t dng_all_md;
+
 pipeline_manager::pipeline_manager()
 {
-    //��Ҫ����һ��statistic_info_t
-    //
     stat_addr = new statistic_info_t;
     if (stat_addr == nullptr)
     {
@@ -24,7 +24,7 @@ pipeline_manager::~pipeline_manager()
     {
         delete (*it);
     }
-    //��Ҫ�ͷ�һ��statistic_info_t
+    //statistic_info_t
     if (stat_addr != nullptr)
     {
         delete stat_addr;
@@ -317,6 +317,7 @@ void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
         {
             if ((*it)->prepare_input())
             {
+                spdlog::info("run module {}", (*it)->name);
                 (*it)->hw_run(stat_out, frame_cnt);
                 not_run_list.remove(*it);
                 break;

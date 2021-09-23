@@ -9,6 +9,7 @@ using std::vector;
 class hw_base {
 public:
     hw_base() = delete;
+    hw_base(const hw_base& module) = delete;
     hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name);
     void connect_port(uint32_t out_port, hw_base* next_hw, uint32_t in_port);
     virtual void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) = 0;

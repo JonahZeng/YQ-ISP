@@ -21,6 +21,10 @@
 #include "dng_xmp.h"
 #include "dng_xmp_sdk.h"
 
+#include "meta_data.h"
+
+extern dng_md_t dng_all_md;
+
 fileRead::fileRead(uint32_t outpins, const char* inst_name):hw_base(0, outpins, inst_name), file_name()
 {
     bayer = RGGB;
@@ -93,6 +97,7 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         spdlog::error("pixel size must be 2 byte");
         return;
     }
+    spdlog::info("total size {}, {}", stage1->Width(), stage1->Height());
 
     if (*out0 == nullptr)
     {
@@ -128,7 +133,84 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         spdlog::warn("bit depth is 8");
         *bit_depth = 8;
     }
-    spdlog::info("bit depth is {}", *bit_depth);
+    int32_t t = negative->GetLinearizationInfo()->fActiveArea.t;
+    int32_t l = negative->GetLinearizationInfo()->fActiveArea.l;
+    int32_t b = negative->GetLinearizationInfo()->fActiveArea.b;
+    int32_t r = negative->GetLinearizationInfo()->fActiveArea.r;
+
+    spdlog::info("active region {}, {}, {}, {}", l, t, r, b);
+
+    uint32_t blc_dim_x = negative->GetLinearizationInfo()->fBlackLevelRepeatCols;
+    uint32_t blc_dim_y = negative->GetLinearizationInfo()->fBlackLevelRepeatRows;
+
+    spdlog::info("black level repeat dim {}, {}, {} value:", blc_dim_x, blc_dim_y, stage1->Planes());
+    for (int i = 0; i < kMaxBlackPattern; i++)
+    {
+        for (int j = 0; j < kMaxBlackPattern; j++)
+        {
+            spdlog::info("{}, {}, {}, {}", negative->GetLinearizationInfo()->fBlackLevel[i][j][0],
+                negative->GetLinearizationInfo()->fBlackLevel[i][j][1],
+                negative->GetLinearizationInfo()->fBlackLevel[i][j][2],
+                negative->GetLinearizationInfo()->fBlackLevel[i][j][3]);
+        }
+    }
+
+    spdlog::info("bit depth is {} white_level = {} {} {} {}", *bit_depth, negative->GetLinearizationInfo()->fWhiteLevel[0],
+        negative->GetLinearizationInfo()->fWhiteLevel[1],
+        negative->GetLinearizationInfo()->fWhiteLevel[2],
+        negative->GetLinearizationInfo()->fWhiteLevel[3]);
+
+    if (blc_dim_x == 1 && blc_dim_y == 1)
+    {
+        dng_all_md.blc_md.r_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+        dng_all_md.blc_md.gr_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+        dng_all_md.blc_md.gb_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+        dng_all_md.blc_md.b_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+
+        dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+        dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+        dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+        dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+    }
+    else if (blc_dim_x == 2 && blc_dim_y == 2)
+    {
+        dng_all_md.blc_md.r_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+        dng_all_md.blc_md.gr_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+        dng_all_md.blc_md.gb_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+        dng_all_md.blc_md.b_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+
+        if (bayer_tp == RGGB)
+        {
+            dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+            dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
+            dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
+            dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
+        }
+        else if (bayer_tp == GRBG)
+        {
+            dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+            dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
+            dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
+            dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
+        }
+        else if (bayer_tp == GBRG)
+        {
+            dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+            dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
+            dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
+            dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
+        }
+        else {
+            dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+            dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
+            dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
+            dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
+        }
+    }
+    else {
+        spdlog::error("blc channel must be 1 or 4");
+        exit(1);
+    }
 }
 
 void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -213,10 +295,13 @@ void fileRead::init()
     {
         this->cfgList.push_back(config[i]);
     }
+
+    hw_base::init();
     spdlog::info("{0} run end", __FUNCTION__);
 }
 
 fileRead::~fileRead()
 {
+    spdlog::info("{0} deinit start", __FUNCTION__);
     spdlog::info("{0} deinit end", __FUNCTION__);
 }

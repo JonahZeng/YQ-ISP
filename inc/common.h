@@ -100,3 +100,35 @@ typedef struct cfgEntry_s {
     void* targetAddr;
     size_t max_len;
 }cfgEntry_t;
+
+
+template<typename T>
+T common_check_bits(T& input, uint32_t bits, const char* reg_name) //for unsigned type
+{
+    T max_val = (1U << bits) - 1;
+    T min_val = 0;
+    if (input > max_val)
+    {
+        spdlog::error("{} check fail max_val {}, current val {}", reg_name, max_val, input);
+        return max_val;
+    }
+    return input;
+}
+
+template<typename T>
+T common_check_bits_ex(T& input, uint32_t bits, const char* reg_name) //for signed type
+{
+    T max_val = (1 << (bits - 1)) - 1;
+    T min_val = 0 - (1 << (bits - 1));
+    if (input > max_val)
+    {
+        spdlog::error("{} check fail max_val {}, current val {}", reg_name, max_val, input);
+        return max_val;
+    }
+    else if (input < min_val)
+    {
+        spdlog::error("{} check fail min_val {}, current val {}", reg_name, max_val, input);
+        return min_val;
+    }
+    return input;
+}

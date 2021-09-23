@@ -16,7 +16,7 @@ pipeline_collection pipelines[] = {
 // -p pipe_number -cfg xml_file -f frame_end 
 int main(int argc, char* argv[])
 {
-    spdlog::logger* logger = spdlog::default_logger_raw();
+    //spdlog::logger* logger = spdlog::default_logger_raw();
     if (argc < 7) {
         spdlog::info("input param number must >= 5");
         return 0;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 
     if (pipe_id >= sizeof(pipelines) / sizeof(pipeline_collection))
     {
-        spdlog::info("pipe_id out of range");
+        spdlog::error("pipe_id out of range");
         return 0;
     }
 

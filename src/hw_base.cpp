@@ -39,7 +39,7 @@ hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name):
         in[in_p] = nullptr;
     }
 
-    for (uint32_t out_p = 0; out_p < inpins; out_p++)
+    for (uint32_t out_p = 0; out_p < outpins; out_p++)
     {
         out[out_p] = nullptr;
     }
@@ -70,7 +70,22 @@ void hw_base::connect_port(uint32_t out_port, hw_base* next_hw, uint32_t in_port
 
 void hw_base::init()
 {
-    return;
+    spdlog::info("{0} run start", __FUNCTION__);
+
+    cfgEntry_t config[] = {
+        {"xmlConfigValid",     BOOL_T,           &this->xmlConfigValid             },
+        {"write_pic",          BOOL_T,           &this->write_pic                  },
+        {"write_pic_src_pin",  VECT_UINT32,      &this->write_pic_src_pin,        3},
+        {"write_pic_format",   STRING,           this->write_pic_format,         16},
+        {"write_pic_path",     STRING,           this->write_pic_path,          256},
+        {"write_pic_bits",     UINT_32,          &this->write_pic_bits,            },
+    };
+    for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
+    {
+        this->cfgList.push_back(config[i]);
+    }
+
+    spdlog::info("{0} run end", __FUNCTION__);
 }
 
 void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -118,7 +133,7 @@ void hw_base::release_output_memory()
 
 bool hw_base::prepare_input()
 {
-    for (uint32_t in_p = 0; in_p = inpins; in_p++)
+    for (uint32_t in_p = 0; in_p < inpins; in_p++)
     {
         hw_base* pre_hw = this->previous_hw[in_p];
         uint32_t pre_hw_out_port = this->outport_of_previous_hw[in_p];
