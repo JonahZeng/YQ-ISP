@@ -5,15 +5,15 @@ tiny ISP simulation
 我手上的相机是NIKON D610，镜头有两个sigma 35 F1.4和NIKON 85 F1.8，考虑到FOV和shading，畸变存在的多少，后续只使用sigma 35 F1.4拍摄NEF，转换到DNG后做仿真；
 
 ## 规划
-<input type="checkbox" checked>DNG/RAW支持</input>
+- [x] DNG/RAW支持
 
-<input type="checkbox" checked>ubuntu/wsl2/windows跨平台支持</input>
+- [x] ubuntu/wsl2/windows跨平台支持
 
-<input type="checkbox" checked>cmake支持</input>
+- [x] cmake支持
 
-<input type="checkbox">opencl支持</input>
+- [ ] opencl支持
 
-<input type="checkbox">多stripe支持</input>
+- [ ] 多stripe支持
 
 ## 使用方法
 采用cmake进行跨平台构建，已在VS2017 c++工具集v141，WSL2 ubuntu20.04 gcc 9.3.0下测试通过;
