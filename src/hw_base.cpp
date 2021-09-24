@@ -1,6 +1,5 @@
 #include "hw_base.h"
 #include <stdexcept>
-#include "spdlog/spdlog.h"
 
 hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name):
     in(inpins), out(outpins), previous_hw(inpins), outport_of_previous_hw(inpins), 
@@ -108,7 +107,11 @@ void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             }
         }
     }
-    return;
+    
+    if (this->write_pic)
+    {
+        write_pic_for_output();
+    }
 }
 
 void hw_base::reset_hw_cnt_of_outport()
@@ -152,9 +155,165 @@ bool hw_base::prepare_input()
     return true;
 }
 
+void hw_base::write_raw_for_output(FILE* fp)
+{
+    if (fp == nullptr)
+    {
+        spdlog::error("open file {} fail", write_pic_path);
+        return;
+    }
+    uint32_t port = write_pic_src_pin[0];
+    if (port >= out.size())
+    {
+        spdlog::error("can't write pic because port = {}, all outport size = {}", port, out.size());
+        return;
+    }
+    data_buffer* src_data = out[port];
+    if (src_data != nullptr)
+    {
+        if (write_pic_bits > 8 && write_pic_bits <= 16)
+        {
+            uint16_t* buffer = new uint16_t[src_data->width * src_data->height];
+            for (uint32_t sz = 0; sz < src_data->width * src_data->height; sz++)
+            {
+                buffer[sz] = (src_data->data_ptr)[sz] >> (16 - write_pic_bits);
+            }
+            fwrite(buffer, sizeof(uint16_t), src_data->width * src_data->height, fp);
+            delete[] buffer;
+        }
+        else if (write_pic_bits <= 8)
+        {
+            uint8_t* buffer = new uint8_t[src_data->width * src_data->height];
+            for (uint32_t sz = 0; sz < src_data->width * src_data->height; sz++)
+            {
+                buffer[sz] = (src_data->data_ptr)[sz] >> (16 - write_pic_bits);
+            }
+            fwrite(buffer, sizeof(uint8_t), src_data->width * src_data->height, fp);
+            delete[] buffer;
+        }
+    }
+}
+
+void hw_base::write_pnm_for_output(FILE* fp)
+{
+    if (fp == nullptr)
+    {
+        spdlog::error("open file {} fail", write_pic_path);
+        return;
+    }
+    uint32_t port0 = write_pic_src_pin[0];
+    uint32_t port1 = write_pic_src_pin[1];
+    uint32_t port2 = write_pic_src_pin[2];
+    if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
+    {
+        spdlog::error("can't write pic because port = {} {} {}, all outport size = {}", port0, port1, port2, out.size());
+        return;
+    }
+
+    data_buffer* src_data0 = out[port0];
+    data_buffer* src_data1 = out[port1];
+    data_buffer* src_data2 = out[port2];
+
+    if (src_data0 != nullptr && src_data1 != nullptr && src_data2 != nullptr
+        && src_data0->width == src_data1->width && src_data1->width == src_data2->width
+        && src_data0->height == src_data1->height && src_data1->height == src_data2->height)
+    {
+        if (write_pic_bits > 8 && write_pic_bits <= 16)
+        {
+            uint16_t* buffer = new uint16_t[src_data0->width * src_data0->height * 3];
+            uint16_t tmp;
+            for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
+            {
+                tmp = (src_data0->data_ptr)[sz] >> (16 - write_pic_bits);
+                tmp = ((tmp & 0x00ff) << 8) | ((tmp & 0xff00) >> 8);
+                buffer[sz * 3 + 0] = tmp;
+
+                tmp = (src_data1->data_ptr)[sz] >> (16 - write_pic_bits);
+                tmp = ((tmp & 0x00ff) << 8) | ((tmp & 0xff00) >> 8);
+                buffer[sz * 3 + 1] = tmp;
+
+                tmp = (src_data2->data_ptr)[sz] >> (16 - write_pic_bits);
+                tmp = ((tmp & 0x00ff) << 8) | ((tmp & 0xff00) >> 8);
+                buffer[sz * 3 + 2] = tmp;
+            }
+            fwrite(buffer, sizeof(uint16_t), src_data0->width * src_data0->height * 3, fp);
+            delete[] buffer;
+        }
+        else if (write_pic_bits <= 8)
+        {
+            uint8_t* buffer = new uint8_t[src_data0->width * src_data0->height * 3];
+            for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
+            {
+                buffer[sz * 3 + 0] = (src_data0->data_ptr)[sz] >> (16 - write_pic_bits);
+                buffer[sz * 3 + 1] = (src_data1->data_ptr)[sz] >> (16 - write_pic_bits);
+                buffer[sz * 3 + 2] = (src_data2->data_ptr)[sz] >> (16 - write_pic_bits);
+            }
+            fwrite(buffer, sizeof(uint8_t), src_data0->width * src_data0->height * 3, fp);
+            delete[] buffer;
+        }
+    }
+}
+
+void hw_base::write_yuv_for_output(FILE* fp)
+{
+    if (fp == nullptr)
+    {
+        spdlog::error("open file {} fail", write_pic_path);
+        return;
+    }
+    uint32_t port0 = write_pic_src_pin[0];
+    uint32_t port1 = write_pic_src_pin[1];
+    uint32_t port2 = write_pic_src_pin[2];
+    if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
+    {
+        spdlog::error("can't write pic because port = {} {} {}, all outport size = {}", port0, port1, port2, out.size());
+        return;
+    }
+}
+
 void hw_base::write_pic_for_output()
 {
+    if (write_pic_src_pin.size() > out.size())
+    {
+        spdlog::error("can't write pic because outpins = {}, and xml config pins for pic = {}", out.size(), write_pic_src_pin.size());
+        return;
+    }
+    FILE* fp = nullptr;
+    if (strcmp(write_pic_format, "RAW") == 0 && write_pic_src_pin.size() == 1)
+    {
+#ifdef _MSC_VER
+        fopen_s(&fp, write_pic_path, "wb");
+#else
+        fp = fopen(write_pic_path, "wb");
+#endif
+        write_raw_for_output(fp);
+    }
+    else if (strcmp(write_pic_format, "PNM") == 0 && write_pic_src_pin.size() == 3)
+    {
+#ifdef _MSC_VER
+        fopen_s(&fp, write_pic_path, "wb");
+#else
+        fp = fopen(write_pic_path, "wb");
+#endif
+        write_pnm_for_output(fp);
+    }
+    else if (strcmp(write_pic_format, "YUV") == 0 && write_pic_src_pin.size() == 3)
+    {
+#ifdef _MSC_VER
+        fopen_s(&fp, write_pic_path, "wb");
+#else
+        fp = fopen(write_pic_path, "wb");
+#endif
+        write_yuv_for_output(fp);
+    }
+    else {
+        spdlog::error("can't write pic, RAW:1, PNM:3, YUV:3");
+    }
 
+    if (fp)
+    {
+        fclose(fp);
+    }
 }
 
 hw_base::~hw_base()

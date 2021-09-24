@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jonah/code/YQ_ISP/YQ-ISP
+CMAKE_SOURCE_DIR = /mnt/d/yqzeng/github_repo/YQ-ISP
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jonah/code/YQ_ISP/YQ-ISP/build
+CMAKE_BINARY_DIR = /mnt/d/yqzeng/github_repo/YQ-ISP/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jonah/code/YQ_ISP/YQ-ISP/build/CMakeFiles /home/jonah/code/YQ_ISP/YQ-ISP/build/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/yqzeng/github_repo/YQ-ISP/build/CMakeFiles /mnt/d/yqzeng/github_repo/YQ-ISP/build/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jonah/code/YQ_ISP/YQ-ISP/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/d/yqzeng/github_repo/YQ-ISP/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -149,6 +149,60 @@ pipeline/full_pipeline_V1.s: pipeline/full_pipeline_V1.cpp.s
 pipeline/full_pipeline_V1.cpp.s:
 	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/pipeline/full_pipeline_V1.cpp.s
 .PHONY : pipeline/full_pipeline_V1.cpp.s
+
+src/blc.o: src/blc.cpp.o
+
+.PHONY : src/blc.o
+
+# target to build an object file
+src/blc.cpp.o:
+	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/blc.cpp.o
+.PHONY : src/blc.cpp.o
+
+src/blc.i: src/blc.cpp.i
+
+.PHONY : src/blc.i
+
+# target to preprocess a source file
+src/blc.cpp.i:
+	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/blc.cpp.i
+.PHONY : src/blc.cpp.i
+
+src/blc.s: src/blc.cpp.s
+
+.PHONY : src/blc.s
+
+# target to generate assembly for a file
+src/blc.cpp.s:
+	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/blc.cpp.s
+.PHONY : src/blc.cpp.s
+
+src/fe_firmware.o: src/fe_firmware.cpp.o
+
+.PHONY : src/fe_firmware.o
+
+# target to build an object file
+src/fe_firmware.cpp.o:
+	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/fe_firmware.cpp.o
+.PHONY : src/fe_firmware.cpp.o
+
+src/fe_firmware.i: src/fe_firmware.cpp.i
+
+.PHONY : src/fe_firmware.i
+
+# target to preprocess a source file
+src/fe_firmware.cpp.i:
+	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/fe_firmware.cpp.i
+.PHONY : src/fe_firmware.cpp.i
+
+src/fe_firmware.s: src/fe_firmware.cpp.s
+
+.PHONY : src/fe_firmware.s
+
+# target to generate assembly for a file
+src/fe_firmware.cpp.s:
+	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/fe_firmware.cpp.s
+.PHONY : src/fe_firmware.cpp.s
 
 src/fileRead.o: src/fileRead.cpp.o
 
@@ -270,6 +324,12 @@ help:
 	@echo "... pipeline/full_pipeline_V1.o"
 	@echo "... pipeline/full_pipeline_V1.i"
 	@echo "... pipeline/full_pipeline_V1.s"
+	@echo "... src/blc.o"
+	@echo "... src/blc.i"
+	@echo "... src/blc.s"
+	@echo "... src/fe_firmware.o"
+	@echo "... src/fe_firmware.i"
+	@echo "... src/fe_firmware.s"
 	@echo "... src/fileRead.o"
 	@echo "... src/fileRead.i"
 	@echo "... src/fileRead.s"

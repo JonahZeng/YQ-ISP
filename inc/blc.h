@@ -10,6 +10,9 @@ typedef struct blc_reg_s
     int32_t blc_gr;
     int32_t blc_gb;
     int32_t blc_b;
+
+    uint32_t normalize_en;
+    uint32_t white_level;
 }blc_reg_t;
 
 class blc :public hw_base {
@@ -27,4 +30,6 @@ private:
     int32_t blc_gr;
     int32_t blc_gb;
     int32_t blc_b;
+    uint32_t normalize_en;
+    uint32_t white_level;
 };

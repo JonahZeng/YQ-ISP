@@ -162,10 +162,7 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
 
     if (blc_dim_x == 1 && blc_dim_y == 1)
     {
-        dng_all_md.blc_md.r_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
-        dng_all_md.blc_md.gr_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
-        dng_all_md.blc_md.gb_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
-        dng_all_md.blc_md.b_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+        dng_all_md.blc_md.white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
 
         dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
         dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
@@ -174,10 +171,7 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
     }
     else if (blc_dim_x == 2 && blc_dim_y == 2)
     {
-        dng_all_md.blc_md.r_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
-        dng_all_md.blc_md.gr_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
-        dng_all_md.blc_md.gb_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
-        dng_all_md.blc_md.b_white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+        dng_all_md.blc_md.white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
 
         if (bayer_tp == RGGB)
         {
@@ -248,7 +242,11 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         {
             if (bit_depth > 8 && bit_depth <= 16)
             {
-                fread(out0->data_ptr, sizeof(uint16_t), img_width*img_height, input_f);
+                size_t read_cnt = fread(out0->data_ptr, sizeof(uint16_t), img_width*img_height, input_f);
+                if (read_cnt != sizeof(uint16_t) * img_width * img_height)
+                {
+                    spdlog::error("read raw file bytes unexpected");
+                }
                 for (uint32_t s = 0; s < img_height*img_width; s++)
                 {
                     out0->data_ptr[s] = out0->data_ptr[s] << (16 - bit_depth);

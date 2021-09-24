@@ -15,6 +15,9 @@ static void blc_reg_calc(dng_md_t& all_dng_md, blc_reg_t& blc_reg)
     blc_reg.blc_gr = all_dng_md.blc_md.gr_black_level;
     blc_reg.blc_gb = all_dng_md.blc_md.gb_black_level;
     blc_reg.blc_b = all_dng_md.blc_md.b_black_level;
+
+    blc_reg.normalize_en = 1;
+    blc_reg.white_level = (uint32_t)all_dng_md.blc_md.white_level;
 }
 
 void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)

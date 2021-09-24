@@ -106,7 +106,7 @@ template<typename T>
 T common_check_bits(T& input, uint32_t bits, const char* reg_name) //for unsigned type
 {
     T max_val = (1U << bits) - 1;
-    T min_val = 0;
+    T min_val = 0U;
     if (input > max_val)
     {
         spdlog::error("{} check fail max_val {}, current val {}", reg_name, max_val, input);
@@ -127,7 +127,7 @@ T common_check_bits_ex(T& input, uint32_t bits, const char* reg_name) //for sign
     }
     else if (input < min_val)
     {
-        spdlog::error("{} check fail min_val {}, current val {}", reg_name, max_val, input);
+        spdlog::error("{} check fail min_val {}, current val {}", reg_name, min_val, input);
         return min_val;
     }
     return input;

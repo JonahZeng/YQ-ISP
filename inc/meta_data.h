@@ -13,10 +13,7 @@ typedef struct blc_dng_md_s
     int32_t gb_black_level;
     int32_t b_black_level;
 
-    int32_t r_white_level;
-    int32_t gr_white_level;
-    int32_t gb_white_level;
-    int32_t b_white_level;
+    int32_t white_level;
 }blc_dng_md_t;
 
 typedef struct dng_md_s

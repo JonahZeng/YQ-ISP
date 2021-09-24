@@ -40,6 +40,11 @@ static void blc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uin
         blc_val[2] = blc_reg->blc_gr;
         blc_val[3] = blc_reg->blc_r;
     }
+
+    uint32_t white_level = blc_reg->white_level;
+
+    uint32_t nom_ratio = (16383 * 1024) / white_level;
+
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
         int32_t pix = indata[sz];
@@ -53,6 +58,13 @@ static void blc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uin
 
         pix = pix - offset;
         pix = (pix < 0) ? 0 : ((pix > 16383) ? 16383 : pix);
+
+        if (blc_reg->normalize_en)
+        {
+            
+            pix = (pix * nom_ratio + 512) >> 10;
+            pix = (pix < 0) ? 0 : ((pix > 16383) ? 16383 : pix);
+        }
 
         outdata[sz] = (uint16_t)pix;
     }
@@ -111,11 +123,13 @@ void blc::init()
 {
     spdlog::info("{0} run start", __FUNCTION__);
     cfgEntry_t config[] = {
-        {"bypass",     UINT_32,     &this->bypass          },
-        {"blc_r",      INT_32,      &this->blc_r           },
-        {"blc_gr",     INT_32,      &this->blc_gr          },
-        {"blc_gb",     INT_32,      &this->blc_gb          },
-        {"blc_b",      INT_32,      &this->blc_b           }
+        {"bypass",                 UINT_32,     &this->bypass          },
+        {"blc_r",                  INT_32,      &this->blc_r           },
+        {"blc_gr",                 INT_32,      &this->blc_gr          },
+        {"blc_gb",                 INT_32,      &this->blc_gb          },
+        {"blc_b",                  INT_32,      &this->blc_b           },
+        {"normalize_en",           UINT_32,     &this->normalize_en    },
+        {"white_level",            UINT_32,     &this->white_level     }
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
@@ -137,4 +151,16 @@ void blc::checkparameters(blc_reg_t* reg)
     reg->blc_gr = common_check_bits_ex(reg->blc_gr, 15, "blc_gr");
     reg->blc_gb = common_check_bits_ex(reg->blc_gb, 15, "blc_gb");
     reg->blc_b = common_check_bits_ex(reg->blc_b, 15, "blc_b");
+    reg->normalize_en = common_check_bits(reg->normalize_en, 1, "normalize_en");
+    reg->white_level = common_check_bits(reg->white_level, 14, "white_level");
+
+    spdlog::info("================= blc reg=================");
+    spdlog::info("bypass {}", reg->bypass);
+    spdlog::info("blc_r {}", reg->blc_r);
+    spdlog::info("blc_gr {}", reg->blc_gr);
+    spdlog::info("blc_gb {}", reg->blc_gb);
+    spdlog::info("blc_b {}", reg->blc_b);
+    spdlog::info("normalize_en {}", reg->normalize_en);
+    spdlog::info("white_level {}", reg->white_level);
+    spdlog::info("================= blc reg=================");
 }
