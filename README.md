@@ -15,6 +15,8 @@ tiny ISP simulation
 
 - [ ] 多stripe支持
 
+![结构图](https://github.com/JonahZeng/YQ-ISP/blob/master/doc/pipeline_v1.png?raw=true)
+
 ## 使用方法
 采用cmake进行跨平台构建，已在VS2017 c++工具集v141，WSL2 ubuntu20.04 gcc 9.3.0下测试通过;
 windows生成VS工程方法：
