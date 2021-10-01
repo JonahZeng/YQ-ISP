@@ -222,14 +222,14 @@ void hw_base::write_pnm_for_output(FILE* fp)
 #ifdef _MSC_VER
         scanf_s(header0, "P6\n%d %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
 #else
-        scanf(header0, "P6\n%d %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
+        int len = scanf(header0, "P6\n%d %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
 #endif
         if (strlen(header0) % 2 == 1)
         {
 #ifdef _MSC_VER
             scanf_s(header0, "P6\n%d  %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
 #else
-            scanf(header0, "P6\n%d  %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
+            len = scanf(header0, "P6\n%d  %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
 #endif
         }
         fwrite(header0, sizeof(char), strlen(header0), fp);

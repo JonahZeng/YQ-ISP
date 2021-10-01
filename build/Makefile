@@ -258,6 +258,33 @@ src/hw_base.cpp.s:
 	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/hw_base.cpp.s
 .PHONY : src/hw_base.cpp.s
 
+src/lsc.o: src/lsc.cpp.o
+
+.PHONY : src/lsc.o
+
+# target to build an object file
+src/lsc.cpp.o:
+	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/lsc.cpp.o
+.PHONY : src/lsc.cpp.o
+
+src/lsc.i: src/lsc.cpp.i
+
+.PHONY : src/lsc.i
+
+# target to preprocess a source file
+src/lsc.cpp.i:
+	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/lsc.cpp.i
+.PHONY : src/lsc.cpp.i
+
+src/lsc.s: src/lsc.cpp.s
+
+.PHONY : src/lsc.s
+
+# target to generate assembly for a file
+src/lsc.cpp.s:
+	$(MAKE) -f CMakeFiles/isp_emulation.dir/build.make CMakeFiles/isp_emulation.dir/src/lsc.cpp.s
+.PHONY : src/lsc.cpp.s
+
 src/pipe_main.o: src/pipe_main.cpp.o
 
 .PHONY : src/pipe_main.o
@@ -336,6 +363,9 @@ help:
 	@echo "... src/hw_base.o"
 	@echo "... src/hw_base.i"
 	@echo "... src/hw_base.s"
+	@echo "... src/lsc.o"
+	@echo "... src/lsc.i"
+	@echo "... src/lsc.s"
 	@echo "... src/pipe_main.o"
 	@echo "... src/pipe_main.i"
 	@echo "... src/pipe_main.s"

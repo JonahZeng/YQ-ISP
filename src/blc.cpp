@@ -9,7 +9,7 @@ blc::blc(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpi
     blc_b = 0;
 }
 
-static void blc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uint32_t ysize, bayer_type_t by, blc_reg_t* blc_reg)
+static void blc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uint32_t ysize, bayer_type_t by, const blc_reg_t* blc_reg)
 {
     int32_t blc_val[4];
     if (by == RGGB)

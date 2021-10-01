@@ -35,6 +35,119 @@ fileRead::fileRead(uint32_t outpins, const char* inst_name):hw_base(0, outpins, 
 }
 
 
+static void get_blc_md_from_dng(uint32_t blc_dim_x, uint32_t blc_dim_y, AutoPtr<dng_negative>& negative, bayer_type_t bayer_tp, dng_md_t& all_md)
+{
+    if (blc_dim_x == 1 && blc_dim_y == 1)
+    {
+        all_md.blc_md.white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+
+        all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+        all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+        all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+        all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+    }
+    else if (blc_dim_x == 2 && blc_dim_y == 2)
+    {
+        all_md.blc_md.white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+
+        if (bayer_tp == RGGB)
+        {
+            all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+            all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
+            all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
+            all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
+        }
+        else if (bayer_tp == GRBG)
+        {
+            all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+            all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
+            all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
+            all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
+        }
+        else if (bayer_tp == GBRG)
+        {
+            all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+            all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
+            all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
+            all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
+        }
+        else {
+            all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
+            all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
+            all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
+            all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
+        }
+    }
+    else {
+        spdlog::error("blc channel must be 1 or 4");
+        exit(1);
+    }
+}
+
+static void get_lsc_md_from_dng(dng_exif* exif, dng_ifd* main_ifd, dng_md_t& all_md)
+{
+    /*struct dng_name_table
+    {
+        uint32 key;
+        const char *name;
+    };
+
+    enum
+    {
+
+        ruNone = 1,
+        ruInch = 2,
+        ruCM = 3,
+        ruMM = 4,
+        ruMicroM = 5
+
+    };
+
+    const dng_name_table kResolutionUnitNames[] =
+    {
+    {	ruNone, 	"None"			},
+    {	ruInch,		"Inch"			},
+    {	ruCM,		"cm"			},
+    {	ruMM,		"mm"			},
+    {	ruMicroM,	"Micrometer"	}
+    };*/
+
+
+    all_md.lsc_md.FocalLength = exif->fFocalLength.As_real64();
+    all_md.lsc_md.FocalPlaneResolutionUnit = exif->fFocalPlaneResolutionUnit;
+    all_md.lsc_md.FocalPlaneXResolution = exif->fFocalPlaneXResolution.As_real64();
+    all_md.lsc_md.FocalPlaneYResolution = exif->fFocalPlaneYResolution.As_real64();
+    all_md.lsc_md.FocusDistance = exif->fApproxFocusDistance.As_real64();
+
+    all_md.lsc_md.img_w = main_ifd->fImageWidth;
+    all_md.lsc_md.img_h = main_ifd->fImageLength;
+
+    all_md.lsc_md.crop_x = 0; //current pipeline no crop
+    all_md.lsc_md.crop_y = 0;
+
+    spdlog::info("lsc info: FocalLength {}mm, FocalPlaneResolutionUnit {} 1:none, 2:inch, 3:cm, 4:mm, 5:microm, \nFocalPlaneXResolution {}, FocalPlaneYResolution {}, FocusDistance {}m",
+        all_md.lsc_md.FocalLength, all_md.lsc_md.FocalPlaneResolutionUnit, all_md.lsc_md.FocalPlaneXResolution, 
+        all_md.lsc_md.FocalPlaneYResolution, all_md.lsc_md.FocusDistance);
+    if (all_md.lsc_md.FocalPlaneResolutionUnit == 1)
+    {
+        spdlog::error("no ResolutionUnit");
+        exit(1);
+    }
+}
+
+static void get_ae_md_from_dng(dng_exif* exif, dng_md_t& all_md)
+{
+    all_md.ae_md.ApertureValue = exif->fApertureValue.As_real64();
+    all_md.ae_md.ISOSpeedRatings[0] = exif->fISOSpeedRatings[0];
+    all_md.ae_md.ISOSpeedRatings[1] = exif->fISOSpeedRatings[1];
+    all_md.ae_md.ISOSpeedRatings[2] = exif->fISOSpeedRatings[2];
+    all_md.ae_md.ShutterSpeedValue = exif->fShutterSpeedValue.As_real64();
+
+    spdlog::info("ae info: apertureValue {}, ISO {} {} {}, shutterSpeedValue {}s", 
+        all_md.ae_md.ApertureValue, all_md.ae_md.ISOSpeedRatings[0], all_md.ae_md.ISOSpeedRatings[1], 
+        all_md.ae_md.ISOSpeedRatings[2], all_md.ae_md.ShutterSpeedValue);
+}
+
 static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* bit_depth)
 {
     dng_file_stream stream(file_name);
@@ -106,9 +219,8 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
     void* p_raw = (*out0)->data_ptr;
     dng_pixel_buffer raw_buf(dng_rect(stage1->Height(), stage1->Width()), 0, stage1->Planes(), stage1->PixelType(), pcPlanar, p_raw);
     stage1->Get(raw_buf);
-    negative->SynchronizeMetadata(); //xmp focus distance
+    negative->SynchronizeMetadata(); //xmp exif info include focus distance
     dng_exif* exif = negative->GetExif();
-    double focus_dist = exif->fApproxFocusDistance.As_real64();
 
     *bit_depth = info.fIFD[info.fMainIndex]->fBitsPerSample[0];
 
@@ -160,51 +272,10 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         negative->GetLinearizationInfo()->fWhiteLevel[2],
         negative->GetLinearizationInfo()->fWhiteLevel[3]);
 
-    if (blc_dim_x == 1 && blc_dim_y == 1)
-    {
-        dng_all_md.blc_md.white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
+    get_blc_md_from_dng(blc_dim_x, blc_dim_y, negative, bayer_tp, dng_all_md);
+    get_ae_md_from_dng(exif, dng_all_md);
+    get_lsc_md_from_dng(exif, info.fIFD[info.fMainIndex], dng_all_md);
 
-        dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
-        dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
-        dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
-        dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
-    }
-    else if (blc_dim_x == 2 && blc_dim_y == 2)
-    {
-        dng_all_md.blc_md.white_level = (int32_t)negative->GetLinearizationInfo()->fWhiteLevel[0];
-
-        if (bayer_tp == RGGB)
-        {
-            dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
-            dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
-            dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
-            dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
-        }
-        else if (bayer_tp == GRBG)
-        {
-            dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
-            dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
-            dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
-            dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
-        }
-        else if (bayer_tp == GBRG)
-        {
-            dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
-            dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
-            dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
-            dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
-        }
-        else {
-            dng_all_md.blc_md.b_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][0][0];
-            dng_all_md.blc_md.gb_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[0][1][0];
-            dng_all_md.blc_md.gr_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][0][0];
-            dng_all_md.blc_md.r_black_level = (int32_t)negative->GetLinearizationInfo()->fBlackLevel[1][1][0];
-        }
-    }
-    else {
-        spdlog::error("blc channel must be 1 or 4");
-        exit(1);
-    }
 }
 
 void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)

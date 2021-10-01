@@ -63,7 +63,12 @@ $> ./isp_emulation -p 0 -cfg ../cfg/V1_config.xml -f 0 1
 
 ## **第一个难题 镜头的vignette校正参数**
 首先是没有均匀灯箱，所以不可能自己测试各个光圈下的vignette，只能采用别人已经测量好的参数，adobe的lcp（lens correction profile)不知是二进制还是文本方式，如果是文本方式可以打开看一下；
-google到一个比较有意思的github repo：
+photoshop存放lens profiles的路径：
+```
+C:\ProgramData\Adobe\CameraRaw\LensProfiles\1.0\Sigma\Nikon
+```
+如果没有安装ps或者lr，则参考如下第三方结果：
+
 https://github.com/lensfun/lensfun/blob/master/data/db/slr-sigma.xml
 里面列举了部分镜头的畸变和vignette参数，比如sigma 35 F1.4:
 ```xml
