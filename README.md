@@ -105,26 +105,7 @@ C:\ProgramData\Adobe\CameraRaw\LensProfiles\1.0\Sigma\Nikon #我的是nikon相�
 
 abobe的vignette model:
 
-令：
-$$
-L(x_{d}, y_{d}) = 1 + a_{1}r_{d}^{2} + a_{2}r_{d}^{4} + a_{3}r_{d}^{6} \\
-
-I(x_{d}, y_{d}) = I_{ideal}(x_{d}, y_{d}) * L(x_{d}, y_{d}) \\
-
-r_{d}^{2} = x_{d}^{2} + y_{d}^{2} \\
-
-\begin{bmatrix}
-x_{d} \\
-y_{d} 
-\end{bmatrix} = 
-\begin{bmatrix}
-(u_{d} - u_{0}) / (f_{x}*res_{x})\\
-(v_{d} - v_{0}) / (f_{y}*res_{y})
-\end{bmatrix}
-
-$$
-
-$a_{1}, a_{2}, a_{3}$分别对应上面的lcp中的`VignetteModelParam1, VignetteModelParam2,VignetteModelParam3`，$r_{d}$表示距离光学中心的距离(mm)和焦距(mm)的比值， $u_{0}, v_{0}$表示圆心坐标(pixel)， $u_{d}, v_{d}$表示图像像素坐标(pixel)，$res_{x}, res_{y}$表示像素密度(pixs/mm)
+![vignette model](https://github.com/JonahZeng/YQ-ISP/blob/master/doc/adobe_vignette_model.png?raw=true)
 
 
 
