@@ -10,7 +10,7 @@ int main()
     const int height = 4028;
     const int focusLength = 35;
 
-    double a1=-0.49268299999999998, a2=1.2963659999999999, a3=-4.1669510000000001;
+    double a1=-5.668678, a2=19.64465, a3=-28.093815;
 
     int c_x = width / 2;
     int c_y = height / 2;
@@ -25,16 +25,9 @@ int main()
             double r_y = double(y - c_y)/(167.50150*focusLength);
             double r2 = r_x*r_x + r_y*r_y;
 
-            if(x==0 && y==0)
-            {
-                printf("r2 = %lf\n", r2);
-            }
             double g = 1.0 + a1 * r2 + r2 * r2 * a2 + r2 * r2 * r2 * a3;
             g = 1/g;
-            if(x==0 && y==0)
-            {
-                printf("g = %lf\n", g);
-            }
+
             buffer[y*width+x] = g;
         }
     }
@@ -44,4 +37,4 @@ int main()
     fclose(fp);
 
     delete[] buffer;
-    }
+}
