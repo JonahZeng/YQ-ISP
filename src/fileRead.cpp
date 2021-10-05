@@ -148,6 +148,114 @@ static void get_ae_md_from_dng(dng_exif* exif, dng_md_t& all_md)
         all_md.ae_md.ISOSpeedRatings[2], all_md.ae_md.ShutterSpeedValue);
 }
 
+static void get_awb_md_from_dng(dng_info* info, dng_md_t& all_md)
+{
+    if (info->fShared->fAsShotNeutral.Count() != 3)
+    {
+        spdlog::error("img planes != 3");
+        exit(1);
+    }
+
+    all_md.awb_md.r_Neutral = info->fShared->fAsShotNeutral[0];
+    all_md.awb_md.g_Neutral = info->fShared->fAsShotNeutral[1];
+    all_md.awb_md.b_Neutral = info->fShared->fAsShotNeutral[2];
+
+    all_md.awb_md.asShot_valid = info->fShared->fAsShotWhiteXY.IsValid();
+    all_md.awb_md.asShot_x = info->fShared->fAsShotWhiteXY.x;
+    all_md.awb_md.asShot_y = info->fShared->fAsShotWhiteXY.y;
+}
+
+static void get_cc_md_from_dng(dng_info* info, dng_md_t& all_md)
+{
+    if (info->fShared->fAnalogBalance.Count() != 3)
+    {
+        spdlog::error("img planes != 3");
+        exit(1);
+    }
+    all_md.cc_md.Analogbalance[0] = info->fShared->fAnalogBalance[0];
+    all_md.cc_md.Analogbalance[1] = info->fShared->fAnalogBalance[1];
+    all_md.cc_md.Analogbalance[2] = info->fShared->fAnalogBalance[2];
+
+    all_md.cc_md.CalibrationIlluminant1 = info->fShared->fCameraProfile.fCalibrationIlluminant1;
+    all_md.cc_md.CalibrationIlluminant2 = info->fShared->fCameraProfile.fCalibrationIlluminant2;
+
+    if (info->fShared->fCameraProfile.fColorMatrix1.Rows() != 3 || info->fShared->fCameraProfile.fColorMatrix1.Cols() != 3)
+    {
+        spdlog::error("CM1 dim != 3*3");
+        exit(1);
+    }
+    for (uint32_t row = 0; row < 3; row++)
+    {
+        for (uint32_t col = 0; col < 3; col++)
+        {
+            all_md.cc_md.ColorMatrix1[row][col] = info->fShared->fCameraProfile.fColorMatrix1[row][col];
+        }
+    }
+    if (info->fShared->fCameraProfile.fColorMatrix2.Rows() != 3 || info->fShared->fCameraProfile.fColorMatrix2.Cols() != 3)
+    {
+        spdlog::error("CM2 dim != 3*3");
+        exit(1);
+    }
+    for (uint32_t row = 0; row < 3; row++)
+    {
+        for (uint32_t col = 0; col < 3; col++)
+        {
+            all_md.cc_md.ColorMatrix2[row][col] = info->fShared->fCameraProfile.fColorMatrix2[row][col];
+        }
+    }
+    if (info->fShared->fCameraCalibration1.Rows() != 3 || info->fShared->fCameraCalibration1.Cols() != 3)
+    {
+        spdlog::error("CC1 dim != 3*3");
+        exit(1);
+    }
+    for (uint32_t row = 0; row < 3; row++)
+    {
+        for (uint32_t col = 0; col < 3; col++)
+        {
+            all_md.cc_md.CameraCalibration1[row][col] = info->fShared->fCameraCalibration1[row][col];
+        }
+    }
+    if (info->fShared->fCameraCalibration2.Rows() != 3 || info->fShared->fCameraCalibration2.Cols() != 3)
+    {
+        spdlog::error("CC2 dim != 3*3");
+        exit(1);
+    }
+
+    for (uint32_t row = 0; row < 3; row++)
+    {
+        for (uint32_t col = 0; col < 3; col++)
+        {
+            all_md.cc_md.CameraCalibration2[row][col] = info->fShared->fCameraCalibration2[row][col];
+        }
+    }
+
+    if (info->fShared->fCameraProfile.fForwardMatrix1.Rows() != 3 || info->fShared->fCameraProfile.fForwardMatrix1.Cols() != 3)
+    {
+        spdlog::error("FM1 dim != 3*3");
+        exit(1);
+    }
+    for (uint32_t row = 0; row < 3; row++)
+    {
+        for (uint32_t col = 0; col < 3; col++)
+        {
+            all_md.cc_md.ForwardMatrix1[row][col] = info->fShared->fCameraProfile.fForwardMatrix1[row][col];
+        }
+    }
+
+    if (info->fShared->fCameraProfile.fForwardMatrix2.Rows() != 3 || info->fShared->fCameraProfile.fForwardMatrix2.Cols() != 3)
+    {
+        spdlog::error("FM2 dim != 3*3");
+        exit(1);
+    }
+    for (uint32_t row = 0; row < 3; row++)
+    {
+        for (uint32_t col = 0; col < 3; col++)
+        {
+            all_md.cc_md.ForwardMatrix2[row][col] = info->fShared->fCameraProfile.fForwardMatrix2[row][col];
+        }
+    }
+}
+
 static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* bit_depth)
 {
     dng_file_stream stream(file_name);
@@ -275,6 +383,12 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
     get_blc_md_from_dng(blc_dim_x, blc_dim_y, negative, bayer_tp, dng_all_md);
     get_ae_md_from_dng(exif, dng_all_md);
     get_lsc_md_from_dng(exif, info.fIFD[info.fMainIndex], dng_all_md);
+
+    dng_all_md.ae_comp_md.BaselineExposure = info.fShared->fBaselineExposure.As_real64();
+    
+    get_awb_md_from_dng(&info, dng_all_md);
+
+    get_cc_md_from_dng(&info, dng_all_md);
 
 }
 

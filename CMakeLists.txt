@@ -18,6 +18,9 @@ source_group("calib" FILES ${CALIB_FILES})
 source_group("src" FILES ${SRC_FILES})
 source_group("pipeline" FILES ${PIPELINE_FILES})
 source_group("cfg" FILES ${CFG_FILES})
+
+SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+
 add_executable(isp_emulation ${SRC_FILES} ${INC_FILES} ${PIPELINE_FILES} ${CFG_FILES} ${CALIB_FILES})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
@@ -29,6 +32,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(JPEG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9b/lib/libjpeg.lib")
     set(JPEG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9b/lib/libjpeg_d.lib")
     set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2")
+	set(XML_BIN_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/bin")
     set(XML_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2.lib" 
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a.lib" 
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dll.lib")
@@ -118,4 +122,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 target_link_libraries(isp_emulation 
         optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} ${SPDLOG_LIBRARIES_RELEASE} z lzma
         debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} ${SPDLOG_LIBRARIES_DEBUG} z lzma)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E 
+	copy "${XML_BIN_DIR}/$<$<CONFIG:Release>:libxml2.dll>$<$<CONFIG:Debug>:libxml2d.dll>"  "${EXECUTABLE_OUTPUT_PATH}/$<$<CONFIG:Release>:Release>$<$<CONFIG:Debug>:Debug>/libxml2.dll")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()

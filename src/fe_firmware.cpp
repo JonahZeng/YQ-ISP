@@ -259,6 +259,19 @@ static void lsc_reg_calc(dng_md_t& all_dng_md, lsc_reg_t& lsc_reg)
     //spdlog::info("\n{}", ss.str());
 }
 
+static void awbgain_reg_calc(dng_md_t& all_dng_md, awbgain_reg_t& awbgain_reg)
+{
+    double r_gain = 1.0 / all_dng_md.awb_md.r_Neutral;
+    double g_gain = 1.0 / all_dng_md.awb_md.g_Neutral;
+    double b_gain = 1.0 / all_dng_md.awb_md.b_Neutral;
+
+    awbgain_reg.bypass = 0;
+    awbgain_reg.r_gain = uint32_t(r_gain * 1024);
+    awbgain_reg.gr_gain = uint32_t(g_gain * 1024);
+    awbgain_reg.gb_gain = awbgain_reg.gr_gain;
+    awbgain_reg.b_gain = uint32_t(b_gain * 1024);
+}
+
 void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
     spdlog::info("{0} run start", __FUNCTION__);
@@ -281,6 +294,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     blc_reg_calc(dng_all_md, reg_ptr->blc_reg);
     lsc_reg_calc(dng_all_md, reg_ptr->lsc_reg);
+    awbgain_reg_calc(dng_all_md, reg_ptr->awbgain_reg);
 
     hw_base::hw_run(stat_out, frame_cnt);
 

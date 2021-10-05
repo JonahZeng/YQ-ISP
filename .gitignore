@@ -2,6 +2,9 @@
 *.db
 *.pdb
 *.exe
+*.ilk
+bin/Debug/*.dll
+bin/Release/*.dll
 build/.vs
 build/x64
 build/CMakeFiles

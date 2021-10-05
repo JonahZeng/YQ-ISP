@@ -17,27 +17,27 @@ lsc::lsc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpin
 
 static void lsc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uint32_t ysize, const lsc_reg_t* lsc_reg)
 {
-    int32_t x_grad = (1 << 15) / lsc_reg->block_size_x;
-    int32_t y_grad = (1 << 15) / lsc_reg->block_size_y;
+    uint32_t x_grad = (1U << 15) / lsc_reg->block_size_x;
+    uint32_t y_grad = (1U << 15) / lsc_reg->block_size_y;
+    uint32_t y_block = lsc_reg->block_start_y_idx;
+    uint32_t y_offset = lsc_reg->block_start_y_oft;
     for (uint32_t y = 0; y < ysize; y++)
     {
-        uint32_t y_block = lsc_reg->block_start_y_idx;
-        uint32_t y_offset = y + lsc_reg->block_start_y_oft;
         if (y_offset >= lsc_reg->block_size_y)
         {
             y_block += 1;
             y_block = (y_block > (LSC_GRID_ROWS - 2)) ? (LSC_GRID_ROWS - 2) : y_block; //max y block 31-2 29
-            y_offset -= lsc_reg->block_size_y;
+            y_offset = 0;
         }
+        uint32_t x_block = lsc_reg->block_start_x_idx;
+        uint32_t x_offset = lsc_reg->block_start_x_oft;
         for (uint32_t x = 0; x < xsize; x++)
         {
-            uint32_t x_block = lsc_reg->block_start_x_idx;
-            uint32_t x_offset = x + lsc_reg->block_start_x_oft;
             if (x_offset >= lsc_reg->block_size_x)
             {
                 x_block += 1;
                 x_block = (x_block > (LSC_GRID_COLS - 2)) ? (LSC_GRID_COLS - 2) : x_block;
-                x_offset -= lsc_reg->block_size_x;
+                x_offset = 0;
             }
 
             int32_t gain_lt = (int32_t)lsc_reg->luma_gain[y_block*LSC_GRID_COLS + x_block];
@@ -50,15 +50,18 @@ static void lsc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uin
             int64_t gain1 = gain_lb + (((int64_t)(gain_rb - gain_lb) * x_offset * x_grad + 16383) >> 15);
             int64_t gain = gain0 + (((int64_t)(gain1 - gain0) * y_offset * y_grad + 16383) >> 15);
 
-            if (gain > 16383)
+            if (y == 0 && x == xsize - 1)
             {
-                gain = 16383;
+                printf("%d, %d, %d, %d, %lld, %lld, %lld\n", gain_lt, gain_rt, gain_lb, gain_rb, gain0, gain1, gain);
             }
 
             uint32_t tmp = (indata[y*xsize + x] * (uint32_t)gain + 512) >> 10;
-            tmp = tmp > 16383 ? 16383 : tmp;
+            tmp = (tmp > 16383) ? 16383 : tmp;
             outdata[y*xsize + x] = (uint16_t)tmp;
+
+            x_offset++;
         }
+        y_offset++;
     }
 }
 
@@ -70,9 +73,10 @@ void lsc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
     lsc_reg_t* lsc_reg = &fe_reg->lsc_reg;
 
+    lsc_reg->bypass = bypass;
+
     if (xmlConfigValid)
     {
-        lsc_reg->bypass = bypass;
         lsc_reg->block_size_x = block_size_x;
         lsc_reg->block_size_y = block_size_y;
         lsc_reg->block_start_x_idx = block_start_x_idx;

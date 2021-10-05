@@ -32,9 +32,41 @@ typedef struct lsc_dng_md_s
     uint32_t FocalPlaneResolutionUnit;
 }lsc_dng_md_t;
 
+typedef struct awb_dng_md_s
+{
+    double r_Neutral;
+    double g_Neutral;
+    double b_Neutral;
+
+    bool asShot_valid;
+    double asShot_x;
+    double asShot_y;
+}awb_dng_md_t;
+
+typedef struct cc_dng_md_s
+{
+    double Analogbalance[3];
+    uint32_t CalibrationIlluminant1;
+    uint32_t CalibrationIlluminant2;
+    double ColorMatrix1[3][3];
+    double ColorMatrix2[3][3];
+    double CameraCalibration1[3][3];
+    double CameraCalibration2[3][3];
+    double ForwardMatrix1[3][3];
+    double ForwardMatrix2[3][3];
+}cc_dng_md_t;
+
+typedef struct ae_comp_md_s
+{
+    double BaselineExposure;
+}ae_comp_md_t;
+
 typedef struct dng_md_s
 {
     ae_dng_md_t ae_md;
     blc_dng_md_t blc_md;
     lsc_dng_md_t lsc_md;
+    awb_dng_md_t awb_md;
+    cc_dng_md_t cc_md;
+    ae_comp_md_t ae_comp_md;
 }dng_md_t;
