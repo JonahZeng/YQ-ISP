@@ -50,10 +50,6 @@ static void lsc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uin
             int64_t gain1 = gain_lb + (((int64_t)(gain_rb - gain_lb) * x_offset * x_grad + 16383) >> 15);
             int64_t gain = gain0 + (((int64_t)(gain1 - gain0) * y_offset * y_grad + 16383) >> 15);
 
-            if (y == 0 && x == xsize - 1)
-            {
-                printf("%d, %d, %d, %d, %lld, %lld, %lld\n", gain_lt, gain_rt, gain_lb, gain_rb, gain0, gain1, gain);
-            }
 
             uint32_t tmp = (indata[y*xsize + x] * (uint32_t)gain + 512) >> 10;
             tmp = (tmp > 16383) ? 16383 : tmp;
