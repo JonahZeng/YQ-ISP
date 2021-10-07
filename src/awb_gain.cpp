@@ -41,21 +41,24 @@ static void awbgain_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize,
         gain_val[3] = awbgain_reg->r_gain;
     }
 
-    for (uint32_t sz = 0; sz < xsize*ysize; sz++)
+    for (uint32_t y = 0; y < ysize; y++)
     {
-        uint32_t pix = indata[sz];
-        uint32_t channel = ((ysize % 2) << 1) | (xsize % 2);
-        if (channel > 3)
+        for (uint32_t x = 0; x < xsize; x++)
         {
-            spdlog::error("error for blc pix bayer select");
-            channel = 3;
+            uint32_t pix = indata[y*xsize + x];
+            uint32_t channel = ((y % 2) << 1) | (x % 2);
+            if (channel > 3)
+            {
+                spdlog::error("error for blc pix bayer select");
+                channel = 3;
+            }
+            uint32_t gain = gain_val[channel];
+
+            pix = (pix * gain + 512) >> 10;
+            pix = (pix < 0) ? 0 : ((pix > 16383) ? 16383 : pix);
+
+            outdata[y*xsize + x] = (uint16_t)pix;
         }
-        int32_t gain = gain_val[channel];
-
-        pix = (pix * gain + 512)>>10;
-        pix = (pix < 0) ? 0 : ((pix > 16383) ? 16383 : pix);
-
-        outdata[sz] = (uint16_t)pix;
     }
 }
 

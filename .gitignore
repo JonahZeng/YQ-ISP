@@ -3,6 +3,7 @@
 *.pdb
 *.exe
 *.ilk
+*.pnm
 bin/Debug/*.dll
 bin/Release/*.dll
 build/.vs

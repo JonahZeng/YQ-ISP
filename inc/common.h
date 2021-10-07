@@ -14,6 +14,13 @@ enum bayer_type_t {
     BGGR = 3
 };
 
+enum pixel_bayer_type{
+    PIX_R = 0,
+    PIX_GR = 1,
+    PIX_GB = 2,
+    PIX_B = 3
+};
+
 enum data_type_t {
     R = 0,
     G = 1,

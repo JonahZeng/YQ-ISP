@@ -78,9 +78,9 @@ void blc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) //input 2pins, 
     fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
     blc_reg_t* blc_reg = &fe_reg->blc_reg;
 
+    blc_reg->bypass = bypass;
     if (xmlConfigValid)
     {
-        blc_reg->bypass = bypass;
         blc_reg->blc_r = blc_r;
         blc_reg->blc_gr = blc_gr;
         blc_reg->blc_gb = blc_gb;

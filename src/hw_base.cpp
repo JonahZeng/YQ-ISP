@@ -220,34 +220,35 @@ void hw_base::write_pnm_for_output(FILE* fp)
     {
         char header0[64] = { 0 };
 #ifdef _MSC_VER
-        scanf_s(header0, "P6\n%d %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
+        sprintf_s(header0, "P6\n%d %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
 #else
-        int len = scanf(header0, "P6\n%d %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
+        int len = sprintf(header0, "P6\n%d %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
 #endif
         if (strlen(header0) % 2 == 1)
         {
 #ifdef _MSC_VER
-            scanf_s(header0, "P6\n%d  %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
+            sprintf_s(header0, "P6\n%d  %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
 #else
-            len = scanf(header0, "P6\n%d  %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
+            len = sprintf(header0, "P6\n%d  %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
 #endif
         }
         fwrite(header0, sizeof(char), strlen(header0), fp);
+
         if (write_pic_bits > 8 && write_pic_bits <= 16)
         {
             uint16_t* buffer = new uint16_t[src_data0->width * src_data0->height * 3];
             uint16_t tmp;
             for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
             {
-                tmp = (src_data0->data_ptr)[sz] >> (16 - write_pic_bits);
+                tmp = ((src_data0->data_ptr)[sz]) >> (16 - write_pic_bits);
                 tmp = ((tmp & 0x00ff) << 8) | ((tmp & 0xff00) >> 8);
                 buffer[sz * 3 + 0] = tmp;
 
-                tmp = (src_data1->data_ptr)[sz] >> (16 - write_pic_bits);
+                tmp = ((src_data1->data_ptr)[sz]) >> (16 - write_pic_bits);
                 tmp = ((tmp & 0x00ff) << 8) | ((tmp & 0xff00) >> 8);
                 buffer[sz * 3 + 1] = tmp;
 
-                tmp = (src_data2->data_ptr)[sz] >> (16 - write_pic_bits);
+                tmp = ((src_data2->data_ptr)[sz]) >> (16 - write_pic_bits);
                 tmp = ((tmp & 0x00ff) << 8) | ((tmp & 0xff00) >> 8);
                 buffer[sz * 3 + 2] = tmp;
             }
@@ -259,11 +260,12 @@ void hw_base::write_pnm_for_output(FILE* fp)
             uint8_t* buffer = new uint8_t[src_data0->width * src_data0->height * 3];
             for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
             {
-                buffer[sz * 3 + 0] = (src_data0->data_ptr)[sz] >> (16 - write_pic_bits);
-                buffer[sz * 3 + 1] = (src_data1->data_ptr)[sz] >> (16 - write_pic_bits);
-                buffer[sz * 3 + 2] = (src_data2->data_ptr)[sz] >> (16 - write_pic_bits);
+                buffer[sz * 3 + 0] = ((src_data0->data_ptr)[sz]) >> (16 - write_pic_bits);
+                buffer[sz * 3 + 1] = ((src_data1->data_ptr)[sz]) >> (16 - write_pic_bits);
+                buffer[sz * 3 + 2] = ((src_data2->data_ptr)[sz]) >> (16 - write_pic_bits);
             }
             fwrite(buffer, sizeof(uint8_t), src_data0->width * src_data0->height * 3, fp);
+
             delete[] buffer;
         }
     }
