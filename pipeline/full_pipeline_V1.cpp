@@ -13,6 +13,7 @@ void test_V1_pipeline(pipeline_manager* manager)
     lsc* lsc_hw = new lsc(2, 1, "lsc_hw");
     awbgain* awbgain_hw = new awbgain(2, 1, "awbgain_hw");
     demosaic* demosaic_hw = new demosaic(2, 3, "demosaic_hw");
+    cc* cc_hw = new cc(4, 3, "cc_hw");
 
     manager->register_module(raw_in);
     manager->register_module(fe_fw);
@@ -20,6 +21,7 @@ void test_V1_pipeline(pipeline_manager* manager)
     manager->register_module(lsc_hw);
     manager->register_module(awbgain_hw);
     manager->register_module(demosaic_hw);
+    manager->register_module(cc_hw);
 
     raw_in->connect_port(0, fe_fw, 0); //raw data
     fe_fw->connect_port(0, blc_hw, 0); //raw data
@@ -28,9 +30,14 @@ void test_V1_pipeline(pipeline_manager* manager)
     blc_hw->connect_port(0, lsc_hw, 0); //raw data
     fe_fw->connect_port(1, lsc_hw, 1);  //regs
 
-    lsc_hw->connect_port(0, awbgain_hw, 0);//raw data
-    fe_fw->connect_port(1, awbgain_hw, 1);//regs
+    lsc_hw->connect_port(0, awbgain_hw, 0); //raw data
+    fe_fw->connect_port(1, awbgain_hw, 1); //regs
 
-    awbgain_hw->connect_port(0, demosaic_hw, 0);//raw data
-    fe_fw->connect_port(1, demosaic_hw, 1);//regs
+    awbgain_hw->connect_port(0, demosaic_hw, 0); //raw data
+    fe_fw->connect_port(1, demosaic_hw, 1); //regs
+
+    demosaic_hw->connect_port(0, cc_hw, 0); //r
+    demosaic_hw->connect_port(1, cc_hw, 1); //g
+    demosaic_hw->connect_port(2, cc_hw, 2); //b
+    fe_fw->connect_port(1, cc_hw, 3); //regs
 }

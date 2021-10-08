@@ -1,7 +1,10 @@
 #include "fe_firmware.h"
 #include "meta_data.h"
 #include "chromatix_lsc.h"
-#include <sstream>
+#include "dng_tag_values.h"
+#include "dng_xy_coord.h"
+//#include <sstream>
+#include "opencv2/opencv.hpp"
 
 extern dng_md_t dng_all_md;
 
@@ -272,6 +275,98 @@ static void awbgain_reg_calc(dng_md_t& all_dng_md, awbgain_reg_t& awbgain_reg)
     awbgain_reg.b_gain = uint32_t(b_gain * 1024);
 }
 
+
+static void get_xy_wp(uint32_t CalibrationIlluminant1, uint32_t CalibrationIlluminant2, dng_xy_coord& xy1, dng_xy_coord& xy2)
+{
+    switch (CalibrationIlluminant1)
+    {
+    case lsStandardLightA:
+        xy1 = StdA_xy_coord();
+        break;
+    case lsD55:
+        xy1 = D55_xy_coord();
+        break;
+    case lsD65:
+        xy1 = D65_xy_coord();
+        break;
+    case lsD50:
+        xy1 = D50_xy_coord();
+        break;
+    case lsD75:
+        xy1 = D75_xy_coord();
+        break;
+    default:
+        xy1 = StdA_xy_coord();
+        break;
+    }
+
+    switch (CalibrationIlluminant2)
+    {
+    case lsStandardLightA:
+        xy2 = StdA_xy_coord();
+        break;
+    case lsD55:
+        xy2 = D55_xy_coord();
+        break;
+    case lsD65:
+        xy2 = D65_xy_coord();
+        break;
+    case lsD50:
+        xy2 = D50_xy_coord();
+        break;
+    case lsD75:
+        xy2 = D75_xy_coord();
+        break;
+    default:
+        xy2 = StdA_xy_coord();
+        break;
+    }
+}
+static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
+{
+    cv::Mat cameraNeutral = (cv::Mat_<float>(3, 1) << all_dng_md.awb_md.r_Neutral, all_dng_md.awb_md.g_Neutral, all_dng_md.awb_md.b_Neutral);
+
+    if (all_dng_md.cc_md.Analogbalance[0] != 1.0 || all_dng_md.cc_md.Analogbalance[1] != 1.0 || all_dng_md.cc_md.Analogbalance[2] != 1.0)
+    {
+        spdlog::error("AB is not all == 1.0");
+    }
+    if (all_dng_md.cc_md.CameraCalibration1[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration1[1][1] != 1.0 
+        || all_dng_md.cc_md.CameraCalibration1[2][2] != 1.0)
+    {
+        spdlog::error("CC1 is not I matrix");
+    }
+    if (all_dng_md.cc_md.CameraCalibration2[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration2[1][1] != 1.0
+        || all_dng_md.cc_md.CameraCalibration2[2][2] != 1.0)
+    {
+        spdlog::error("CC2 is not I matrix");
+    }
+
+    cv::Mat CM_1(3, 3, CV_64FC1);
+    cv::Mat CM_2(3, 3, CV_64FC1);
+    cv::Mat FM_1(3, 3, CV_64FC1);
+    cv::Mat FM_2(3, 3, CV_64FC1);
+
+    for (int32_t row = 0; row < 3; row++)
+    {
+        for (int32_t col = 0; col < 3; col++)
+        {
+            CM_1.at<double>(row, col) = all_dng_md.cc_md.ColorMatrix1[row][col];
+            CM_2.at<double>(row, col) = all_dng_md.cc_md.ColorMatrix2[row][col];
+
+            FM_1.at<double>(row, col) = all_dng_md.cc_md.ForwardMatrix1[row][col];
+            FM_2.at<double>(row, col) = all_dng_md.cc_md.ForwardMatrix1[row][col];
+        }
+    }
+
+    uint32_t CalibrationIlluminant1 = all_dng_md.cc_md.CalibrationIlluminant1;
+    uint32_t CalibrationIlluminant2 = all_dng_md.cc_md.CalibrationIlluminant2;
+    assert((CalibrationIlluminant1 >= lsD55 && CalibrationIlluminant1 <= lsD50) || CalibrationIlluminant1 == lsStandardLightA);
+    assert((CalibrationIlluminant2 >= lsD55 && CalibrationIlluminant2 <= lsD50) || CalibrationIlluminant2 == lsStandardLightA);
+    dng_xy_coord xy1, xy2;
+    get_xy_wp(CalibrationIlluminant1, CalibrationIlluminant2, xy1, xy2);
+
+}
+
 void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
     spdlog::info("{0} run start", __FUNCTION__);
@@ -295,6 +390,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     blc_reg_calc(dng_all_md, reg_ptr->blc_reg);
     lsc_reg_calc(dng_all_md, reg_ptr->lsc_reg);
     awbgain_reg_calc(dng_all_md, reg_ptr->awbgain_reg);
+    cc_reg_calc(dng_all_md, reg_ptr->cc_reg);
 
     hw_base::hw_run(stat_out, frame_cnt);
 

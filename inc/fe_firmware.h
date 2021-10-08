@@ -4,12 +4,14 @@
 #include "lsc.h"
 #include "awb_gain.h"
 #include "demosaic.h"
+#include "cc.h"
 
 typedef struct fe_module_reg_s {
     blc_reg_t blc_reg;
     lsc_reg_t lsc_reg;
     awbgain_reg_t awbgain_reg;
     demosaic_reg_t demosaic_reg;
+    cc_reg_t cc_reg;
 }fe_module_reg_t;
 
 class fe_firmware :public hw_base {
