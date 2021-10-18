@@ -13,7 +13,7 @@ static void gamma_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r
 
     uint16_t max_value = (1U << 14) - 1;
     uint16_t* lut = new uint16_t[max_value + 1];
-    for (UINT16 i = 0; i < max_value + 1; i++)
+    for (uint16_t i = 0; i < max_value + 1; i++)
     {
         double tmp = double(i) / max_value;
         tmp = pow(tmp, inv_gamma_val);
