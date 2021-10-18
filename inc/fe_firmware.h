@@ -5,6 +5,9 @@
 #include "awb_gain.h"
 #include "demosaic.h"
 #include "cc.h"
+#include "gtm.h"
+#include "gamma.h"
+#include "gtm_stat.h"
 
 typedef struct fe_module_reg_s {
     blc_reg_t blc_reg;
@@ -12,6 +15,9 @@ typedef struct fe_module_reg_s {
     awbgain_reg_t awbgain_reg;
     demosaic_reg_t demosaic_reg;
     cc_reg_t cc_reg;
+    gtm_reg_t gtm_reg;
+    gamma_reg_t gamma_reg;
+    gtm_stat_reg_t gtm_stat_reg;
 }fe_module_reg_t;
 
 class fe_firmware :public hw_base {

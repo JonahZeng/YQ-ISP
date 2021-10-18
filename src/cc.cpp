@@ -1,4 +1,5 @@
 #include "fe_firmware.h"
+#include <sstream>
 
 cc::cc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
 {
@@ -9,7 +10,8 @@ cc::cc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins,
     ccm[6] = 0; ccm[7] = 0; ccm[8] = 1024;
 }
 
-static void cc_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, uint16_t* out_g, uint16_t* out_b, 
+
+static void cc_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, uint16_t* out_g, uint16_t* out_b,
     uint32_t xsize, uint32_t ysize, const cc_reg_t* cc_reg)
 {
     int32_t r_in, g_in, b_in;
@@ -18,7 +20,7 @@ static void cc_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, u
     {
         for (uint32_t col = 0; col < xsize; col++)
         {
-            
+
             r_in = r[row*xsize + col];
             g_in = g[row*xsize + col];
             b_in = b[row*xsize + col];
@@ -36,6 +38,8 @@ static void cc_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, u
         }
     }
 }
+
+
 
 void cc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) 
 {
@@ -140,4 +144,19 @@ void cc::checkparameters(cc_reg_t* reg)
     {
         reg->ccm[i] = common_check_bits_ex(reg->ccm[i], 14, "ccm");
     }
+
+    spdlog::info("================= cc reg=================");
+    spdlog::info("bypass {}", reg->bypass);
+    std::stringstream ostr;
+
+    for (int32_t i = 0; i < 9; i++)
+    {
+        ostr << reg->ccm[i] << ", ";
+        if (i % 3 == 2)
+        {
+            ostr << std::endl;
+        }
+    }
+    spdlog::info("ccm \n{}", ostr.str());
+    spdlog::info("================= cc reg=================");
 }

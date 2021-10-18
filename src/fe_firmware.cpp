@@ -6,7 +6,7 @@
 //#include <sstream>
 #include "opencv2/opencv.hpp"
 
-extern dng_md_t dng_all_md;
+extern dng_md_t g_dng_all_md;
 
 fe_firmware::fe_firmware(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
 {
@@ -273,6 +273,12 @@ static void awbgain_reg_calc(dng_md_t& all_dng_md, awbgain_reg_t& awbgain_reg)
     awbgain_reg.gr_gain = uint32_t(g_gain * 1024);
     awbgain_reg.gb_gain = awbgain_reg.gr_gain;
     awbgain_reg.b_gain = uint32_t(b_gain * 1024);
+
+    double BaselineExposure = all_dng_md.ae_comp_md.BaselineExposure;
+    double compensat_gain = pow(2, BaselineExposure);
+    spdlog::info("compensat_gain {:.4f}", compensat_gain);
+
+    awbgain_reg.ae_compensat_gain = (uint32_t)(compensat_gain * 1024);
 }
 
 
@@ -322,9 +328,83 @@ static void get_xy_wp(uint32_t CalibrationIlluminant1, uint32_t CalibrationIllum
         break;
     }
 }
+
+static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat cameraNeutral,
+    dng_xy_coord& wp1, dng_xy_coord& wp2,
+    cv::Mat CM_1, cv::Mat CM_2, double* weight1, double* weight2)
+{
+    
+    double white_point1_xy[2] = { wp1.x, wp1.y };
+    double white_point2_xy[2] = { wp2.x, wp2.y };
+
+    double dist_1_x, dist_1_y, dist_1;
+    double dist_2_x, dist_2_y, dist_2;
+    double weight_1, weight_2;
+
+    double input_x = *x;
+    double input_y = *y;
+
+    double out_x = 0.0;
+    double out_y = 0.0;
+
+    for (int32_t i = 0; i < 25; i++)
+    {
+        spdlog::info("========input xy = {:.4f} {:.4f}========", input_x, input_y);
+        std::cout << "cameraNeutral:" << cameraNeutral << std::endl;
+
+        dist_1_x = abs(input_x - white_point1_xy[0]);
+        dist_1_y = abs(input_y - white_point1_xy[1]);
+
+        dist_1 = sqrt(dist_1_x * dist_1_x + dist_1_y * dist_1_y);
+
+        dist_2_x = abs(input_x - white_point2_xy[0]);
+        dist_2_y = abs(input_y - white_point2_xy[1]);
+
+        dist_2 = sqrt(dist_2_x * dist_2_x + dist_2_y * dist_2_y);
+        spdlog::info("dist to 1 = {:.4f}, to 2 = {:.4f}", dist_1, dist_2);
+
+        weight_1 = dist_1_x / (dist_1_x + dist_2_x);
+        weight_2 = dist_2_x / (dist_1_x + dist_2_x);
+        
+
+        spdlog::info("weight1 = {:.4f}, weight2 = {:.4f}", weight_1, weight_2);
+
+        cv::Mat tmp_CM = CM_2 * weight_2 + CM_1 * weight_1;
+        tmp_CM = tmp_CM.inv();
+
+        std::cout << "tmp_CM:" << tmp_CM << std::endl;
+
+        cv::Mat tmp_XYZ = tmp_CM * cameraNeutral;
+        std::cout << "tmp_XYZ:" << tmp_XYZ << std::endl;
+
+        double X = tmp_XYZ.at<double>(0);
+        double Y = tmp_XYZ.at<double>(1);
+        double Z = tmp_XYZ.at<double>(2);
+
+        out_x = X / (X + Y + Z);
+        out_y = Y / (X + Y + Z);
+
+        spdlog::info("========out xy = {:.4f} {:.4f}========", out_x, out_y);
+
+        if (abs(out_x - input_x) < 0.01 &&  abs(out_y - input_y) < 0.01)
+        {
+            break;
+        }
+        else
+        {
+            input_x += (out_x - input_x) / 4;
+            input_y += (out_y - input_y) / 4;
+        }
+    }
+    *x = out_x;
+    *y = out_y;
+    *weight1 = weight_1;
+    *weight1 = weight_2;
+}
+
 static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
 {
-    cv::Mat cameraNeutral = (cv::Mat_<float>(3, 1) << all_dng_md.awb_md.r_Neutral, all_dng_md.awb_md.g_Neutral, all_dng_md.awb_md.b_Neutral);
+    cv::Mat cameraNeutral = (cv::Mat_<double>(3, 1) << all_dng_md.awb_md.r_Neutral, all_dng_md.awb_md.g_Neutral, all_dng_md.awb_md.b_Neutral);
 
     if (all_dng_md.cc_md.Analogbalance[0] != 1.0 || all_dng_md.cc_md.Analogbalance[1] != 1.0 || all_dng_md.cc_md.Analogbalance[2] != 1.0)
     {
@@ -362,9 +442,99 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
     uint32_t CalibrationIlluminant2 = all_dng_md.cc_md.CalibrationIlluminant2;
     assert((CalibrationIlluminant1 >= lsD55 && CalibrationIlluminant1 <= lsD50) || CalibrationIlluminant1 == lsStandardLightA);
     assert((CalibrationIlluminant2 >= lsD55 && CalibrationIlluminant2 <= lsD50) || CalibrationIlluminant2 == lsStandardLightA);
-    dng_xy_coord xy1, xy2;
-    get_xy_wp(CalibrationIlluminant1, CalibrationIlluminant2, xy1, xy2);
+    dng_xy_coord wp1, wp2;
+    get_xy_wp(CalibrationIlluminant1, CalibrationIlluminant2, wp1, wp2);
 
+    double x = 0.390669;
+    double y = 0.584906;
+    double weight1 = 0.5;
+    double weight2 = 0.5;
+    calc_xy_coordinate_by_cameraNeutral(&x, &y, cameraNeutral, wp1, wp2,
+        CM_1, CM_2, &weight1, &weight2);
+
+    cv::Mat FM = FM_1 * weight1 + FM_2 * weight2;
+    std::cout << "camera2XYZ_mat" << FM << std::endl;
+    
+    //cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
+    //    3.2404542, -1.5371385, -0.4985314,
+    //    -0.9692660, 1.8760108, 0.0415560,
+    //    0.0556434, -0.2040259, 1.0572252);
+    cv::Mat XYZ2photoRGB = (cv::Mat_<double>(3, 3) <<
+        1.3459433, -0.2556075, -0.0511118,
+        -0.5445989,  1.5081673,  0.0205351,
+        0.0000000,  0.0000000,  1.2118128);
+    //std::cout << "XYZ2sRGB:" << XYZ2sRGB << std::endl;
+    std::cout << "ccm:" << std::endl;
+    cv::Mat ccm = XYZ2photoRGB * FM;
+    std::cout << ccm << std::endl;
+
+    cc_reg.bypass = 0;
+    for (int32_t i=0; i<9; i++)
+    {
+        cc_reg.ccm[i] = (int32_t)(ccm.at<double>(i / 3, i % 3) * 1024);
+    }
+}
+
+static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg)
+{
+    //uint32_t rgb2y[3] = { 306, 601, 117 };
+    //uint32_t rgb2y[3] = { 217,  732,  75 };
+    gtm_reg.bypass = 0;
+    gtm_reg.rgb2y[0] = 217;
+    gtm_reg.rgb2y[1] = 732;
+    gtm_reg.rgb2y[2] = 75;
+
+    uint32_t tone_curve_y[257] = {
+ 0,     9,    18,    28,    39,    50,    61,    74,    87,   100,
+115,   130,   145,   162,   179,   196,   215,   234,   254,   274,
+296,   318,   341,   365,   389,   415,   441,   468,   496,   525,
+554,   585,   616,   649,   682,   716,   751,   787,   824,   862,
+901,   941,   982,  1024,  1067,  1111,  1156,  1202,  1249,  1298,
+1347,  1398,  1449,  1502,  1556,  1611,  1667,  1724,  1783,  1842,
+1903,  1965,  2028,  2093,  2159,  2226,  2294,  2363,  2434,  2506,
+2580,  2655,  2731,  2808,  2887,  2967,  3048,  3130,  3214,  3298,
+3384,  3471,  3559,  3648,  3738,  3829,  3920,  4013,  4106,  4201,
+4296,  4392,  4488,  4586,  4683,  4782,  4881,  4981,  5081,  5182,
+5284,  5385,  5488,  5590,  5693,  5796,  5900,  6004,  6108,  6212,
+6317,  6421,  6526,  6631,  6736,  6841,  6946,  7050,  7155,  7260,
+7364,  7469,  7573,  7677,  7780,  7884,  7987,  8090,  8192,  8294,
+8395,  8497,  8597,  8697,  8797,  8896,  8995,  9094,  9192,  9289,
+9386,  9482,  9578,  9674,  9769,  9863,  9957, 10050, 10143, 10235,
+10327, 10418, 10508, 10598, 10688, 10776, 10864, 10952, 11039, 11125,
+11211, 11296, 11380, 11464, 11547, 11629, 11711, 11792, 11872, 11952,
+12031, 12109, 12186, 12263, 12339, 12414, 12489, 12563, 12636, 12708,
+12779, 12850, 12920, 12989, 13057, 13125, 13192, 13257, 13323, 13387,
+13451, 13514, 13576, 13637, 13698, 13758, 13817, 13876, 13934, 13991,
+14047, 14103, 14158, 14213, 14267, 14320, 14373, 14425, 14476, 14527,
+14577, 14627, 14676, 14725, 14772, 14820, 14867, 14913, 14959, 15004,
+15049, 15093, 15137, 15180, 15223, 15265, 15307, 15348, 15389, 15429,
+15469, 15509, 15548, 15587, 15625, 15663, 15701, 15738, 15775, 15811,
+15847, 15883, 15919, 15954, 15988, 16023, 16057, 16091, 16124, 16158,
+16191, 16223, 16256, 16288, 16320, 16352, 16383
+    };
+#ifdef _MSC_VER
+    memcpy_s(gtm_reg.tone_curve, sizeof(uint32_t)*257, tone_curve_y, sizeof(uint32_t)*257);
+#else
+    memcpy(gtm_reg.tone_curve, tone_curve_y, sizeof(uint32_t) * 257);
+#endif
+
+    //TODO: GTM stat calc gtm curve
+}
+
+static void gtm_stat_reg_calc(gtm_stat_reg_t& gtm_stat_reg)
+{
+    gtm_stat_reg.bypass = 0;
+    gtm_stat_reg.rgb2y[0] = 217;
+    gtm_stat_reg.rgb2y[1] = 732;
+    gtm_stat_reg.rgb2y[2] = 75;
+    gtm_stat_reg.w_ratio = 4;
+    gtm_stat_reg.h_ratio = 4;
+}
+
+static void gamma_reg_calc(gamma_reg_t& gamma_reg)
+{
+    gamma_reg.bypass = 0;
+    gamma_reg.gamma_x1024 = 2253;
 }
 
 void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -387,10 +557,13 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     out[0] = output0;
     out[1] = output1;
 
-    blc_reg_calc(dng_all_md, reg_ptr->blc_reg);
-    lsc_reg_calc(dng_all_md, reg_ptr->lsc_reg);
-    awbgain_reg_calc(dng_all_md, reg_ptr->awbgain_reg);
-    cc_reg_calc(dng_all_md, reg_ptr->cc_reg);
+    blc_reg_calc(g_dng_all_md, reg_ptr->blc_reg);
+    lsc_reg_calc(g_dng_all_md, reg_ptr->lsc_reg);
+    awbgain_reg_calc(g_dng_all_md, reg_ptr->awbgain_reg);
+    cc_reg_calc(g_dng_all_md, reg_ptr->cc_reg);
+    gtm_stat_reg_calc(reg_ptr->gtm_stat_reg);
+    gtm_reg_calc(stat_out, reg_ptr->gtm_reg);
+    gamma_reg_calc(reg_ptr->gamma_reg);
 
     hw_base::hw_run(stat_out, frame_cnt);
 

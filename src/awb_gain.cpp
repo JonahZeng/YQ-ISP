@@ -55,6 +55,9 @@ static void awbgain_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize,
             uint32_t gain = gain_val[channel];
 
             pix = (pix * gain + 512) >> 10;
+            //pix = (pix < 0) ? 0 : ((pix > 16383) ? 16383 : pix);
+
+            pix = (pix * awbgain_reg->ae_compensat_gain + 512) >> 10;
             pix = (pix < 0) ? 0 : ((pix > 16383) ? 16383 : pix);
 
             outdata[y*xsize + x] = (uint16_t)pix;
@@ -121,6 +124,7 @@ void awbgain::init()
         {"gr_gain",                UINT_32,     &this->gr_gain         },
         {"gb_gain",                UINT_32,     &this->gb_gain         },
         {"b_gain",                 UINT_32,     &this->b_gain          },
+        {"ae_compensat_gain",      UINT_32,     &this->ae_compensat_gain}
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
@@ -144,7 +148,7 @@ void awbgain::checkparameters(awbgain_reg_t* reg)
     reg->gr_gain = common_check_bits(reg->gr_gain, 13, "gr_gain");
     reg->gb_gain = common_check_bits(reg->gb_gain, 13, "gb_gain");
     reg->b_gain = common_check_bits(reg->b_gain, 13, "b_gain");
-
+    reg->ae_compensat_gain = common_check_bits(reg->ae_compensat_gain, 13, "ae_compensat_gain");
 
     spdlog::info("================= awb gain reg=================");
     spdlog::info("bypass {}", reg->bypass);
@@ -152,5 +156,6 @@ void awbgain::checkparameters(awbgain_reg_t* reg)
     spdlog::info("gr_gain {}", reg->gr_gain);
     spdlog::info("gb_gain {}", reg->gb_gain);
     spdlog::info("b_gain {}", reg->b_gain);
+    spdlog::info("ae_compensat_gain {}", reg->ae_compensat_gain);
     spdlog::info("================= awb gain reg=================");
 }

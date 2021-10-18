@@ -4,10 +4,11 @@
 #include <libxml/tree.h>
 #include <string>
 #include <list>
+#include "fileRead.h"
 
 using std::list;
 
-dng_md_t dng_all_md;
+dng_md_t g_dng_all_md;
 
 pipeline_manager::pipeline_manager()
 {
@@ -334,6 +335,17 @@ void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     for (size_t i = 0; i < md_size; i++)
     {
-        modules_list.at(i)->release_output_memory();
+        hw_base* m = modules_list.at(i);
+        if (typeid(*m) == typeid(fileRead))
+        {
+            if (frame_cnt == frames - 1)
+            {
+                m->release_output_memory();
+            }
+        }
+        else 
+        {
+            m->release_output_memory();
+        }
     }
 }

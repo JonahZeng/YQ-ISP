@@ -10,6 +10,8 @@ typedef struct awbgain_reg_s
     uint32_t gr_gain;
     uint32_t gb_gain;
     uint32_t b_gain;
+
+    uint32_t ae_compensat_gain;
 }awbgain_reg_t;
 
 class awbgain :public hw_base {
@@ -28,5 +30,7 @@ private:
     uint32_t gr_gain;
     uint32_t gb_gain;
     uint32_t b_gain;
+
+    uint32_t ae_compensat_gain;
 };
 

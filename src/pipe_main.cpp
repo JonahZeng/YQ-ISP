@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
     }
 
     pipeline_manager isp_pipe_manager;
+    isp_pipe_manager.frames = frame_end;
     pipelines[pipe_id].f(&isp_pipe_manager);
 
     isp_pipe_manager.init();

@@ -1,29 +1,30 @@
 #include "fileRead.h"
 
-#include "dng_color_space.h"
-#include "dng_date_time.h"
-#include "dng_exceptions.h"
+//#include "dng_color_space.h"
+#include "dng_camera_profile.h"
+//#include "dng_date_time.h"
+//#include "dng_exceptions.h"
 #include "dng_file_stream.h"
-#include "dng_globals.h"
+//#include "dng_globals.h"
 #include "dng_host.h"
 #include "dng_ifd.h"
-#include "dng_image_writer.h"
+//#include "dng_image_writer.h"
 #include "dng_info.h"
-#include "dng_linearization_info.h"
+//#include "dng_linearization_info.h"
 #include "dng_mosaic_info.h"
 #include "dng_negative.h"
-#include "dng_preview.h"
-#include "dng_render.h"
-#include "dng_simple_image.h"
-#include "dng_tag_codes.h"
-#include "dng_tag_types.h"
-#include "dng_tag_values.h"
-#include "dng_xmp.h"
-#include "dng_xmp_sdk.h"
+//#include "dng_preview.h"
+//#include "dng_render.h"
+//#include "dng_simple_image.h"
+//#include "dng_tag_codes.h"
+//#include "dng_tag_types.h"
+//#include "dng_tag_values.h"
+//#include "dng_xmp.h"
+//#include "dng_xmp_sdk.h"
 
 #include "meta_data.h"
 
-extern dng_md_t dng_all_md;
+extern dng_md_t g_dng_all_md;
 
 fileRead::fileRead(uint32_t outpins, const char* inst_name):hw_base(0, outpins, inst_name), file_name()
 {
@@ -380,87 +381,105 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         negative->GetLinearizationInfo()->fWhiteLevel[2],
         negative->GetLinearizationInfo()->fWhiteLevel[3]);
 
-    get_blc_md_from_dng(blc_dim_x, blc_dim_y, negative, bayer_tp, dng_all_md);
-    get_ae_md_from_dng(exif, dng_all_md);
-    get_lsc_md_from_dng(exif, info.fIFD[info.fMainIndex], dng_all_md);
+    get_blc_md_from_dng(blc_dim_x, blc_dim_y, negative, bayer_tp, g_dng_all_md);
+    get_ae_md_from_dng(exif, g_dng_all_md);
+    get_lsc_md_from_dng(exif, info.fIFD[info.fMainIndex], g_dng_all_md);
 
-    dng_all_md.ae_comp_md.BaselineExposure = info.fShared->fBaselineExposure.As_real64();
+    g_dng_all_md.ae_comp_md.BaselineExposure = info.fShared->fBaselineExposure.As_real64();
     
-    get_awb_md_from_dng(&info, dng_all_md);
+    get_awb_md_from_dng(&info, g_dng_all_md);
 
-    get_cc_md_from_dng(&info, dng_all_md);
+    get_cc_md_from_dng(&info, g_dng_all_md);
+
+    fprintf(stdout, "tone curve:\n");
+    uint32_t profile_cnt = negative->ProfileCount();
+    for (uint32_t i = 0; i < profile_cnt; i++)
+    {
+        const dng_camera_profile& pf= negative->ProfileByIndex(i);
+        const dng_tone_curve& curve = pf.ToneCurve();
+        size_t sz = curve.fCoord.size();
+        for (size_t j = 0; j < sz; j++)
+        {
+            fprintf(stdout, "%lf, %lf\n", curve.fCoord[j].h, curve.fCoord[j].v);
+        }
+    }
 
 }
 
 void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    spdlog::info("{0} run start", __FUNCTION__);
-    if (strcmp(file_type_string, "RAW") == 0)
+    spdlog::info("{0} run start frame {1}", __FUNCTION__, frame_cnt);
+    if (frame_cnt == 0)
     {
-        bayer_type_t raw_bayer;
-        if (strcmp(this->bayer_string, "RGGB") == 0)
+        if (strcmp(file_type_string, "RAW") == 0)
         {
-            raw_bayer = RGGB;
-        }
-        else if (strcmp(this->bayer_string, "GRBG") == 0)
-        {
-            raw_bayer = GRBG;
-        }
-        else if (strcmp(this->bayer_string, "GBRG") == 0)
-        {
-            raw_bayer = GBRG;
-        }
-        else if (strcmp(this->bayer_string, "BGGR") == 0)
-        {
-            raw_bayer = BGGR;
-        }
-        data_buffer* out0 = new data_buffer(img_width, img_height, RAW, raw_bayer, "raw_in out0");
-        out[0] = out0;
+            bayer_type_t raw_bayer;
+            if (strcmp(this->bayer_string, "RGGB") == 0)
+            {
+                raw_bayer = RGGB;
+            }
+            else if (strcmp(this->bayer_string, "GRBG") == 0)
+            {
+                raw_bayer = GRBG;
+            }
+            else if (strcmp(this->bayer_string, "GBRG") == 0)
+            {
+                raw_bayer = GBRG;
+            }
+            else if (strcmp(this->bayer_string, "BGGR") == 0)
+            {
+                raw_bayer = BGGR;
+            }
+            data_buffer* out0 = new data_buffer(img_width, img_height, RAW, raw_bayer, "raw_in out0");
+            out[0] = out0;
 
-        FILE* input_f;
+            FILE* input_f;
 #ifdef _MSC_VER
-        fopen_s(&input_f, file_name, "rb");
+            fopen_s(&input_f, file_name, "rb");
 #else
-        input_f = fopen(file_name, "rb");
+            input_f = fopen(file_name, "rb");
 #endif
-        if (input_f != nullptr)
+            if (input_f != nullptr)
+            {
+                if (bit_depth > 8 && bit_depth <= 16)
+                {
+                    size_t read_cnt = fread(out0->data_ptr, sizeof(uint16_t), img_width*img_height, input_f);
+                    if (read_cnt != sizeof(uint16_t) * img_width * img_height)
+                    {
+                        spdlog::error("read raw file bytes unexpected");
+                    }
+                    for (uint32_t s = 0; s < img_height*img_width; s++)
+                    {
+                        out0->data_ptr[s] = out0->data_ptr[s] << (16 - bit_depth);
+                    }
+                }
+                fclose(input_f);
+            }
+        }
+        else if (strcmp(file_type_string, "DNG") == 0)
         {
+            data_buffer* out0 = nullptr;
+            uint32_t bit_dep = 0;
+            readDNG_by_adobe_sdk(file_name, &out0, &bit_dep);
+            out[0] = out0;
+            img_width = out0->width;
+            img_height = out0->height;
+            bit_depth = bit_dep;
             if (bit_depth > 8 && bit_depth <= 16)
             {
-                size_t read_cnt = fread(out0->data_ptr, sizeof(uint16_t), img_width*img_height, input_f);
-                if (read_cnt != sizeof(uint16_t) * img_width * img_height)
-                {
-                    spdlog::error("read raw file bytes unexpected");
-                }
                 for (uint32_t s = 0; s < img_height*img_width; s++)
                 {
                     out0->data_ptr[s] = out0->data_ptr[s] << (16 - bit_depth);
                 }
             }
-            fclose(input_f);
+        }
+        else {
+            spdlog::warn("{0} not support yet", file_type_string);
         }
     }
-    else if (strcmp(file_type_string, "DNG") == 0)
-    {
-        data_buffer* out0 = nullptr;
-        uint32_t bit_dep = 0;
-        readDNG_by_adobe_sdk(file_name, &out0, &bit_dep);
-        out[0] = out0;
-        img_width = out0->width;
-        img_height = out0->height;
-        bit_depth = bit_dep;
-        if (bit_depth > 8 && bit_depth <= 16)
-        {
-            for (uint32_t s = 0; s < img_height*img_width; s++)
-            {
-                out0->data_ptr[s] = out0->data_ptr[s] << (16 - bit_depth);
-            }
-        }
-    }
-    else {
-        spdlog::warn("{0} not support yet", file_type_string);
-    }
-    spdlog::info("{0} run end", __FUNCTION__);
+
+    hw_base::hw_run(stat_out, frame_cnt);
+    spdlog::info("{0} run end frame {1}", __FUNCTION__, frame_cnt);
 }
 
 void fileRead::init()

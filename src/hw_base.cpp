@@ -1,5 +1,6 @@
 #include "hw_base.h"
 #include <stdexcept>
+#include "fileRead.h"
 
 hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name) :
     in(inpins), out(outpins), previous_hw(inpins), outport_of_previous_hw(inpins),
@@ -102,8 +103,11 @@ void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         {
             if (pre_hw->out[pre_hw_port] != nullptr)
             {
-                delete pre_hw->out[pre_hw_port];
-                pre_hw->out[pre_hw_port] = nullptr;
+                if (typeid(*pre_hw) != typeid(fileRead))
+                {
+                    delete pre_hw->out[pre_hw_port];
+                    pre_hw->out[pre_hw_port] = nullptr;
+                }
             }
         }
     }
