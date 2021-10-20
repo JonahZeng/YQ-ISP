@@ -513,7 +513,7 @@ static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_
 #ifdef _MSC_VER
         memcpy_s(gtm_reg.gain_lut, sizeof(uint32_t) * 257, gain_map, sizeof(uint32_t) * 257);
 #else
-        memcpy(gtm_reg.tone_curve, tone_curve_y, sizeof(uint32_t) * 257);
+        memcpy(gtm_reg.gain_lut, gain_map, sizeof(uint32_t) * 257);
 #endif
     }
     else 
@@ -595,7 +595,7 @@ static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_
 #ifdef _MSC_VER
         memcpy_s(gtm_reg.gain_lut, sizeof(uint32_t) * 257, gain_map, sizeof(uint32_t) * 257);
 #else
-        memcpy(gtm_reg.tone_curve, tone_curve_y, sizeof(uint32_t) * 257);
+        memcpy(gtm_reg.gain_lut, gain_map, sizeof(uint32_t) * 257);
 #endif
         delete[] hist_equal;
         delete[] hist_equal_db;
