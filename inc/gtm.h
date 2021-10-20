@@ -7,7 +7,7 @@ typedef struct gtm_reg_s
 {
     uint32_t bypass;
     uint32_t rgb2y[3];
-    uint32_t tone_curve[257];
+    uint32_t gain_lut[257];
 }gtm_reg_t;
 
 class gtm :public hw_base {
@@ -23,5 +23,5 @@ private:
     void checkparameters(gtm_reg_t* reg);
     uint32_t bypass;
     vector<uint32_t> rgb2y;
-    vector<uint32_t> tone_curve;
+    vector<uint32_t> gain_lut;
 };

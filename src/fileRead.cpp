@@ -142,11 +142,16 @@ static void get_ae_md_from_dng(dng_exif* exif, dng_md_t& all_md)
     all_md.ae_md.ISOSpeedRatings[0] = exif->fISOSpeedRatings[0];
     all_md.ae_md.ISOSpeedRatings[1] = exif->fISOSpeedRatings[1];
     all_md.ae_md.ISOSpeedRatings[2] = exif->fISOSpeedRatings[2];
-    all_md.ae_md.ShutterSpeedValue = exif->fShutterSpeedValue.As_real64();
+    all_md.ae_md.ExposureTime = exif->fExposureTime.As_real64();
+    double tmp = (1.0 / all_md.ae_md.ApertureValue) * (1.0 / all_md.ae_md.ApertureValue) / all_md.ae_md.ExposureTime;
+    double Ev = log2(tmp);
+    double Sv = log2(0.297*all_md.ae_md.ISOSpeedRatings[0]);
+    all_md.ae_md.BrightnessValue = Ev - Sv;
 
-    spdlog::info("ae info: apertureValue {}, ISO {} {} {}, shutterSpeedValue {}s", 
+    spdlog::info("ae info: apertureValue F 1/{}, ISO {} {} {}, ExposureTime {}s, BV {:.4f}", 
         all_md.ae_md.ApertureValue, all_md.ae_md.ISOSpeedRatings[0], all_md.ae_md.ISOSpeedRatings[1], 
-        all_md.ae_md.ISOSpeedRatings[2], all_md.ae_md.ShutterSpeedValue);
+        all_md.ae_md.ISOSpeedRatings[2], all_md.ae_md.ExposureTime, all_md.ae_md.BrightnessValue);
+    
 }
 
 static void get_awb_md_from_dng(dng_info* info, dng_md_t& all_md)

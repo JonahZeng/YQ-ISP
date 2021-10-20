@@ -8,7 +8,7 @@
 
 extern dng_md_t g_dng_all_md;
 
-fe_firmware::fe_firmware(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
+fe_firmware::fe_firmware(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name)
 {
     bypass = 0;
 }
@@ -52,7 +52,7 @@ static void get_vignette_coeff_inner(double focusDist, lsc_coeff_element_t* elem
         coeff_weight1->a2 = element->focusElement[0].a2;
         coeff_weight1->a3 = element->focusElement[0].a3;
     }
-    else if(focusDist >= element->focusElement[5].focusDist)
+    else if (focusDist >= element->focusElement[5].focusDist)
     {
         coeff_weight0->weight = 0.0;
         coeff_weight0->a1 = element->focusElement[5].a1;
@@ -64,7 +64,7 @@ static void get_vignette_coeff_inner(double focusDist, lsc_coeff_element_t* elem
         coeff_weight1->a2 = element->focusElement[5].a2;
         coeff_weight1->a3 = element->focusElement[5].a3;
     }
-    else 
+    else
     {
         uint32_t i = 0;
         double total;
@@ -110,7 +110,7 @@ static void get_vignette_coeff(dng_md_t& all_dng_md, chromatix_lsc_t& lsc_calib,
     {
         get_vignette_coeff_inner(focusDist, &lsc_calib.element[0], coeff_weight, coeff_weight + 1);
         get_vignette_coeff_inner(focusDist, &lsc_calib.element[1], coeff_weight + 2, coeff_weight + 3);
-        (coeff_weight)->weight = (coeff_weight)->weight * 1.0; 
+        (coeff_weight)->weight = (coeff_weight)->weight * 1.0;
         (coeff_weight + 1)->weight = (coeff_weight + 1)->weight * 1.0;
         (coeff_weight + 2)->weight = 0.0;
         (coeff_weight + 3)->weight = 0.0;
@@ -163,15 +163,15 @@ static void get_vignette_coeff(dng_md_t& all_dng_md, chromatix_lsc_t& lsc_calib,
         (coeff_weight + 3)->weight = (coeff_weight + 3)->weight * weight1;
     }
 
-    
 
-    spdlog::info("weight0 {} weight1 {} weight2 {} weight3 {}", 
+
+    spdlog::info("weight0 {} weight1 {} weight2 {} weight3 {}",
         (coeff_weight)->weight, (coeff_weight + 1)->weight, (coeff_weight + 2)->weight, (coeff_weight + 3)->weight);
 }
 
 static void lsc_reg_calc(dng_md_t& all_dng_md, lsc_reg_t& lsc_reg)
 {
-    chromatix_lsc_t lsc_calib = 
+    chromatix_lsc_t lsc_calib =
     {
 #include "calib_lsc_sigma_A102_nikon.h"
     };
@@ -333,7 +333,7 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
     dng_xy_coord& wp1, dng_xy_coord& wp2,
     cv::Mat CM_1, cv::Mat CM_2, double* weight1, double* weight2)
 {
-    
+
     double white_point1_xy[2] = { wp1.x, wp1.y };
     double white_point2_xy[2] = { wp2.x, wp2.y };
 
@@ -365,7 +365,7 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
 
         weight_1 = dist_1_x / (dist_1_x + dist_2_x);
         weight_2 = dist_2_x / (dist_1_x + dist_2_x);
-        
+
 
         spdlog::info("weight1 = {:.4f}, weight2 = {:.4f}", weight_1, weight_2);
 
@@ -410,7 +410,7 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
     {
         spdlog::error("AB is not all == 1.0");
     }
-    if (all_dng_md.cc_md.CameraCalibration1[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration1[1][1] != 1.0 
+    if (all_dng_md.cc_md.CameraCalibration1[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration1[1][1] != 1.0
         || all_dng_md.cc_md.CameraCalibration1[2][2] != 1.0)
     {
         spdlog::error("CC1 is not I matrix");
@@ -454,28 +454,28 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
 
     cv::Mat FM = FM_1 * weight1 + FM_2 * weight2;
     std::cout << "camera2XYZ_mat" << FM << std::endl;
-    
+
     //cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
     //    3.2404542, -1.5371385, -0.4985314,
     //    -0.9692660, 1.8760108, 0.0415560,
     //    0.0556434, -0.2040259, 1.0572252);
     cv::Mat XYZ2photoRGB = (cv::Mat_<double>(3, 3) <<
         1.3459433, -0.2556075, -0.0511118,
-        -0.5445989,  1.5081673,  0.0205351,
-        0.0000000,  0.0000000,  1.2118128);
+        -0.5445989, 1.5081673, 0.0205351,
+        0.0000000, 0.0000000, 1.2118128);
     //std::cout << "XYZ2sRGB:" << XYZ2sRGB << std::endl;
     std::cout << "ccm:" << std::endl;
     cv::Mat ccm = XYZ2photoRGB * FM;
     std::cout << ccm << std::endl;
 
     cc_reg.bypass = 0;
-    for (int32_t i=0; i<9; i++)
+    for (int32_t i = 0; i < 9; i++)
     {
         cc_reg.ccm[i] = (int32_t)(ccm.at<double>(i / 3, i % 3) * 1024);
     }
 }
 
-static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg)
+static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_t frame_cnt)
 {
     //uint32_t rgb2y[3] = { 306, 601, 117 };
     //uint32_t rgb2y[3] = { 217,  732,  75 };
@@ -483,40 +483,124 @@ static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg)
     gtm_reg.rgb2y[0] = 217;
     gtm_reg.rgb2y[1] = 732;
     gtm_reg.rgb2y[2] = 75;
-
-    uint32_t tone_curve_y[257] = {
- 0,     9,    18,    28,    39,    50,    61,    74,    87,   100,
-115,   130,   145,   162,   179,   196,   215,   234,   254,   274,
-296,   318,   341,   365,   389,   415,   441,   468,   496,   525,
-554,   585,   616,   649,   682,   716,   751,   787,   824,   862,
-901,   941,   982,  1024,  1067,  1111,  1156,  1202,  1249,  1298,
-1347,  1398,  1449,  1502,  1556,  1611,  1667,  1724,  1783,  1842,
-1903,  1965,  2028,  2093,  2159,  2226,  2294,  2363,  2434,  2506,
-2580,  2655,  2731,  2808,  2887,  2967,  3048,  3130,  3214,  3298,
-3384,  3471,  3559,  3648,  3738,  3829,  3920,  4013,  4106,  4201,
-4296,  4392,  4488,  4586,  4683,  4782,  4881,  4981,  5081,  5182,
-5284,  5385,  5488,  5590,  5693,  5796,  5900,  6004,  6108,  6212,
-6317,  6421,  6526,  6631,  6736,  6841,  6946,  7050,  7155,  7260,
-7364,  7469,  7573,  7677,  7780,  7884,  7987,  8090,  8192,  8294,
-8395,  8497,  8597,  8697,  8797,  8896,  8995,  9094,  9192,  9289,
-9386,  9482,  9578,  9674,  9769,  9863,  9957, 10050, 10143, 10235,
-10327, 10418, 10508, 10598, 10688, 10776, 10864, 10952, 11039, 11125,
-11211, 11296, 11380, 11464, 11547, 11629, 11711, 11792, 11872, 11952,
-12031, 12109, 12186, 12263, 12339, 12414, 12489, 12563, 12636, 12708,
-12779, 12850, 12920, 12989, 13057, 13125, 13192, 13257, 13323, 13387,
-13451, 13514, 13576, 13637, 13698, 13758, 13817, 13876, 13934, 13991,
-14047, 14103, 14158, 14213, 14267, 14320, 14373, 14425, 14476, 14527,
-14577, 14627, 14676, 14725, 14772, 14820, 14867, 14913, 14959, 15004,
-15049, 15093, 15137, 15180, 15223, 15265, 15307, 15348, 15389, 15429,
-15469, 15509, 15548, 15587, 15625, 15663, 15701, 15738, 15775, 15811,
-15847, 15883, 15919, 15954, 15988, 16023, 16057, 16091, 16124, 16158,
-16191, 16223, 16256, 16288, 16320, 16352, 16383
-    };
+    if (frame_cnt == 0 || stat_out->gtm_stat.stat_en == 0)
+    {
+        uint32_t gain_map[257] =
+        {
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024
+        };
 #ifdef _MSC_VER
-    memcpy_s(gtm_reg.tone_curve, sizeof(uint32_t)*257, tone_curve_y, sizeof(uint32_t)*257);
+        memcpy_s(gtm_reg.gain_lut, sizeof(uint32_t) * 257, gain_map, sizeof(uint32_t) * 257);
 #else
-    memcpy(gtm_reg.tone_curve, tone_curve_y, sizeof(uint32_t) * 257);
+        memcpy(gtm_reg.tone_curve, tone_curve_y, sizeof(uint32_t) * 257);
 #endif
+    }
+    else 
+    {
+        const uint32_t* luma_hist = stat_out->gtm_stat.luma_hist;
+        const uint32_t total_cnt = stat_out->gtm_stat.total_pixs;
+        uint32_t* hist_equal = new uint32_t[256];
+        double* hist_equal_db = new double[256 + 8]; //savgol window size=9, order=3
+        double* hist_equal_res = new double[256];
+
+        hist_equal[0] = luma_hist[0];
+        for (int32_t i = 1; i < 256; i++)
+        {
+            hist_equal[i] = hist_equal[i - 1] + luma_hist[i];
+        }
+        assert(hist_equal[255] == total_cnt);
+        for (int32_t i = 0; i < 256; i++)
+        {
+            hist_equal_db[i + 4] = double(hist_equal[i]) * 255.0 / total_cnt;
+        }
+        for (int32_t i = 0; i < 4; i++)
+        {
+            hist_equal_db[i] = hist_equal_db[8 - i];
+        }
+        for (int32_t i = 256 + 4; i < 256 + 8; i++)
+        {
+            hist_equal_db[i] = hist_equal_db[259 * 2 - i];
+        }
+
+        double coeff[9] = {-0.09090909, 0.06060606, 0.16883117, 0.23376623, 0.25541126, 0.23376623, 0.16883117, 0.06060606, -0.09090909};
+
+        for (int32_t i = 0; i < 256; i++)
+        {
+            hist_equal_res[i] = hist_equal_db[i + 0] * coeff[0] + hist_equal_db[i + 1] * coeff[1] + hist_equal_db[i + 2] * coeff[2] +
+                                hist_equal_db[i + 3] * coeff[3] + hist_equal_db[i + 4] * coeff[4] + hist_equal_db[i + 5] * coeff[5] +
+                                hist_equal_db[i + 6] * coeff[6] + hist_equal_db[i + 7] * coeff[7] + hist_equal_db[i + 8] * coeff[8];
+            if (hist_equal_res[i] < 0.0)
+            {
+                hist_equal_res[i] = 0.0;
+            }
+        }
+
+        uint32_t gain_map[257] = {
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024
+        };
+
+        for (int32_t i = 0; i < 256; i++)
+        {
+            hist_equal_res[i] = hist_equal_res[i] * 1024 / i;
+            gain_map[i] = uint32_t(hist_equal_res[i]);
+            printf("%d, ", gain_map[i]);
+            if (i % 32 == 31)
+            {
+                printf("\n");
+            }
+        }
+        gain_map[256] = gain_map[255];
+#ifdef _MSC_VER
+        memcpy_s(gtm_reg.gain_lut, sizeof(uint32_t) * 257, gain_map, sizeof(uint32_t) * 257);
+#else
+        memcpy(gtm_reg.tone_curve, tone_curve_y, sizeof(uint32_t) * 257);
+#endif
+        delete[] hist_equal;
+        delete[] hist_equal_db;
+        delete[] hist_equal_res;
+    }
 
     //TODO: GTM stat calc gtm curve
 }
@@ -544,7 +628,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     data_buffer* input = in[0];
     data_buffer* output0 = new data_buffer(input->width, input->height, input->data_type, input->bayer_pattern, "fe_fw_out0");
 
-    memcpy(output0->data_ptr, input->data_ptr, input->width*input->height*sizeof(uint16_t));
+    memcpy(output0->data_ptr, input->data_ptr, input->width*input->height * sizeof(uint16_t));
 
     size_t reg_len = sizeof(fe_module_reg_t) / sizeof(uint16_t);
     if (reg_len * sizeof(uint16_t) < sizeof(fe_module_reg_t))
@@ -562,7 +646,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     awbgain_reg_calc(g_dng_all_md, reg_ptr->awbgain_reg);
     cc_reg_calc(g_dng_all_md, reg_ptr->cc_reg);
     gtm_stat_reg_calc(reg_ptr->gtm_stat_reg);
-    gtm_reg_calc(stat_out, reg_ptr->gtm_reg);
+    gtm_reg_calc(stat_out, reg_ptr->gtm_reg, frame_cnt);
     gamma_reg_calc(reg_ptr->gamma_reg);
 
     hw_base::hw_run(stat_out, frame_cnt);

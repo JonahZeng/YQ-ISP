@@ -16,7 +16,7 @@ void test_V1_pipeline(pipeline_manager* manager)
     cc* cc_hw = new cc(4, 3, "cc_hw");
     gtm_stat* gtm_stat_hw = new gtm_stat(4, 1, "gtm_stat_hw");
     gtm* gtm_hw = new gtm(4, 3, "gtm_hw");
-    gamma* gamma_hw = new gamma(4, 3, "gamma_hw");
+    Gamma* gamma_hw = new Gamma(4, 3, "gamma_hw");
 
     manager->register_module(raw_in);
     manager->register_module(fe_fw);

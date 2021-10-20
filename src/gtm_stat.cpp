@@ -26,6 +26,7 @@ static void gtm_stat_hw_core(gtm_stat_info_t* stat_gtm, uint16_t* r, uint16_t* g
             idx = CLIP3(idx, 0, 255);
 
             stat_gtm->luma_hist[idx] += 1;
+            stat_gtm->total_pixs += 1;
         }
     }
 }

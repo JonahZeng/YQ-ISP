@@ -13,6 +13,7 @@ typedef struct awb_stat_info_s {
 
 typedef struct gtm_stat_info_s {
     uint32_t stat_en;
+    uint32_t total_pixs;
     uint32_t luma_hist[256];
 }gtm_stat_info_t;
 

@@ -4,49 +4,51 @@
 gtm::gtm(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
 {
     bypass = 0;
-    tone_curve.resize(257);
+    gain_lut.resize(257);
 }
 
 static void gtm_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, uint16_t* out_g, uint16_t* out_b,
     uint32_t xsize, uint32_t ysize, const gtm_reg_t* gtm_reg)
 {
     const uint32_t* rgb2y = gtm_reg->rgb2y;
-    const uint32_t* tone_curve = gtm_reg->tone_curve;
+    const uint32_t* gain_lut = gtm_reg->gain_lut;
     uint32_t y_tmp = 0;
-    uint32_t dst_y;
-    double ratio;
+    int32_t gain_tmp;
+    const uint32_t MAX_VAL = (1U << 14) - 1;
+
     for (uint32_t row = 0; row < ysize; row++)
     {
         for (uint32_t col = 0; col < xsize; col++)
         {
+            if (col == 2314 && row == 1446)
+            {
+                printf("\n");
+            }
             y_tmp = r[row * xsize + col] * rgb2y[0] + g[row * xsize + col] * rgb2y[1] + b[row * xsize + col] * rgb2y[2];
             y_tmp = (y_tmp + 512) >> 10;
             //spdlog::info("{}, {}, {}, y_tmp {}", r[row * xsize + col], g[row * xsize + col], b[row * xsize + col], y_tmp);
-            if (y_tmp > (1U << 14) - 1)
-                y_tmp = (1U << 14) - 1;
+            if (y_tmp > MAX_VAL)
+                y_tmp = MAX_VAL;
             uint32_t idx1 = y_tmp >> 6;
             uint32_t idx2 = idx1 + 1;
             if (idx2 > 256)
                 idx2 = 256;
-            uint32_t delta = y_tmp - idx1 * 64;
-            dst_y = tone_curve[idx1] + delta * (tone_curve[idx2] - tone_curve[idx1]) / 64;
-            //spdlog::info("dst_y {}", dst_y);
-            if (y_tmp == 0)
-                ratio = 0.0;
-            else
-                ratio = (double)dst_y / (double)y_tmp;
+            int32_t delta = y_tmp - idx1 * 64;
+            int32_t gain1 = int32_t(gain_lut[idx1]);
+            int32_t gain2 = int32_t(gain_lut[idx2]);
+            gain_tmp = gain1 + delta * (gain2 - gain1) / 64;
 
-            uint32_t b_out = uint32_t(b[row * xsize + col] * ratio);
-            if (b_out > (1U << 14) - 1U)
-                b_out = (1U << 14) - 1U;
+            uint32_t b_out = (b[row * xsize + col] * gain_tmp + 512) >> 10;
+            if (b_out > MAX_VAL)
+                b_out = MAX_VAL;
             out_b[row * xsize + col] = uint16_t(b_out);
-            uint32_t g_out = uint32_t(g[row * xsize + col] * ratio);
-            if (g_out > (1U << 14) - 1U)
-                g_out = (1U << 14) - 1U;
+            uint32_t g_out = (g[row * xsize + col] * gain_tmp + 512) >> 10;
+            if (g_out > MAX_VAL)
+                g_out = MAX_VAL;
             out_g[row * xsize + col] = uint16_t(g_out);
-            uint32_t r_out = uint32_t(r[row * xsize + col] * ratio);
-            if (r_out > (1U << 14) - 1U)
-                r_out = (1U << 14) - 1U;
+            uint32_t r_out = (r[row * xsize + col] * gain_tmp + 512) >> 10;
+            if (r_out > MAX_VAL)
+                r_out = MAX_VAL;
             out_r[row * xsize + col] = uint16_t(r_out);
         }
     }
@@ -71,7 +73,7 @@ void gtm::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
         for (int32_t i = 0; i < 257; i++)
         {
-            gtm_reg->tone_curve[i] = tone_curve[i];
+            gtm_reg->gain_lut[i] = gain_lut[i];
         }
     }
 
@@ -136,7 +138,7 @@ void gtm::init()
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,         &this->bypass          },
         {"rgb2y",                  VECT_UINT32,     &this->rgb2y,         3},
-        {"tone_curve",             VECT_UINT32,     &this->tone_curve,  257}
+        {"tone_curve",             VECT_UINT32,     &this->gain_lut,  257}
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
@@ -162,7 +164,7 @@ void gtm::checkparameters(gtm_reg_t* reg)
     }
     for (int32_t i = 0; i < 257; i++)
     {
-        reg->tone_curve[i] = common_check_bits(reg->tone_curve[i], 14, "tone_curve");
+        reg->gain_lut[i] = common_check_bits(reg->gain_lut[i], 13, "tone_curve"); //1024 = 1.0
     }
 
     spdlog::info("================= gtm reg=================");
@@ -172,13 +174,13 @@ void gtm::checkparameters(gtm_reg_t* reg)
 
     for (int32_t i = 0; i < 257; i++)
     {
-        ostr << reg->tone_curve[i] << ", ";
+        ostr << reg->gain_lut[i] << ", ";
         if (i % 32 == 31)
         {
             ostr << std::endl;
         }
     }
 
-    spdlog::info("tone_curve \n{}", ostr.str());
+    spdlog::info("gain_lut \n{}", ostr.str());
     spdlog::info("================= gtm reg=================");
 }

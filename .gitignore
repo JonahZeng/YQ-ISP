@@ -4,6 +4,8 @@
 *.exe
 *.ilk
 *.pnm
+*.NEF
+*.jpg
 bin/Debug/*.dll
 bin/Release/*.dll
 build/.vs

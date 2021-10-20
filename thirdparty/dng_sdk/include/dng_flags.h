@@ -11,7 +11,7 @@
 /* $Change: 1066844 $ */
 /* $Author: erichan $ */
 
-/** \file
+/** file
  * Conditional compilation flags for DNG SDK.
  *
  * All conditional compilation macros for the DNG SDK begin with a lowercase 'q'.
