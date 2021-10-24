@@ -63,7 +63,7 @@ static void lsc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uin
 
 void lsc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     data_buffer* input_raw = in[0];
     //bayer_type_t bayer_pattern = input_raw->bayer_pattern;
     fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
@@ -116,12 +116,12 @@ void lsc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     delete[] tmp;
 
     hw_base::hw_run(stat_out, frame_cnt);
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 void lsc::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,      &this->bypass                 },
         {"block_size_x",           UINT_32,      &this->block_size_x           },
@@ -138,13 +138,13 @@ void lsc::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 lsc::~lsc()
 {
-    spdlog::info("{0} module deinit start", __FUNCTION__);
-    spdlog::info("{0} module deinit end", __FUNCTION__);
+    log_info("%s module deinit start\n", __FUNCTION__);
+    log_info("%s module deinit end\n", __FUNCTION__);
 }
 
 
@@ -162,14 +162,14 @@ void lsc::checkparameters(lsc_reg_t* reg)
         reg->luma_gain[i] = common_check_bits(reg->luma_gain[i], 14, "luma_gain"); //4.10bit
     }
 
-    spdlog::info("================= lsc reg=================");
-    spdlog::info("bypass {}", reg->bypass);
-    spdlog::info("block_size_x {}", reg->block_size_x);
-    spdlog::info("block_size_y {}", reg->block_size_y);
-    spdlog::info("block_start_x_idx {}", reg->block_start_x_idx);
-    spdlog::info("block_start_x_oft {}", reg->block_start_x_oft);
-    spdlog::info("block_start_y_idx {}", reg->block_start_y_idx);
-    spdlog::info("block_start_y_oft {}", reg->block_start_y_oft);
+    log_info("================= lsc reg=================\n");
+    log_info("bypass %d\n", reg->bypass);
+    log_info("block_size_x %d\n", reg->block_size_x);
+    log_info("block_size_y %d\n", reg->block_size_y);
+    log_info("block_start_x_idx %d\n", reg->block_start_x_idx);
+    log_info("block_start_x_oft %d\n", reg->block_start_x_oft);
+    log_info("block_start_y_idx %d\n", reg->block_start_y_idx);
+    log_info("block_start_y_oft %d\n", reg->block_start_y_oft);
     std::stringstream ostr;
     
     for (int32_t i = 0; i < LSC_GRID_ROWS * LSC_GRID_COLS; i++)
@@ -181,6 +181,6 @@ void lsc::checkparameters(lsc_reg_t* reg)
         }
     }
 
-    spdlog::info("luma gain \n{}", ostr.str());
-    spdlog::info("================= lsc reg=================");
+    log_info("luma gain \n%s\n", ostr.str());
+    log_info("================= lsc reg=================\n");
 }

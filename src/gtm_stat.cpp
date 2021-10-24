@@ -1,5 +1,6 @@
 #include "fe_firmware.h"
 #include <sstream>
+#include <assert.h>
 
 #define CLIP3(x, min, max) (x>max)?max:((x<min)?min:x)
 
@@ -33,7 +34,7 @@ static void gtm_stat_hw_core(gtm_stat_info_t* stat_gtm, uint16_t* r, uint16_t* g
 
 void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     data_buffer* input0 = in[0];
     data_buffer* input1 = in[1];
     data_buffer* input2 = in[2];
@@ -95,16 +96,16 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             ostr << std::endl;
         }
     }
-    spdlog::info("luma hist[256]\n{}", ostr.str());
+    log_info("luma hist[256]:\n%s", ostr.str());
 
     hw_base::hw_run(stat_out, frame_cnt);
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 
 void gtm_stat::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,         &this->bypass          }
     };
@@ -114,13 +115,13 @@ void gtm_stat::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 gtm_stat::~gtm_stat()
 {
-    spdlog::info("{0} module deinit start", __FUNCTION__);
-    spdlog::info("{0} module deinit end", __FUNCTION__);
+    log_info("%s module deinit start\n", __FUNCTION__);
+    log_info("%s module deinit end\n", __FUNCTION__);
 }
 
 void gtm_stat::checkparameters(gtm_stat_reg_t* reg)
@@ -132,9 +133,9 @@ void gtm_stat::checkparameters(gtm_stat_reg_t* reg)
     }
     reg->w_ratio = common_check_bits(reg->w_ratio, 4, "w_ratio");
     reg->h_ratio = common_check_bits(reg->h_ratio, 4, "h_ratio");
-    spdlog::info("================= gtm stat reg=================");
-    spdlog::info("bypass {}", reg->bypass);
-    spdlog::info("rgb2y {} {} {}", reg->rgb2y[0], reg->rgb2y[1], reg->rgb2y[2]);
-    spdlog::info("w_ratio {} h_ratio {}", reg->w_ratio, reg->h_ratio);
-    spdlog::info("================= gtm stat reg=================");
+    log_info("================= gtm stat reg=================\n");
+    log_info("bypass %d\n", reg->bypass);
+    log_info("rgb2y %d %d %d\n", reg->rgb2y[0], reg->rgb2y[1], reg->rgb2y[2]);
+    log_info("w_ratio %d h_ratio %d\n", reg->w_ratio, reg->h_ratio);
+    log_info("================= gtm stat reg=================\n");
 }

@@ -70,7 +70,7 @@ void hw_base::connect_port(uint32_t out_port, hw_base* next_hw, uint32_t in_port
 
 void hw_base::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
 
     cfgEntry_t config[] = {
         {"xmlConfigValid",     BOOL_T,           &this->xmlConfigValid             },
@@ -85,7 +85,7 @@ void hw_base::init()
         this->cfgList.push_back(config[i]);
     }
 
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -163,13 +163,13 @@ void hw_base::write_raw_for_output(FILE* fp)
 {
     if (fp == nullptr)
     {
-        spdlog::error("open file {} fail", write_pic_path);
+        log_error("open file %s fail\n", write_pic_path);
         return;
     }
     uint32_t port = write_pic_src_pin[0];
     if (port >= out.size())
     {
-        spdlog::error("can't write pic because port = {}, all outport size = {}", port, out.size());
+        log_error("can't write pic because port = %s, all outport size = %ld\n", port, out.size());
         return;
     }
     data_buffer* src_data = out[port];
@@ -202,7 +202,7 @@ void hw_base::write_pnm_for_output(FILE* fp)
 {
     if (fp == nullptr)
     {
-        spdlog::error("open file {} fail", write_pic_path);
+        log_error("open file %s fail\n", write_pic_path);
         return;
     }
     uint32_t port0 = write_pic_src_pin[0];
@@ -210,7 +210,7 @@ void hw_base::write_pnm_for_output(FILE* fp)
     uint32_t port2 = write_pic_src_pin[2];
     if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
     {
-        spdlog::error("can't write pic because port = {} {} {}, all outport size = {}", port0, port1, port2, out.size());
+        log_error("can't write pic because port = %d %d %d, all outport size = %ld\n", port0, port1, port2, out.size());
         return;
     }
 
@@ -279,7 +279,7 @@ void hw_base::write_yuv_for_output(FILE* fp)
 {
     if (fp == nullptr)
     {
-        spdlog::error("open file {} fail", write_pic_path);
+        log_error("open file %s fail\n", write_pic_path);
         return;
     }
     uint32_t port0 = write_pic_src_pin[0];
@@ -287,7 +287,7 @@ void hw_base::write_yuv_for_output(FILE* fp)
     uint32_t port2 = write_pic_src_pin[2];
     if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
     {
-        spdlog::error("can't write pic because port = {} {} {}, all outport size = {}", port0, port1, port2, out.size());
+        log_error("can't write pic because port = %d %d %d, all outport size = %ld\n", port0, port1, port2, out.size());
         return;
     }
 
@@ -347,7 +347,7 @@ void hw_base::write_pic_for_output()
 {
     if (write_pic_src_pin.size() > out.size())
     {
-        spdlog::error("can't write pic because outpins = {}, and xml config pins for pic = {}", out.size(), write_pic_src_pin.size());
+        log_error("can't write pic because outpins = %ld, and xml config pins for pic = %ld\n", out.size(), write_pic_src_pin.size());
         return;
     }
     FILE* fp = nullptr;
@@ -379,7 +379,7 @@ void hw_base::write_pic_for_output()
         write_yuv_for_output(fp);
     }
     else {
-        spdlog::error("can't write pic, RAW:1, PNM:3, YUV:3");
+        log_error("can't write pic, RAW:1, PNM:3, YUV:3\n");
     }
 
     if (fp)
@@ -392,7 +392,7 @@ hw_base::~hw_base()
 {
     if (name != nullptr)
     {
-        spdlog::info("deinit module {0}", name);
+        log_info("deinit module %s\n", name);
         delete[] name;
     }
     return;

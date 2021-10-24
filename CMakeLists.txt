@@ -41,9 +41,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(XML_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2d.lib" 
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib" 
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dlld.lib")
-    set(SPDLOG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include")
-    set(SPDLOG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlog.lib")
-    set(SPDLOG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlogd.lib")
+    # set(SPDLOG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include")
+    # set(SPDLOG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlog.lib")
+    # set(SPDLOG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlogd.lib")
     target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;" 
         "qDNGValidateTarget=1;"
         "WIN64;" 
@@ -82,9 +82,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_release.a")
     set(XML_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_debug.a" 
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_debug.a")
-    set(SPDLOG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include")
-    set(SPDLOG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/libspdlog.a")
-    set(SPDLOG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/libspdlogd.a")
+    # set(SPDLOG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include")
+    # set(SPDLOG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/libspdlog.a")
+    # set(SPDLOG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/libspdlogd.a")
     target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;"
         "qDNGValidateTarget=1;"
         "$<$<CONFIG:Debug>:"
@@ -115,18 +115,18 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         "qDNGXMPDocOps=0;")
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR}/inc ${CMAKE_SOURCE_DIR}/calib ${DNG_SDK_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${XML_INCLUDE_DIR} ${SPDLOG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/inc ${CMAKE_SOURCE_DIR}/calib ${DNG_SDK_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${XML_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_link_libraries(isp_emulation 
-        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} ${SPDLOG_LIBRARIES_RELEASE})
+        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE})
     target_link_libraries(isp_emulation 
-        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} ${SPDLOG_LIBRARIES_DEBUG})
+        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG})
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(isp_emulation 
-        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} ${SPDLOG_LIBRARIES_RELEASE} z lzma)
+        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} z lzma)
     target_link_libraries(isp_emulation 
-        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} ${SPDLOG_LIBRARIES_DEBUG} z lzma)
+        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} z lzma)
 endif()
 target_link_libraries(isp_emulation ${OpenCV_LIBS})
 

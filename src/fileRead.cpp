@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "fileRead.h"
 
 //#include "dng_color_space.h"
@@ -80,7 +81,7 @@ static void get_blc_md_from_dng(uint32_t blc_dim_x, uint32_t blc_dim_y, AutoPtr<
         }
     }
     else {
-        spdlog::error("blc channel must be 1 or 4");
+        log_error("blc channel must be 1 or 4\n");
         exit(1);
     }
 }
@@ -126,12 +127,13 @@ static void get_lsc_md_from_dng(dng_exif* exif, dng_ifd* main_ifd, dng_md_t& all
     all_md.lsc_md.crop_x = 0; //current pipeline no crop
     all_md.lsc_md.crop_y = 0;
 
-    spdlog::info("lsc info: FocalLength {}mm, FocalPlaneResolutionUnit {} 1:none, 2:inch, 3:cm, 4:mm, 5:microm, \nFocalPlaneXResolution {}, FocalPlaneYResolution {}, FocusDistance {}m",
+    log_info("lsc info: FocalLength %lf mm, FocalPlaneResolutionUnit %d 1:none, 2:inch, 3:cm, 4:mm, 5:microm, \nFocalPlaneXResolution %lf, \
+        FocalPlaneYResolution %lf, FocusDistance %lf m\n",
         all_md.lsc_md.FocalLength, all_md.lsc_md.FocalPlaneResolutionUnit, all_md.lsc_md.FocalPlaneXResolution, 
         all_md.lsc_md.FocalPlaneYResolution, all_md.lsc_md.FocusDistance);
     if (all_md.lsc_md.FocalPlaneResolutionUnit == 1)
     {
-        spdlog::error("no ResolutionUnit");
+        log_error("no ResolutionUnit\n");
         exit(1);
     }
 }
@@ -148,7 +150,7 @@ static void get_ae_md_from_dng(dng_exif* exif, dng_md_t& all_md)
     double Sv = log2(0.297*all_md.ae_md.ISOSpeedRatings[0]);
     all_md.ae_md.BrightnessValue = Ev - Sv;
 
-    spdlog::info("ae info: apertureValue F 1/{}, ISO {} {} {}, ExposureTime {}s, BV {:.4f}", 
+    log_info("ae info: apertureValue F 1/%lf, ISO %d %d %d, ExposureTime %lf s, BV %.4lf\n", 
         all_md.ae_md.ApertureValue, all_md.ae_md.ISOSpeedRatings[0], all_md.ae_md.ISOSpeedRatings[1], 
         all_md.ae_md.ISOSpeedRatings[2], all_md.ae_md.ExposureTime, all_md.ae_md.BrightnessValue);
     
@@ -158,7 +160,7 @@ static void get_awb_md_from_dng(dng_info* info, dng_md_t& all_md)
 {
     if (info->fShared->fAsShotNeutral.Count() != 3)
     {
-        spdlog::error("img planes != 3");
+        log_error("img planes != 3\n");
         exit(1);
     }
 
@@ -175,7 +177,7 @@ static void get_cc_md_from_dng(dng_info* info, dng_md_t& all_md)
 {
     if (info->fShared->fAnalogBalance.Count() != 3)
     {
-        spdlog::error("img planes != 3");
+        log_error("img planes != 3\n");
         exit(1);
     }
     all_md.cc_md.Analogbalance[0] = info->fShared->fAnalogBalance[0];
@@ -187,7 +189,7 @@ static void get_cc_md_from_dng(dng_info* info, dng_md_t& all_md)
 
     if (info->fShared->fCameraProfile.fColorMatrix1.Rows() != 3 || info->fShared->fCameraProfile.fColorMatrix1.Cols() != 3)
     {
-        spdlog::error("CM1 dim != 3*3");
+        log_error("CM1 dim != 3*3\n");
         exit(1);
     }
     for (uint32_t row = 0; row < 3; row++)
@@ -199,7 +201,7 @@ static void get_cc_md_from_dng(dng_info* info, dng_md_t& all_md)
     }
     if (info->fShared->fCameraProfile.fColorMatrix2.Rows() != 3 || info->fShared->fCameraProfile.fColorMatrix2.Cols() != 3)
     {
-        spdlog::error("CM2 dim != 3*3");
+        log_error("CM2 dim != 3*3\n");
         exit(1);
     }
     for (uint32_t row = 0; row < 3; row++)
@@ -211,7 +213,7 @@ static void get_cc_md_from_dng(dng_info* info, dng_md_t& all_md)
     }
     if (info->fShared->fCameraCalibration1.Rows() != 3 || info->fShared->fCameraCalibration1.Cols() != 3)
     {
-        spdlog::error("CC1 dim != 3*3");
+        log_error("CC1 dim != 3*3\n");
         exit(1);
     }
     for (uint32_t row = 0; row < 3; row++)
@@ -223,7 +225,7 @@ static void get_cc_md_from_dng(dng_info* info, dng_md_t& all_md)
     }
     if (info->fShared->fCameraCalibration2.Rows() != 3 || info->fShared->fCameraCalibration2.Cols() != 3)
     {
-        spdlog::error("CC2 dim != 3*3");
+        log_error("CC2 dim != 3*3\n");
         exit(1);
     }
 
@@ -237,7 +239,7 @@ static void get_cc_md_from_dng(dng_info* info, dng_md_t& all_md)
 
     if (info->fShared->fCameraProfile.fForwardMatrix1.Rows() != 3 || info->fShared->fCameraProfile.fForwardMatrix1.Cols() != 3)
     {
-        spdlog::error("FM1 dim != 3*3");
+        log_error("FM1 dim != 3*3\n");
         exit(1);
     }
     for (uint32_t row = 0; row < 3; row++)
@@ -250,7 +252,7 @@ static void get_cc_md_from_dng(dng_info* info, dng_md_t& all_md)
 
     if (info->fShared->fCameraProfile.fForwardMatrix2.Rows() != 3 || info->fShared->fCameraProfile.fForwardMatrix2.Cols() != 3)
     {
-        spdlog::error("FM2 dim != 3*3");
+        log_error("FM2 dim != 3*3\n");
         exit(1);
     }
     for (uint32_t row = 0; row < 3; row++)
@@ -316,15 +318,15 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         bayer_tp = BGGR;
     }
 
-    spdlog::info("bayer: {} 0:RGGB 1:GRBG 2:GBRG 3:BGGR", bayer_tp);
+    log_info("bayer: %d 0:RGGB 1:GRBG 2:GBRG 3:BGGR\n", bayer_tp);
 
     const dng_image* stage1 = negative->Stage1Image();
     if (stage1->PixelSize() != 2)
     {
-        spdlog::error("pixel size must be 2 byte");
+        log_error("pixel size must be 2 byte\n");
         return;
     }
-    spdlog::info("total size {}, {}", stage1->Width(), stage1->Height());
+    log_info("total size %d, %d\n", stage1->Width(), stage1->Height());
 
     if (*out0 == nullptr)
     {
@@ -356,7 +358,7 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         *bit_depth = 10;
     }
     else {
-        spdlog::warn("bit depth is 8");
+        log_warning("bit depth is 8");
         *bit_depth = 8;
     }
     int32_t t = negative->GetLinearizationInfo()->fActiveArea.t;
@@ -364,24 +366,24 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
     int32_t b = negative->GetLinearizationInfo()->fActiveArea.b;
     int32_t r = negative->GetLinearizationInfo()->fActiveArea.r;
 
-    spdlog::info("active region {}, {}, {}, {}", l, t, r, b);
+    log_info("active region %d, %d, %d, %d\n", l, t, r, b);
 
     uint32_t blc_dim_x = negative->GetLinearizationInfo()->fBlackLevelRepeatCols;
     uint32_t blc_dim_y = negative->GetLinearizationInfo()->fBlackLevelRepeatRows;
 
-    spdlog::info("black level repeat dim {}, {}, {} value:", blc_dim_x, blc_dim_y, stage1->Planes());
+    log_info("black level repeat dim %d, %d, %d value:\n", blc_dim_x, blc_dim_y, stage1->Planes());
     for (int i = 0; i < kMaxBlackPattern; i++)
     {
         for (int j = 0; j < kMaxBlackPattern; j++)
         {
-            spdlog::info("{}, {}, {}, {}", negative->GetLinearizationInfo()->fBlackLevel[i][j][0],
+            log_info("%lf, %lf, %lf, %lf\n", negative->GetLinearizationInfo()->fBlackLevel[i][j][0],
                 negative->GetLinearizationInfo()->fBlackLevel[i][j][1],
                 negative->GetLinearizationInfo()->fBlackLevel[i][j][2],
                 negative->GetLinearizationInfo()->fBlackLevel[i][j][3]);
         }
     }
 
-    spdlog::info("bit depth is {} white_level = {} {} {} {}", *bit_depth, negative->GetLinearizationInfo()->fWhiteLevel[0],
+    log_info("bit depth is %d white_level = %lf, %lf, %lf, %lf\n", *bit_depth, negative->GetLinearizationInfo()->fWhiteLevel[0],
         negative->GetLinearizationInfo()->fWhiteLevel[1],
         negative->GetLinearizationInfo()->fWhiteLevel[2],
         negative->GetLinearizationInfo()->fWhiteLevel[3]);
@@ -396,7 +398,7 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
 
     get_cc_md_from_dng(&info, g_dng_all_md);
 
-    fprintf(stdout, "tone curve:\n");
+    log_info("tone curve:\n");
     uint32_t profile_cnt = negative->ProfileCount();
     for (uint32_t i = 0; i < profile_cnt; i++)
     {
@@ -405,7 +407,7 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         size_t sz = curve.fCoord.size();
         for (size_t j = 0; j < sz; j++)
         {
-            fprintf(stdout, "%lf, %lf\n", curve.fCoord[j].h, curve.fCoord[j].v);
+            log_info("%lf, %lf\n", curve.fCoord[j].h, curve.fCoord[j].v);
         }
     }
 
@@ -413,7 +415,7 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
 
 void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    spdlog::info("{0} run start frame {1}", __FUNCTION__, frame_cnt);
+    log_info("%s run start frame %d\n", __FUNCTION__, frame_cnt);
     if (frame_cnt == 0)
     {
         if (strcmp(file_type_string, "RAW") == 0)
@@ -451,7 +453,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
                     size_t read_cnt = fread(out0->data_ptr, sizeof(uint16_t), img_width*img_height, input_f);
                     if (read_cnt != sizeof(uint16_t) * img_width * img_height)
                     {
-                        spdlog::error("read raw file bytes unexpected");
+                        log_error("read raw file bytes unexpected\n");
                     }
                     for (uint32_t s = 0; s < img_height*img_width; s++)
                     {
@@ -479,17 +481,17 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             }
         }
         else {
-            spdlog::warn("{0} not support yet", file_type_string);
+            log_warning("{0} not support yet", file_type_string);
         }
     }
 
     hw_base::hw_run(stat_out, frame_cnt);
-    spdlog::info("{0} run end frame {1}", __FUNCTION__, frame_cnt);
+    log_info("%s run end frame %d\n", __FUNCTION__, frame_cnt);
 }
 
 void fileRead::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bayer_type",     STRING,     this->bayer_string,      32},
         {"bit_depth",      UINT_32,    &this->bit_depth           },
@@ -504,11 +506,11 @@ void fileRead::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 fileRead::~fileRead()
 {
-    spdlog::info("{0} deinit start", __FUNCTION__);
-    spdlog::info("{0} deinit end", __FUNCTION__);
+    log_info("%s deinit start\n", __FUNCTION__);
+    log_info("%s deinit end\n", __FUNCTION__);
 }

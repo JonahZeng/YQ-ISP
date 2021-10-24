@@ -1,4 +1,6 @@
 #include "fe_firmware.h"
+#include <cmath>
+#include <assert.h>
 
 Gamma::Gamma(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name)
 {
@@ -42,7 +44,7 @@ static void gamma_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r
 
 void Gamma::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     data_buffer* input0 = in[0];
     data_buffer* input1 = in[1];
     data_buffer* input2 = in[2];
@@ -118,12 +120,12 @@ void Gamma::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     delete[] tmp2;
 
     hw_base::hw_run(stat_out, frame_cnt);
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 void Gamma::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,         &this->bypass          },
         {"gamma_x1024",            UINT_32,         &this->gamma_x1024     }
@@ -134,21 +136,21 @@ void Gamma::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 Gamma::~Gamma()
 {
-    spdlog::info("{0} module deinit start", __FUNCTION__);
-    spdlog::info("{0} module deinit end", __FUNCTION__);
+    log_info("%s module deinit start\n", __FUNCTION__);
+    log_info("%s module deinit end\n", __FUNCTION__);
 }
 
 void Gamma::checkparameters(gamma_reg_t* reg)
 {
     reg->bypass = common_check_bits(reg->bypass, 1, "bypass");
     reg->gamma_x1024 = common_check_bits(reg->gamma_x1024, 12, "gamma_x1024");
-    spdlog::info("================= gamma reg=================");
-    spdlog::info("bypass {}", reg->bypass);
-    spdlog::info("bypass {}", reg->gamma_x1024);
-    spdlog::info("================= gamma reg=================");
+    log_info("================= gamma reg=================\n");
+    log_info("bypass %d\n", reg->bypass);
+    log_info("bypass %d\n", reg->gamma_x1024);
+    log_info("================= gamma reg=================\n");
 }

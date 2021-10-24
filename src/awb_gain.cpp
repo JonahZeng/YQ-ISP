@@ -49,7 +49,7 @@ static void awbgain_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize,
             uint32_t channel = ((y % 2) << 1) | (x % 2);
             if (channel > 3)
             {
-                spdlog::error("error for blc pix bayer select");
+                log_error("error for blc pix bayer select\n");
                 channel = 3;
             }
             uint32_t gain = gain_val[channel];
@@ -68,7 +68,7 @@ static void awbgain_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize,
 
 void awbgain::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     data_buffer* input_raw = in[0];
     bayer_type_t bayer_pattern = input_raw->bayer_pattern;
     fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
@@ -113,11 +113,11 @@ void awbgain::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     delete[] tmp;
 
     hw_base::hw_run(stat_out, frame_cnt);
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 void awbgain::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,     &this->bypass          },
         {"r_gain",                 UINT_32,     &this->r_gain          },
@@ -132,12 +132,12 @@ void awbgain::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 awbgain::~awbgain()
 {
-    spdlog::info("{0} module deinit start", __FUNCTION__);
-    spdlog::info("{0} module deinit end", __FUNCTION__);
+    log_info("%s module deinit start\n", __FUNCTION__);
+    log_info("%s module deinit end\n", __FUNCTION__);
 }
 
 
@@ -150,12 +150,12 @@ void awbgain::checkparameters(awbgain_reg_t* reg)
     reg->b_gain = common_check_bits(reg->b_gain, 13, "b_gain");
     reg->ae_compensat_gain = common_check_bits(reg->ae_compensat_gain, 13, "ae_compensat_gain");
 
-    spdlog::info("================= awb gain reg=================");
-    spdlog::info("bypass {}", reg->bypass);
-    spdlog::info("r_gain {}", reg->r_gain);
-    spdlog::info("gr_gain {}", reg->gr_gain);
-    spdlog::info("gb_gain {}", reg->gb_gain);
-    spdlog::info("b_gain {}", reg->b_gain);
-    spdlog::info("ae_compensat_gain {}", reg->ae_compensat_gain);
-    spdlog::info("================= awb gain reg=================");
+    log_info("================= awb gain reg=================\n");
+    log_info("bypass %d\n", reg->bypass);
+    log_info("r_gain %d\n", reg->r_gain);
+    log_info("gr_gain %d\n", reg->gr_gain);
+    log_info("gb_gain %d\n", reg->gb_gain);
+    log_info("b_gain %d\n", reg->b_gain);
+    log_info("ae_compensat_gain %d\n", reg->ae_compensat_gain);
+    log_info("================= awb gain reg=================\n");
 }

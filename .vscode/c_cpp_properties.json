@@ -1,21 +1,20 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Linux",
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/inc",
                 "${workspaceFolder}/thirdparty/dng_sdk/include",
                 "${workspaceFolder}/thirdparty/libjpeg9b/include",
                 "${workspaceFolder}/thirdparty/libxml2/include",
-                "${workspaceFolder}/thirdparty/spdlog/include"
+                "${workspaceFolder}/calib"
             ],
-            "windowsSdkVersion": "10.0.17763.0",
-            "compilerPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx64\\x64\\cl.exe",
+            "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64",
-            "defines": ["qWinOS"]
+            "intelliSenseMode": "linux-gcc-x64",
+            "defines": ["qLinux"]
         }
     ],
     "version": 4

@@ -51,7 +51,7 @@ static void blc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uin
         uint32_t channel = ((ysize % 2) << 1) | (xsize % 2);
         if (channel > 3)
         {
-            spdlog::error("error for blc pix bayer select");
+            log_error("error for blc pix bayer select\n");
             channel = 3;
         }
         int32_t offset = blc_val[channel];
@@ -72,7 +72,7 @@ static void blc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uin
 
 void blc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) //input 2pins, 0~raw, 1~reg
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     data_buffer* input_raw = in[0];
     bayer_type_t bayer_pattern = input_raw->bayer_pattern;
     fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
@@ -117,11 +117,11 @@ void blc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) //input 2pins, 
     delete[] tmp;
 
     hw_base::hw_run(stat_out, frame_cnt);
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 void blc::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,     &this->bypass          },
         {"blc_r",                  INT_32,      &this->blc_r           },
@@ -137,12 +137,12 @@ void blc::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 blc::~blc()
 {
-    spdlog::info("{0} module deinit start", __FUNCTION__);
-    spdlog::info("{0} module deinit end", __FUNCTION__);
+    log_info("%s module deinit start\n", __FUNCTION__);
+    log_info("%s module deinit end\n", __FUNCTION__);
 }
 void blc::checkparameters(blc_reg_t* reg)
 {
@@ -154,13 +154,13 @@ void blc::checkparameters(blc_reg_t* reg)
     reg->normalize_en = common_check_bits(reg->normalize_en, 1, "normalize_en");
     reg->white_level = common_check_bits(reg->white_level, 14, "white_level");
 
-    spdlog::info("================= blc reg=================");
-    spdlog::info("bypass {}", reg->bypass);
-    spdlog::info("blc_r {}", reg->blc_r);
-    spdlog::info("blc_gr {}", reg->blc_gr);
-    spdlog::info("blc_gb {}", reg->blc_gb);
-    spdlog::info("blc_b {}", reg->blc_b);
-    spdlog::info("normalize_en {}", reg->normalize_en);
-    spdlog::info("white_level {}", reg->white_level);
-    spdlog::info("================= blc reg=================");
+    log_info("================= blc reg=================\n");
+    log_info("bypass %d\n", reg->bypass);
+    log_info("blc_r %d\n", reg->blc_r);
+    log_info("blc_gr %d\n", reg->blc_gr);
+    log_info("blc_gb %d\n", reg->blc_gb);
+    log_info("blc_b %d\n", reg->blc_b);
+    log_info("normalize_en %d\n", reg->normalize_en);
+    log_info("white_level %d\n", reg->white_level);
+    log_info("================= blc reg=================\n");
 }

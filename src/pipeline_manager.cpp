@@ -15,7 +15,7 @@ pipeline_manager::pipeline_manager()
     stat_addr = new statistic_info_t;
     if (stat_addr == nullptr)
     {
-        spdlog::error("alloc memory for statistc_info fail");
+        log_error("alloc memory for statistc_info fail\n");
     }
 }
 
@@ -90,37 +90,37 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
 
     ctxt = xmlNewParserCtxt();
     if (ctxt == NULL) {
-        spdlog::error("Failed to allocate parser context");
+        log_error("Failed to allocate parser context\n");
         return;
     }
     doc = xmlCtxtReadFile(ctxt, filename, NULL, XML_PARSE_NOBLANKS);
 
     if (doc == NULL) {
-        spdlog::error("Failed to parse {}", filename);
+        log_error("Failed to parse %s\n", filename);
         xmlFreeParserCtxt(ctxt);
         return;
     }
 
     if (ctxt->valid == 0)
     {
-        spdlog::error("Failed to validate {}", filename);
+        log_error("Failed to validate %s\n", filename);
         xmlFreeParserCtxt(ctxt);
         return;
     }
     xmlNodePtr rootNode = xmlDocGetRootElement(doc);
     if (rootNode == NULL)
     {
-        spdlog::error("empty document\n");
+        log_error("empty document\n");
         xmlFreeDoc(doc);
         xmlFreeParserCtxt(ctxt);
         return;
     }
 
-    spdlog::info("root node name: {0}, type:{1}", rootNode->name, rootNode->type); //pipeline_config
+    log_info("root node name: %s, type:%d\n", rootNode->name, rootNode->type); //pipeline_config
     xmlNodePtr component = rootNode->children;
     while (component != NULL)
     {
-        spdlog::info("component name {0}, type:{1}", component->name, component->type); //component
+        log_info("component name %s, type:%d\n", component->name, component->type); //component
 
         xmlChar* inst_name;
         xmlChar tagName[10] = "inst_name";
@@ -153,7 +153,7 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
             if (xmlChildElementCount(detail_node) == 0) { //leaf node
                 xmlChar* text = xmlNodeGetContent(detail_node);
                 delete_space_in_string(text);
-                spdlog::info("tag name:{0} text:{1}", detail_node->name, text);
+                log_info("tag name:%s text:%s\n", detail_node->name, text);
                 size_t cfg_len = module_array->at(i)->cfgList.size();
                 size_t j = 0;
                 for (; j < cfg_len; j++)
@@ -318,7 +318,7 @@ void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
         {
             if ((*it)->prepare_input())
             {
-                spdlog::info("run module {}", (*it)->name);
+                log_info("run module %s\n", (*it)->name);
                 (*it)->hw_run(stat_out, frame_cnt);
                 not_run_list.remove(*it);
                 break;
@@ -328,7 +328,7 @@ void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
         cycle_time++;
         if (cycle_time > 2 * md_size)
         {
-            spdlog::error("can't find module to run");
+            log_error("can't find module to run\n");
             exit(1);
         }
     }

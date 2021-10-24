@@ -37,7 +37,7 @@ typedef struct lsc_coeff_weight_s
 static void get_vignette_coeff_inner(double focusDist, lsc_coeff_element_t* element, lsc_coeff_weight_t* coeff_weight0, lsc_coeff_weight_t* coeff_weight1)
 {
 
-    spdlog::info("focusDist {} focusElement[0].focusDist {} focusElement[5].focusDist {} ",
+    log_info("focusDist %lf focusElement[0].focusDist %lf focusElement[5].focusDist %lf\n",
         focusDist, element->focusElement[0].focusDist, element->focusElement[5].focusDist);
 
     if (focusDist < element->focusElement[0].focusDist)
@@ -84,7 +84,7 @@ static void get_vignette_coeff_inner(double focusDist, lsc_coeff_element_t* elem
         }
         if (!flag)
         {
-            spdlog::error("can't find neareset two focus dist");
+            log_error("can't find neareset two focus dist\n");
             exit(1);
         }
         coeff_weight0->weight = w1;
@@ -98,7 +98,7 @@ static void get_vignette_coeff_inner(double focusDist, lsc_coeff_element_t* elem
         coeff_weight1->a3 = element->focusElement[i + 1].a3;
     }
 
-    spdlog::info("w1 {} w2 {}", coeff_weight0->weight, coeff_weight1->weight);
+    log_info("w1 %lf w2 %lf\n", coeff_weight0->weight, coeff_weight1->weight);
 }
 
 static void get_vignette_coeff(dng_md_t& all_dng_md, chromatix_lsc_t& lsc_calib, lsc_coeff_weight_t* coeff_weight)
@@ -135,14 +135,14 @@ static void get_vignette_coeff(dng_md_t& all_dng_md, chromatix_lsc_t& lsc_calib,
                 flag = true;
                 total_step = 1.0 / lsc_calib.element[i].apertureVal - 1.0 / lsc_calib.element[i + 1].apertureVal;
                 part_step0 = 1.0 / apertureVal - 1.0 / lsc_calib.element[i + 1].apertureVal;
-                spdlog::info("apertureVal input {} apertureVal0 {} apertureVal1 {}", apertureVal, lsc_calib.element[i].apertureVal, lsc_calib.element[i + 1].apertureVal);
-                spdlog::info("total_step {} part_step0 {}", total_step, part_step0);
+                log_info("apertureVal input %lf apertureVal0 %lf apertureVal1 %lf\n", apertureVal, lsc_calib.element[i].apertureVal, lsc_calib.element[i + 1].apertureVal);
+                log_info("total_step %lf part_step0 %lf\n", total_step, part_step0);
                 break;
             }
         }
         if (!flag)
         {
-            spdlog::error("can't find two neareset aperture value");
+            log_error("can't find two neareset aperture value\n");
             exit(1);
         }
 
@@ -152,10 +152,10 @@ static void get_vignette_coeff(dng_md_t& all_dng_md, chromatix_lsc_t& lsc_calib,
         double weight0 = part_step0 / total_step;
         double weight1 = 1.0 - weight0;
 
-        spdlog::info("weight0 {} weight1 {} weight2 {} weight3 {}",
+        log_info("weight0 %lf weight1 %lf weight2 %lf weight3 %lf\n",
             (coeff_weight)->weight, (coeff_weight + 1)->weight, (coeff_weight + 2)->weight, (coeff_weight + 3)->weight);
 
-        spdlog::info("weight0 {:01.4f} weight1 {:01.4f}", weight0, weight1);
+        log_info("weight0 %lf weight1 %lf\n", weight0, weight1);
 
         (coeff_weight)->weight = (coeff_weight)->weight * weight0;
         (coeff_weight + 1)->weight = (coeff_weight + 1)->weight * weight0;
@@ -165,7 +165,7 @@ static void get_vignette_coeff(dng_md_t& all_dng_md, chromatix_lsc_t& lsc_calib,
 
 
 
-    spdlog::info("weight0 {} weight1 {} weight2 {} weight3 {}",
+    log_info("weight0 %lf weight1 %lf weight2 %lf weight3 %lf\n",
         (coeff_weight)->weight, (coeff_weight + 1)->weight, (coeff_weight + 2)->weight, (coeff_weight + 3)->weight);
 }
 
@@ -259,7 +259,6 @@ static void lsc_reg_calc(dng_md_t& all_dng_md, lsc_reg_t& lsc_reg)
         //ss << std::endl;
         //fprintf(stdout, "\n");
     }
-    //spdlog::info("\n{}", ss.str());
 }
 
 static void awbgain_reg_calc(dng_md_t& all_dng_md, awbgain_reg_t& awbgain_reg)
@@ -276,7 +275,7 @@ static void awbgain_reg_calc(dng_md_t& all_dng_md, awbgain_reg_t& awbgain_reg)
 
     double BaselineExposure = all_dng_md.ae_comp_md.BaselineExposure;
     double compensat_gain = pow(2, BaselineExposure);
-    spdlog::info("compensat_gain {:.4f}", compensat_gain);
+    log_info("compensat_gain %lf\n", compensat_gain);
 
     awbgain_reg.ae_compensat_gain = (uint32_t)(compensat_gain * 1024);
 }
@@ -349,7 +348,7 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
 
     for (int32_t i = 0; i < 25; i++)
     {
-        spdlog::info("========input xy = {:.4f} {:.4f}========", input_x, input_y);
+        log_info("========input xy = %lf %lf========\n", input_x, input_y);
         std::cout << "cameraNeutral:" << cameraNeutral << std::endl;
 
         dist_1_x = abs(input_x - white_point1_xy[0]);
@@ -361,13 +360,13 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
         dist_2_y = abs(input_y - white_point2_xy[1]);
 
         dist_2 = sqrt(dist_2_x * dist_2_x + dist_2_y * dist_2_y);
-        spdlog::info("dist to 1 = {:.4f}, to 2 = {:.4f}", dist_1, dist_2);
+        log_info("dist to 1 = %lf, to 2 = %lf\n", dist_1, dist_2);
 
         weight_1 = dist_1_x / (dist_1_x + dist_2_x);
         weight_2 = dist_2_x / (dist_1_x + dist_2_x);
 
 
-        spdlog::info("weight1 = {:.4f}, weight2 = {:.4f}", weight_1, weight_2);
+        log_info("weight1 = %lf, weight2 = %lf\n", weight_1, weight_2);
 
         cv::Mat tmp_CM = CM_2 * weight_2 + CM_1 * weight_1;
         tmp_CM = tmp_CM.inv();
@@ -384,7 +383,7 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
         out_x = X / (X + Y + Z);
         out_y = Y / (X + Y + Z);
 
-        spdlog::info("========out xy = {:.4f} {:.4f}========", out_x, out_y);
+        log_info("========out xy = %lf %lf========\n", out_x, out_y);
 
         if (abs(out_x - input_x) < 0.01 &&  abs(out_y - input_y) < 0.01)
         {
@@ -408,17 +407,17 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
 
     if (all_dng_md.cc_md.Analogbalance[0] != 1.0 || all_dng_md.cc_md.Analogbalance[1] != 1.0 || all_dng_md.cc_md.Analogbalance[2] != 1.0)
     {
-        spdlog::error("AB is not all == 1.0");
+        log_error("AB is not all == 1.0\n");
     }
     if (all_dng_md.cc_md.CameraCalibration1[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration1[1][1] != 1.0
         || all_dng_md.cc_md.CameraCalibration1[2][2] != 1.0)
     {
-        spdlog::error("CC1 is not I matrix");
+        log_error("CC1 is not I matrix\n");
     }
     if (all_dng_md.cc_md.CameraCalibration2[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration2[1][1] != 1.0
         || all_dng_md.cc_md.CameraCalibration2[2][2] != 1.0)
     {
-        spdlog::error("CC2 is not I matrix");
+        log_error("CC2 is not I matrix\n");
     }
 
     cv::Mat CM_1(3, 3, CV_64FC1);
@@ -623,7 +622,7 @@ static void gamma_reg_calc(gamma_reg_t& gamma_reg)
 
 void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
 
     data_buffer* input = in[0];
     data_buffer* output0 = new data_buffer(input->width, input->height, input->data_type, input->bayer_pattern, "fe_fw_out0");
@@ -651,12 +650,12 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     hw_base::hw_run(stat_out, frame_cnt);
 
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 void fe_firmware::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bypass",     UINT_32,     &this->bypass          }
     };
@@ -666,11 +665,11 @@ void fe_firmware::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 fe_firmware::~fe_firmware()
 {
-    spdlog::info("{0} module {1} deinit start", __FUNCTION__, name);
-    spdlog::info("{0} module {1} deinit end", __FUNCTION__, name);
+    log_info("%s module %s deinit start\n", __FUNCTION__, name);
+    log_info("%s module %s deinit end\n", __FUNCTION__, name);
 };

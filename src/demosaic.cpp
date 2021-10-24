@@ -103,7 +103,7 @@ static void demosaic_hw_core(uint16_t* indata, uint16_t* r_out, uint16_t* g_out,
 
 void demosaic::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     data_buffer* input_raw = in[0];
     bayer_type_t bayer_pattern = input_raw->bayer_pattern;
     fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
@@ -191,12 +191,12 @@ void demosaic::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     delete[] tmp;
 
     hw_base::hw_run(stat_out, frame_cnt);
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 void demosaic::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,     &this->bypass          }
     };
@@ -206,13 +206,13 @@ void demosaic::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 demosaic::~demosaic()
 {
-    spdlog::info("{0} module deinit start", __FUNCTION__);
-    spdlog::info("{0} module deinit end", __FUNCTION__);
+    log_info("%s module deinit start\n", __FUNCTION__);
+    log_info("%s module deinit end\n", __FUNCTION__);
 }
 
 void demosaic::checkparameters(demosaic_reg_t* reg)

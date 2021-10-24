@@ -3,8 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "spdlog/spdlog.h"
+#include "log.h"
 
 enum bayer_type_t {
     BAYER_UNSUPPORT = -1,
@@ -70,13 +69,13 @@ struct data_buffer {
 #endif
         buffer_name[len - 1] = '\0';
 
-        spdlog::info("alloc buffer {0:s} memory {1}", buffer_name, fmt::ptr(data_ptr));
+        log_debug("alloc buffer %s memory %p\n", buffer_name, data_ptr);
     }
     ~data_buffer()
     {
         if (data_ptr != nullptr)
         {
-            spdlog::info("free buffer {0:s} memory {1}", buffer_name, fmt::ptr(data_ptr));
+            log_debug("free buffer %s memory %p\n", buffer_name, data_ptr);
             delete[] data_ptr;
         }
         if (buffer_name != nullptr)
@@ -116,7 +115,7 @@ T common_check_bits(T& input, uint32_t bits, const char* reg_name) //for unsigne
     T min_val = 0U;
     if (input > max_val)
     {
-        spdlog::error("{} check fail max_val {}, current val {}", reg_name, max_val, input);
+        log_error("%s check fail max_val %d, current val %d\n", reg_name, max_val, input);
         return max_val;
     }
     return input;
@@ -129,12 +128,12 @@ T common_check_bits_ex(T& input, uint32_t bits, const char* reg_name) //for sign
     T min_val = 0 - (1 << (bits - 1));
     if (input > max_val)
     {
-        spdlog::error("{} check fail max_val {}, current val {}", reg_name, max_val, input);
+        log_error("%s check fail max_val %d, current val %d\n", reg_name, max_val, input);
         return max_val;
     }
     else if (input < min_val)
     {
-        spdlog::error("{} check fail min_val {}, current val {}", reg_name, min_val, input);
+        log_error("%s check fail min_val %d, current val %d\n", reg_name, min_val, input);
         return min_val;
     }
     return input;

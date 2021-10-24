@@ -1,6 +1,6 @@
 #include <stdio.h>
+#include <string>
 #include "pipeline_manager.h"
-#include "spdlog/spdlog.h"
 
 extern void test_V1_pipeline(pipeline_manager* manager);
 
@@ -16,12 +16,12 @@ pipeline_collection pipelines[] = {
 // -p pipe_number -cfg xml_file -f frame_end 
 int main(int argc, char* argv[])
 {
-    //spdlog::logger* logger = spdlog::default_logger_raw();
+    set_log_level(LOG_TRACE_LEVEL);
     if (argc < 7) {
-        spdlog::info("input param number must >= 5");
+        log_info("input param number must >= 5\n");
         return 0;
     }
-    spdlog::info("run command:");
+    log_info("run command:\n");
 
     std::string cmd_str;
     for (int i = 0; i < argc; i++)
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
         cmd_str.append(argv[i]);
         cmd_str.append(" ");
     }
-    spdlog::info(cmd_str);
+    log_info("%s\n", cmd_str.c_str());
 
     int32_t pipe_id = -1;
     char* cfg_file_name = NULL;
@@ -52,13 +52,13 @@ int main(int argc, char* argv[])
     }
     if (pipe_id < 0 || frame_end < 0 || cfg_file_name == NULL)
     {
-        spdlog::info("param error");
+        log_info("param error\n");
         return 0;
     }
 
     if (pipe_id >= sizeof(pipelines) / sizeof(pipeline_collection))
     {
-        spdlog::error("pipe_id out of range");
+        log_error("pipe_id out of range\n");
         return 0;
     }
 

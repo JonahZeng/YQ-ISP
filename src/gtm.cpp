@@ -1,5 +1,6 @@
 #include "fe_firmware.h"
 #include <sstream>
+#include <assert.h>
 
 gtm::gtm(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
 {
@@ -26,7 +27,7 @@ static void gtm_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, 
             }
             y_tmp = r[row * xsize + col] * rgb2y[0] + g[row * xsize + col] * rgb2y[1] + b[row * xsize + col] * rgb2y[2];
             y_tmp = (y_tmp + 512) >> 10;
-            //spdlog::info("{}, {}, {}, y_tmp {}", r[row * xsize + col], g[row * xsize + col], b[row * xsize + col], y_tmp);
+
             if (y_tmp > MAX_VAL)
                 y_tmp = MAX_VAL;
             uint32_t idx1 = y_tmp >> 6;
@@ -56,7 +57,7 @@ static void gtm_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, 
 
 void gtm::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     data_buffer* input0 = in[0];
     data_buffer* input1 = in[1];
     data_buffer* input2 = in[2];
@@ -129,12 +130,12 @@ void gtm::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     delete[] tmp2;
 
     hw_base::hw_run(stat_out, frame_cnt);
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 void gtm::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,         &this->bypass          },
         {"rgb2y",                  VECT_UINT32,     &this->rgb2y,         3},
@@ -146,13 +147,13 @@ void gtm::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 gtm::~gtm()
 {
-    spdlog::info("{0} module deinit start", __FUNCTION__);
-    spdlog::info("{0} module deinit end", __FUNCTION__);
+    log_info("%s module deinit start\n", __FUNCTION__);
+    log_info("%s module deinit end\n", __FUNCTION__);
 }
 
 void gtm::checkparameters(gtm_reg_t* reg)
@@ -167,9 +168,9 @@ void gtm::checkparameters(gtm_reg_t* reg)
         reg->gain_lut[i] = common_check_bits(reg->gain_lut[i], 13, "tone_curve"); //1024 = 1.0
     }
 
-    spdlog::info("================= gtm reg=================");
-    spdlog::info("bypass {}", reg->bypass);
-    spdlog::info("rgb2y {} {} {}", reg->rgb2y[0], reg->rgb2y[1], reg->rgb2y[2]);
+    log_info("================= gtm reg=================\n");
+    log_info("bypass %d\n", reg->bypass);
+    log_info("rgb2y %d %d %d\n", reg->rgb2y[0], reg->rgb2y[1], reg->rgb2y[2]);
     std::stringstream ostr;
 
     for (int32_t i = 0; i < 257; i++)
@@ -181,6 +182,6 @@ void gtm::checkparameters(gtm_reg_t* reg)
         }
     }
 
-    spdlog::info("gain_lut \n{}", ostr.str());
-    spdlog::info("================= gtm reg=================");
+    log_info("gain_lut \n%s\n", ostr.str());
+    log_info("================= gtm reg=================\n");
 }

@@ -1,4 +1,5 @@
 #include "fe_firmware.h"
+#include <assert.h>
 #include <sstream>
 
 cc::cc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
@@ -43,7 +44,7 @@ static void cc_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, u
 
 void cc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) 
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     data_buffer* input0 = in[0];
     data_buffer* input1 = in[1];
     data_buffer* input2 = in[2];
@@ -112,11 +113,11 @@ void cc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     delete[] tmp2;
 
     hw_base::hw_run(stat_out, frame_cnt);
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 void cc::init()
 {
-    spdlog::info("{0} run start", __FUNCTION__);
+    log_info("%s run start\n", __FUNCTION__);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,     &this->bypass          },
         {"ccm",                    VECT_INT32,  &this->ccm,           9},
@@ -128,13 +129,13 @@ void cc::init()
     }
 
     hw_base::init();
-    spdlog::info("{0} run end", __FUNCTION__);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
 cc::~cc()
 {
-    spdlog::info("{0} module deinit start", __FUNCTION__);
-    spdlog::info("{0} module deinit end", __FUNCTION__);
+    log_info("%s module deinit start\n", __FUNCTION__);
+    log_info("%s module deinit end\n", __FUNCTION__);
 }
 
 void cc::checkparameters(cc_reg_t* reg)
@@ -145,8 +146,8 @@ void cc::checkparameters(cc_reg_t* reg)
         reg->ccm[i] = common_check_bits_ex(reg->ccm[i], 14, "ccm");
     }
 
-    spdlog::info("================= cc reg=================");
-    spdlog::info("bypass {}", reg->bypass);
+    log_info("================= cc reg=================\n");
+    log_info("bypass %d\n", reg->bypass);
     std::stringstream ostr;
 
     for (int32_t i = 0; i < 9; i++)
@@ -157,6 +158,6 @@ void cc::checkparameters(cc_reg_t* reg)
             ostr << std::endl;
         }
     }
-    spdlog::info("ccm \n{}", ostr.str());
-    spdlog::info("================= cc reg=================");
+    log_info("ccm \n%s\n", ostr.str());
+    log_info("================= cc reg=================\n");
 }
