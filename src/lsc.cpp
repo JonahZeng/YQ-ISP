@@ -1,6 +1,4 @@
 #include "fe_firmware.h"
-#include <sstream>
-
 
 lsc::lsc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name),luma_gain(LSC_GRID_ROWS * LSC_GRID_COLS)
 {
@@ -170,17 +168,6 @@ void lsc::checkparameters(lsc_reg_t* reg)
     log_info("block_start_x_oft %d\n", reg->block_start_x_oft);
     log_info("block_start_y_idx %d\n", reg->block_start_y_idx);
     log_info("block_start_y_oft %d\n", reg->block_start_y_oft);
-    std::stringstream ostr;
-    
-    for (int32_t i = 0; i < LSC_GRID_ROWS * LSC_GRID_COLS; i++)
-    {
-        ostr << reg->luma_gain[i] << ", ";
-        if (i % LSC_GRID_COLS == LSC_GRID_COLS - 1)
-        {
-            ostr << std::endl;
-        }
-    }
-
-    log_info("luma gain \n%s\n", ostr.str());
+    log_array("luma gain:\n", "%5d, ", reg->luma_gain, LSC_GRID_ROWS * LSC_GRID_COLS, LSC_GRID_COLS);
     log_info("================= lsc reg=================\n");
 }

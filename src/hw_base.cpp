@@ -1,5 +1,6 @@
 #include "hw_base.h"
 #include <stdexcept>
+#include <typeinfo>
 #include "fileRead.h"
 
 hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name) :

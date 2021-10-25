@@ -3,7 +3,6 @@
 #include "chromatix_lsc.h"
 #include "dng_tag_values.h"
 #include "dng_xy_coord.h"
-//#include <sstream>
 #include "opencv2/opencv.hpp"
 
 extern dng_md_t g_dng_all_md;
@@ -229,8 +228,6 @@ static void lsc_reg_calc(dng_md_t& all_dng_md, lsc_reg_t& lsc_reg)
 
     get_vignette_coeff(all_dng_md, lsc_calib, coeff_weight);
 
-    //std::stringstream ss;
-
     for (uint32_t row = 0; row < LSC_GRID_ROWS; row++)
     {
         for (uint32_t col = 0; col < LSC_GRID_COLS; col++)
@@ -253,11 +250,7 @@ static void lsc_reg_calc(dng_md_t& all_dng_md, lsc_reg_t& lsc_reg)
             double g = g0 * coeff_weight[0].weight + g1 * coeff_weight[1].weight + g2 * coeff_weight[2].weight + g3 * coeff_weight[3].weight;
 
             lsc_reg.luma_gain[row * LSC_GRID_COLS + col] = (uint32_t)(g * 1024);
-            //fprintf(stdout, "%5d, ", lsc_reg.luma_gain[row * LSC_GRID_COLS + col]);
-            //ss << lsc_reg.luma_gain[row * LSC_GRID_COLS + col] << ", ";
         }
-        //ss << std::endl;
-        //fprintf(stdout, "\n");
     }
 }
 
@@ -348,8 +341,9 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
 
     for (int32_t i = 0; i < 25; i++)
     {
-        log_info("========input xy = %lf %lf========\n", input_x, input_y);
-        std::cout << "cameraNeutral:" << cameraNeutral << std::endl;
+        log_info("-----------loop %d, input xy = %.6lf %.6lf\n", i, input_x, input_y);
+        log_array("cameraNeutral:\n", "%.6lf, ", cameraNeutral.ptr<double>(), (uint32_t)cameraNeutral.cols*cameraNeutral.rows, (uint32_t)cameraNeutral.cols);
+        //std::cout << "cameraNeutral:" << cameraNeutral << std::endl;
 
         dist_1_x = abs(input_x - white_point1_xy[0]);
         dist_1_y = abs(input_y - white_point1_xy[1]);
@@ -360,21 +354,23 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
         dist_2_y = abs(input_y - white_point2_xy[1]);
 
         dist_2 = sqrt(dist_2_x * dist_2_x + dist_2_y * dist_2_y);
-        log_info("dist to 1 = %lf, to 2 = %lf\n", dist_1, dist_2);
+        log_info("dist to 1 = %.6lf, to 2 = %.6lf\n", dist_1, dist_2);
 
         weight_1 = dist_1_x / (dist_1_x + dist_2_x);
         weight_2 = dist_2_x / (dist_1_x + dist_2_x);
 
 
-        log_info("weight1 = %lf, weight2 = %lf\n", weight_1, weight_2);
+        log_info("weight1 = %.6lf, weight2 = %.6lf\n", weight_1, weight_2);
 
         cv::Mat tmp_CM = CM_2 * weight_2 + CM_1 * weight_1;
         tmp_CM = tmp_CM.inv();
 
-        std::cout << "tmp_CM:" << tmp_CM << std::endl;
+        //std::cout << "tmp_CM:" << tmp_CM << std::endl;
+        log_array("tmp_CM:\n", "%.6lf, ", tmp_CM.ptr<double>(), (uint32_t)tmp_CM.cols*tmp_CM.rows, (uint32_t)tmp_CM.cols);
 
         cv::Mat tmp_XYZ = tmp_CM * cameraNeutral;
-        std::cout << "tmp_XYZ:" << tmp_XYZ << std::endl;
+        //std::cout << "tmp_XYZ:" << tmp_XYZ << std::endl;
+        log_array("tmp_XYZ:\n", "%.6lf, ", tmp_XYZ.ptr<double>(), (uint32_t)tmp_XYZ.cols*tmp_XYZ.rows, (uint32_t)tmp_XYZ.cols);
 
         double X = tmp_XYZ.at<double>(0);
         double Y = tmp_XYZ.at<double>(1);
@@ -383,7 +379,7 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
         out_x = X / (X + Y + Z);
         out_y = Y / (X + Y + Z);
 
-        log_info("========out xy = %lf %lf========\n", out_x, out_y);
+        log_info("out xy = %.6lf %.6lf\n", out_x, out_y);
 
         if (abs(out_x - input_x) < 0.01 &&  abs(out_y - input_y) < 0.01)
         {
@@ -452,7 +448,7 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
         CM_1, CM_2, &weight1, &weight2);
 
     cv::Mat FM = FM_1 * weight1 + FM_2 * weight2;
-    std::cout << "camera2XYZ_mat" << FM << std::endl;
+    log_array("camera2XYZ_mat\n", "%lf, ", FM.ptr<double>(), (uint32_t)FM.cols*FM.rows, (uint32_t)FM.cols);
 
     //cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
     //    3.2404542, -1.5371385, -0.4985314,
@@ -462,10 +458,8 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
         1.3459433, -0.2556075, -0.0511118,
         -0.5445989, 1.5081673, 0.0205351,
         0.0000000, 0.0000000, 1.2118128);
-    //std::cout << "XYZ2sRGB:" << XYZ2sRGB << std::endl;
-    std::cout << "ccm:" << std::endl;
     cv::Mat ccm = XYZ2photoRGB * FM;
-    std::cout << ccm << std::endl;
+    log_array("ccm:\n", "%lf, ", ccm.ptr<double>(), (uint32_t)ccm.cols*FM.rows, (uint32_t)ccm.cols);
 
     cc_reg.bypass = 0;
     for (int32_t i = 0; i < 9; i++)
@@ -555,42 +549,15 @@ static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_
             }
         }
 
-        uint32_t gain_map[257] = {
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024
-        };
+        uint32_t gain_map[257] = { 0 };
 
         for (int32_t i = 0; i < 256; i++)
         {
             hist_equal_res[i] = hist_equal_res[i] * 1024 / i;
             gain_map[i] = uint32_t(hist_equal_res[i]);
-            printf("%d, ", gain_map[i]);
-            if (i % 32 == 31)
-            {
-                printf("\n");
-            }
         }
         gain_map[256] = gain_map[255];
+        log_array("gain_map:\n", "%6d, ", gain_map, 257, 16);
 #ifdef _MSC_VER
         memcpy_s(gtm_reg.gain_lut, sizeof(uint32_t) * 257, gain_map, sizeof(uint32_t) * 257);
 #else
@@ -600,8 +567,6 @@ static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_
         delete[] hist_equal_db;
         delete[] hist_equal_res;
     }
-
-    //TODO: GTM stat calc gtm curve
 }
 
 static void gtm_stat_reg_calc(gtm_stat_reg_t& gtm_stat_reg)

@@ -2,9 +2,29 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctime>
+#ifdef _MSC_VER
+#include <Windows.h>
+#else
 #include <sys/time.h>
+#endif
 
 static int32_t g_log_level;
+
+
+#ifdef _MSC_VER
+#define LOG_TIME(level) {SYSTEMTIME system_time;\
+    GetLocalTime(&system_time);\
+    printf("[%d-%02d-%02d %02d:%02d:%02d:%03d] [%s] ", system_time.wYear, system_time.wMonth, system_time.wDay, system_time.wHour,\
+        system_time.wMinute, system_time.wSecond, system_time.wMilliseconds, level);}
+#else
+#define LOG_TIME(level) {time_t now = time(nullptr);\
+    tm *ltm = gmtime(&now);\
+    timeval start_time;\
+    gettimeofday(&start_time, NULL);\
+    printf("[%d-%02d-%02d %02d:%02d:%02d:%03ld] [level] ", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour,\
+        ltm->tm_min, ltm->tm_sec, start_time.tv_usec / 1000);}
+#endif
+
 
 void set_log_level(int32_t level)
 {
@@ -23,13 +43,7 @@ void log_trace(const char *fmt, ...)
 {
     if(g_log_level <= LOG_TRACE_LEVEL)
     {
-        time_t now = time(nullptr);
-        tm *ltm = gmtime(&now);
-        timeval start_time;
-        gettimeofday(&start_time, NULL);
-        printf("[%d-%d-%d %d:%d:%d:%03ld] [trace]", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour, 
-            ltm->tm_min, ltm->tm_sec, start_time.tv_usec/1000);
-
+        LOG_TIME("trace");
         va_list marker;
         va_start(marker, fmt);
         vprintf(fmt, marker);
@@ -41,13 +55,7 @@ void log_debug(const char *fmt, ...)
 {
     if(g_log_level <= LOG_DEBUG_LEVEL)
     {
-        time_t now = time(nullptr);
-        tm *ltm = gmtime(&now);
-        timeval start_time;
-        gettimeofday(&start_time, NULL);
-        printf("[%d-%d-%d %d:%d:%d:%03ld] [debug]", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour, 
-            ltm->tm_min, ltm->tm_sec, start_time.tv_usec/1000);
-
+        LOG_TIME("debug");
         va_list marker;
         va_start(marker, fmt);
         vprintf(fmt, marker);
@@ -59,13 +67,7 @@ void log_info(const char *fmt, ...)
 {
     if(g_log_level <= LOG_INFO_LEVEL)
     {
-        time_t now = time(nullptr);
-        tm *ltm = gmtime(&now);
-        timeval start_time;
-        gettimeofday(&start_time, NULL);
-        printf("[%d-%d-%d %d:%d:%d:%03ld] [info]", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour, 
-            ltm->tm_min, ltm->tm_sec, start_time.tv_usec/1000);
-
+        LOG_TIME("info");
         va_list marker;
         va_start(marker, fmt);
         vprintf(fmt, marker);
@@ -77,13 +79,7 @@ void log_warning(const char *fmt, ...)
 {
     if(g_log_level <= LOG_WARNING_LEVEL)
     {
-        time_t now = time(nullptr);
-        tm *ltm = gmtime(&now);
-        timeval start_time;
-        gettimeofday(&start_time, NULL);
-        printf("[%d-%d-%d %d:%d:%d:%03ld] [warning]", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour, 
-            ltm->tm_min, ltm->tm_sec, start_time.tv_usec/1000);
-
+        LOG_TIME("warn");
         va_list marker;
         va_start(marker, fmt);
         vprintf(fmt, marker);
@@ -95,13 +91,7 @@ void log_error(const char *fmt, ...)
 {
     if(g_log_level <= LOG_ERROR_LEVEL)
     {
-        time_t now = time(nullptr);
-        tm *ltm = gmtime(&now);
-        timeval start_time;
-        gettimeofday(&start_time, NULL);
-        printf("[%d-%d-%d %d:%d:%d:%03ld] [error]", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour, 
-            ltm->tm_min, ltm->tm_sec, start_time.tv_usec/1000);
-
+        LOG_TIME("error");
         va_list marker;
         va_start(marker, fmt);
         vprintf(fmt, marker);
@@ -113,13 +103,7 @@ void log_critical(const char *fmt, ...)
 {
     if(g_log_level <= LOG_CRITICAL_LEVEL)
     {
-        time_t now = time(nullptr);
-        tm *ltm = gmtime(&now);
-        timeval start_time;
-        gettimeofday(&start_time, NULL);
-        printf("[%d-%d-%d %d:%d:%d:%03ld] [critical]", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour, 
-            ltm->tm_min, ltm->tm_sec, start_time.tv_usec/1000);
-
+        LOG_TIME("critical");
         va_list marker;
         va_start(marker, fmt);
         vprintf(fmt, marker);

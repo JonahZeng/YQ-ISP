@@ -1,6 +1,5 @@
 #include "fe_firmware.h"
 #include <assert.h>
-#include <sstream>
 
 cc::cc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
 {
@@ -148,16 +147,6 @@ void cc::checkparameters(cc_reg_t* reg)
 
     log_info("================= cc reg=================\n");
     log_info("bypass %d\n", reg->bypass);
-    std::stringstream ostr;
-
-    for (int32_t i = 0; i < 9; i++)
-    {
-        ostr << reg->ccm[i] << ", ";
-        if (i % 3 == 2)
-        {
-            ostr << std::endl;
-        }
-    }
-    log_info("ccm \n%s\n", ostr.str());
+    log_array("ccm:\n", "%5d, ", reg->ccm, 9, 3);
     log_info("================= cc reg=================\n");
 }

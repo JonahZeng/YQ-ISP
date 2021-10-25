@@ -1,5 +1,4 @@
 #include "fe_firmware.h"
-#include <sstream>
 #include <assert.h>
 
 gtm::gtm(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
@@ -171,17 +170,6 @@ void gtm::checkparameters(gtm_reg_t* reg)
     log_info("================= gtm reg=================\n");
     log_info("bypass %d\n", reg->bypass);
     log_info("rgb2y %d %d %d\n", reg->rgb2y[0], reg->rgb2y[1], reg->rgb2y[2]);
-    std::stringstream ostr;
-
-    for (int32_t i = 0; i < 257; i++)
-    {
-        ostr << reg->gain_lut[i] << ", ";
-        if (i % 32 == 31)
-        {
-            ostr << std::endl;
-        }
-    }
-
-    log_info("gain_lut \n%s\n", ostr.str());
+    log_array("gain_lut:\n", "%6d, ", reg->gain_lut, 257, 16);
     log_info("================= gtm reg=================\n");
 }

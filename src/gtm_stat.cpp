@@ -1,5 +1,4 @@
 #include "fe_firmware.h"
-#include <sstream>
 #include <assert.h>
 
 #define CLIP3(x, min, max) (x>max)?max:((x<min)?min:x)
@@ -87,16 +86,7 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     memcpy(&stat_out->gtm_stat, stat_gtm, sizeof(gtm_stat_info_t));
 #endif
 
-    std::stringstream ostr;
-    for (int32_t i = 0; i < 256; i++)
-    {
-        ostr << stat_gtm->luma_hist[i] << ", ";
-        if (i % 32 == 31)
-        {
-            ostr << std::endl;
-        }
-    }
-    log_info("luma hist[256]:\n%s", ostr.str());
+    log_array("luma hist[256]:\n", "%7d, ", stat_gtm->luma_hist, 256, 16);
 
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);
