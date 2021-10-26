@@ -19,7 +19,7 @@ void log_info(const char *fmt, ...);
 void log_debug(const char *fmt, ...);
 void log_trace(const char *fmt, ...);
 
-#define log_array(info, fmt, arr_name, len, row_len) { printf(info);\
+#define log_array(info, fmt, arr_name, len, row_len) { printf(info); \
     for(uint32_t i=0; i<len; i++){\
         printf(fmt, arr_name[i]);\
         if(i % row_len == (row_len - 1)){\

@@ -1,0 +1,1 @@
+../bin/isp_emulation -p 0 -cfg ../cfg/V1_config.xml -f 2

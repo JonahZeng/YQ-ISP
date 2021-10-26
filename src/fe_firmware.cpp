@@ -551,11 +551,12 @@ static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_
 
         uint32_t gain_map[257] = { 0 };
 
-        for (int32_t i = 0; i < 256; i++)
+        for (int32_t i = 1; i < 256; i++)
         {
             hist_equal_res[i] = hist_equal_res[i] * 1024 / i;
             gain_map[i] = uint32_t(hist_equal_res[i]);
         }
+        gain_map[0] = 0;
         gain_map[256] = gain_map[255];
         log_array("gain_map:\n", "%6d, ", gain_map, 257, 16);
 #ifdef _MSC_VER

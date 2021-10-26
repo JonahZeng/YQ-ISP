@@ -8,7 +8,8 @@
                 "${workspaceFolder}/thirdparty/dng_sdk/include",
                 "${workspaceFolder}/thirdparty/libjpeg9b/include",
                 "${workspaceFolder}/thirdparty/libxml2/include",
-                "${workspaceFolder}/calib"
+                "${workspaceFolder}/calib",
+                "/usr/local/include/opencv4"
             ],
             "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",
