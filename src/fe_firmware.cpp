@@ -24,7 +24,6 @@ static void blc_reg_calc(dng_md_t& all_dng_md, blc_reg_t& blc_reg)
     blc_reg.white_level = (uint32_t)all_dng_md.blc_md.white_level;
 }
 
-
 typedef struct lsc_coeff_weight_s
 {
     double a1;

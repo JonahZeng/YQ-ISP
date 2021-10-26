@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
 
 #define LOG_CRITICAL_LEVEL	5
 #define LOG_DEBUG_LEVEL 	1
