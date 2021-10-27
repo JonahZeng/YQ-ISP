@@ -64,6 +64,7 @@ typedef struct ae_comp_md_s
 
 typedef struct dng_md_s
 {
+    std::string input_file_name;
     ae_dng_md_t ae_md;
     blc_dng_md_t blc_md;
     lsc_dng_md_t lsc_md;

@@ -81,6 +81,7 @@ void awbgain::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         awbgain_reg->gr_gain = gr_gain;
         awbgain_reg->gb_gain = gb_gain;
         awbgain_reg->b_gain = b_gain;
+        awbgain_reg->ae_compensat_gain = ae_compensat_gain;
     }
 
     checkparameters(awbgain_reg);

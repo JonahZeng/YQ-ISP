@@ -1,6 +1,7 @@
 #include "fe_firmware.h"
 #include "meta_data.h"
 #include "chromatix_lsc.h"
+#include "chromatix_cc.h"
 #include "dng_tag_values.h"
 #include "dng_xy_coord.h"
 #include "opencv2/opencv.hpp"
@@ -171,7 +172,7 @@ static void lsc_reg_calc(dng_md_t& all_dng_md, lsc_reg_t& lsc_reg)
 {
     chromatix_lsc_t lsc_calib =
     {
-#include "calib_lsc_sigma_A102_nikon.h"
+#include "calib_lsc_sigma_A102_nikonD610.h"
     };
     lsc_reg.block_size_x = all_dng_md.lsc_md.img_w / (LSC_GRID_COLS - 1);
     if (lsc_reg.block_size_x % 2 == 1)
@@ -398,72 +399,78 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
 
 static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
 {
-    cv::Mat cameraNeutral = (cv::Mat_<double>(3, 1) << all_dng_md.awb_md.r_Neutral, all_dng_md.awb_md.g_Neutral, all_dng_md.awb_md.b_Neutral);
+    chromatix_cc_t cc_calib = {
+#include "calib_cc_sigma_A102_nikonD610.h"
+    };
+    if (cc_calib.cc_mode == 1)
+    {
+        cv::Mat cameraNeutral = (cv::Mat_<double>(3, 1) << all_dng_md.awb_md.r_Neutral, all_dng_md.awb_md.g_Neutral, all_dng_md.awb_md.b_Neutral);
 
-    if (all_dng_md.cc_md.Analogbalance[0] != 1.0 || all_dng_md.cc_md.Analogbalance[1] != 1.0 || all_dng_md.cc_md.Analogbalance[2] != 1.0)
-    {
-        log_error("AB is not all == 1.0\n");
-    }
-    if (all_dng_md.cc_md.CameraCalibration1[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration1[1][1] != 1.0
-        || all_dng_md.cc_md.CameraCalibration1[2][2] != 1.0)
-    {
-        log_error("CC1 is not I matrix\n");
-    }
-    if (all_dng_md.cc_md.CameraCalibration2[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration2[1][1] != 1.0
-        || all_dng_md.cc_md.CameraCalibration2[2][2] != 1.0)
-    {
-        log_error("CC2 is not I matrix\n");
-    }
-
-    cv::Mat CM_1(3, 3, CV_64FC1);
-    cv::Mat CM_2(3, 3, CV_64FC1);
-    cv::Mat FM_1(3, 3, CV_64FC1);
-    cv::Mat FM_2(3, 3, CV_64FC1);
-
-    for (int32_t row = 0; row < 3; row++)
-    {
-        for (int32_t col = 0; col < 3; col++)
+        if (all_dng_md.cc_md.Analogbalance[0] != 1.0 || all_dng_md.cc_md.Analogbalance[1] != 1.0 || all_dng_md.cc_md.Analogbalance[2] != 1.0)
         {
-            CM_1.at<double>(row, col) = all_dng_md.cc_md.ColorMatrix1[row][col];
-            CM_2.at<double>(row, col) = all_dng_md.cc_md.ColorMatrix2[row][col];
-
-            FM_1.at<double>(row, col) = all_dng_md.cc_md.ForwardMatrix1[row][col];
-            FM_2.at<double>(row, col) = all_dng_md.cc_md.ForwardMatrix1[row][col];
+            log_error("AB is not all == 1.0\n");
         }
-    }
+        if (all_dng_md.cc_md.CameraCalibration1[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration1[1][1] != 1.0
+            || all_dng_md.cc_md.CameraCalibration1[2][2] != 1.0)
+        {
+            log_error("CC1 is not I matrix\n");
+        }
+        if (all_dng_md.cc_md.CameraCalibration2[0][0] != 1.0 || all_dng_md.cc_md.CameraCalibration2[1][1] != 1.0
+            || all_dng_md.cc_md.CameraCalibration2[2][2] != 1.0)
+        {
+            log_error("CC2 is not I matrix\n");
+        }
 
-    uint32_t CalibrationIlluminant1 = all_dng_md.cc_md.CalibrationIlluminant1;
-    uint32_t CalibrationIlluminant2 = all_dng_md.cc_md.CalibrationIlluminant2;
-    assert((CalibrationIlluminant1 >= lsD55 && CalibrationIlluminant1 <= lsD50) || CalibrationIlluminant1 == lsStandardLightA);
-    assert((CalibrationIlluminant2 >= lsD55 && CalibrationIlluminant2 <= lsD50) || CalibrationIlluminant2 == lsStandardLightA);
-    dng_xy_coord wp1, wp2;
-    get_xy_wp(CalibrationIlluminant1, CalibrationIlluminant2, wp1, wp2);
+        cv::Mat CM_1(3, 3, CV_64FC1);
+        cv::Mat CM_2(3, 3, CV_64FC1);
+        cv::Mat FM_1(3, 3, CV_64FC1);
+        cv::Mat FM_2(3, 3, CV_64FC1);
 
-    double x = 0.390669;
-    double y = 0.584906;
-    double weight1 = 0.5;
-    double weight2 = 0.5;
-    calc_xy_coordinate_by_cameraNeutral(&x, &y, cameraNeutral, wp1, wp2,
-        CM_1, CM_2, &weight1, &weight2);
+        for (int32_t row = 0; row < 3; row++)
+        {
+            for (int32_t col = 0; col < 3; col++)
+            {
+                CM_1.at<double>(row, col) = all_dng_md.cc_md.ColorMatrix1[row][col];
+                CM_2.at<double>(row, col) = all_dng_md.cc_md.ColorMatrix2[row][col];
 
-    cv::Mat FM = FM_1 * weight1 + FM_2 * weight2;
-    log_array("camera2XYZ_mat\n", "%lf, ", FM.ptr<double>(), (uint32_t)FM.cols*FM.rows, (uint32_t)FM.cols);
+                FM_1.at<double>(row, col) = all_dng_md.cc_md.ForwardMatrix1[row][col];
+                FM_2.at<double>(row, col) = all_dng_md.cc_md.ForwardMatrix1[row][col];
+            }
+        }
 
-    //cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
-    //    3.2404542, -1.5371385, -0.4985314,
-    //    -0.9692660, 1.8760108, 0.0415560,
-    //    0.0556434, -0.2040259, 1.0572252);
-    cv::Mat XYZ2photoRGB = (cv::Mat_<double>(3, 3) <<
-        1.3459433, -0.2556075, -0.0511118,
-        -0.5445989, 1.5081673, 0.0205351,
-        0.0000000, 0.0000000, 1.2118128);
-    cv::Mat ccm = XYZ2photoRGB * FM;
-    log_array("ccm:\n", "%lf, ", ccm.ptr<double>(), (uint32_t)ccm.cols*FM.rows, (uint32_t)ccm.cols);
+        uint32_t CalibrationIlluminant1 = all_dng_md.cc_md.CalibrationIlluminant1;
+        uint32_t CalibrationIlluminant2 = all_dng_md.cc_md.CalibrationIlluminant2;
+        assert((CalibrationIlluminant1 >= lsD55 && CalibrationIlluminant1 <= lsD50) || CalibrationIlluminant1 == lsStandardLightA);
+        assert((CalibrationIlluminant2 >= lsD55 && CalibrationIlluminant2 <= lsD50) || CalibrationIlluminant2 == lsStandardLightA);
+        dng_xy_coord wp1, wp2;
+        get_xy_wp(CalibrationIlluminant1, CalibrationIlluminant2, wp1, wp2);
 
-    cc_reg.bypass = 0;
-    for (int32_t i = 0; i < 9; i++)
-    {
-        cc_reg.ccm[i] = (int32_t)(ccm.at<double>(i / 3, i % 3) * 1024);
+        double x = 0.390669;
+        double y = 0.584906;
+        double weight1 = 0.5;
+        double weight2 = 0.5;
+        calc_xy_coordinate_by_cameraNeutral(&x, &y, cameraNeutral, wp1, wp2,
+            CM_1, CM_2, &weight1, &weight2);
+
+        cv::Mat FM = FM_1 * weight1 + FM_2 * weight2;
+        log_array("camera2XYZ_mat\n", "%lf, ", FM.ptr<double>(), (uint32_t)FM.cols*FM.rows, (uint32_t)FM.cols);
+
+        //cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
+        //    3.2404542, -1.5371385, -0.4985314,
+        //    -0.9692660, 1.8760108, 0.0415560,
+        //    0.0556434, -0.2040259, 1.0572252);
+        cv::Mat XYZ2photoRGB = (cv::Mat_<double>(3, 3) <<
+            1.3459433, -0.2556075, -0.0511118,
+            -0.5445989, 1.5081673, 0.0205351,
+            0.0000000, 0.0000000, 1.2118128);
+        cv::Mat ccm = XYZ2photoRGB * FM;
+        log_array("ccm:\n", "%lf, ", ccm.ptr<double>(), (uint32_t)ccm.cols*FM.rows, (uint32_t)ccm.cols);
+
+        cc_reg.bypass = 0;
+        for (int32_t i = 0; i < 9; i++)
+        {
+            cc_reg.ccm[i] = (int32_t)(ccm.at<double>(i / 3, i % 3) * 1024);
+        }
     }
 }
 

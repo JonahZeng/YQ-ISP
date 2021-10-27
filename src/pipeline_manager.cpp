@@ -218,7 +218,10 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                             m = 0;
                             while (token != NULL && m< (module_array->at(i)->cfgList[j].max_len)) {
                                 int vect_int = std::stoi(token);
-                                ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back(vect_int);
+                                if (m >= ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->size())
+                                    ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back(vect_int);
+                                else
+                                    ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->at(m) = vect_int;
                                 m++;
 #ifdef _MSC_VER
                                 token = strtok_s(NULL, s, &next_token);
@@ -236,7 +239,10 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                             m = 0;
                             while (token != NULL && m < (module_array->at(i)->cfgList[j].max_len)) {
                                 long int vect_lint = std::stol(token);
-                                ((vector<uint32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back((uint32_t)vect_lint);
+                                if (m >= ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->size())
+                                    ((vector<uint32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back((uint32_t)vect_lint);
+                                else
+                                    ((vector<uint32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->at(m) = (uint32_t)vect_lint;
                                 m++;
 #ifdef _MSC_VER
                                 token = strtok_s(NULL, s, &next_token);

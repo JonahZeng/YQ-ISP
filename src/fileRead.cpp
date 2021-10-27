@@ -461,6 +461,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
                     }
                 }
                 fclose(input_f);
+                g_dng_all_md.input_file_name = std::string(file_name);
             }
         }
         else if (strcmp(file_type_string, "DNG") == 0)
@@ -468,6 +469,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             data_buffer* out0 = nullptr;
             uint32_t bit_dep = 0;
             readDNG_by_adobe_sdk(file_name, &out0, &bit_dep);
+            g_dng_all_md.input_file_name = std::string(file_name);
             out[0] = out0;
             img_width = out0->width;
             img_height = out0->height;

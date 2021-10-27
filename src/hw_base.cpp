@@ -3,6 +3,10 @@
 #include <typeinfo>
 #include "fileRead.h"
 
+#include "meta_data.h"
+
+extern dng_md_t g_dng_all_md;
+
 hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name) :
     in(inpins), out(outpins), previous_hw(inpins), outport_of_previous_hw(inpins),
     next_hw_of_outport(outpins), next_hw_cnt_of_outport(outpins), name(new char[64]), write_pic_src_pin()
@@ -162,11 +166,6 @@ bool hw_base::prepare_input()
 
 void hw_base::write_raw_for_output(FILE* fp)
 {
-    if (fp == nullptr)
-    {
-        log_error("open file %s fail\n", write_pic_path);
-        return;
-    }
     uint32_t port = write_pic_src_pin[0];
     if (port >= out.size())
     {
@@ -201,11 +200,6 @@ void hw_base::write_raw_for_output(FILE* fp)
 
 void hw_base::write_pnm_for_output(FILE* fp)
 {
-    if (fp == nullptr)
-    {
-        log_error("open file %s fail\n", write_pic_path);
-        return;
-    }
     uint32_t port0 = write_pic_src_pin[0];
     uint32_t port1 = write_pic_src_pin[1];
     uint32_t port2 = write_pic_src_pin[2];
@@ -278,11 +272,6 @@ void hw_base::write_pnm_for_output(FILE* fp)
 
 void hw_base::write_yuv_for_output(FILE* fp)
 {
-    if (fp == nullptr)
-    {
-        log_error("open file %s fail\n", write_pic_path);
-        return;
-    }
     uint32_t port0 = write_pic_src_pin[0];
     uint32_t port1 = write_pic_src_pin[1];
     uint32_t port2 = write_pic_src_pin[2];
@@ -352,31 +341,54 @@ void hw_base::write_pic_for_output()
         return;
     }
     FILE* fp = nullptr;
+    std::string* input_file_name = &g_dng_all_md.input_file_name;
+    size_t ridx1 = input_file_name->rfind('/');
+    size_t ridx2 = input_file_name->rfind('.');
+    std::string input_raw_fn = input_file_name->substr(ridx1 + 1, ridx2 - ridx1 - 1);
+
+    std::string write_pic_path_str(write_pic_path);
+    ridx1 = write_pic_path_str.rfind('/');
+    write_pic_path_str.insert(ridx1 + 1, input_raw_fn.c_str(), input_raw_fn.size());
     if (strcmp(write_pic_format, "RAW") == 0 && write_pic_src_pin.size() == 1)
     {
 #ifdef _MSC_VER
-        fopen_s(&fp, write_pic_path, "wb");
+        fopen_s(&fp, write_pic_path_str.c_str(), "wb");
 #else
         fp = fopen(write_pic_path, "wb");
 #endif
+        if (fp == nullptr)
+        {
+            log_error("open file %s fail\n", write_pic_path_str.c_str());
+            return;
+        }
         write_raw_for_output(fp);
     }
     else if (strcmp(write_pic_format, "PNM") == 0 && write_pic_src_pin.size() == 3)
     {
 #ifdef _MSC_VER
-        fopen_s(&fp, write_pic_path, "wb");
+        fopen_s(&fp, write_pic_path_str.c_str(), "wb");
 #else
         fp = fopen(write_pic_path, "wb");
 #endif
+        if (fp == nullptr)
+        {
+            log_error("open file %s fail\n", write_pic_path_str.c_str());
+            return;
+        }
         write_pnm_for_output(fp);
     }
     else if (strcmp(write_pic_format, "YUV") == 0 && write_pic_src_pin.size() == 3)
     {
 #ifdef _MSC_VER
-        fopen_s(&fp, write_pic_path, "wb");
+        fopen_s(&fp, write_pic_path_str.c_str(), "wb");
 #else
         fp = fopen(write_pic_path, "wb");
 #endif
+        if (fp == nullptr)
+        {
+            log_error("open file %s fail\n", write_pic_path_str.c_str());
+            return;
+        }
         write_yuv_for_output(fp);
     }
     else {
@@ -387,7 +399,7 @@ void hw_base::write_pic_for_output()
     {
         fclose(fp);
     }
-    }
+}
 
 hw_base::~hw_base()
 {
