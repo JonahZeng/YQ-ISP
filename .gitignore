@@ -1,3 +1,4 @@
+*.yuv
 *.ipch
 *.db
 *.pdb

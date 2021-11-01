@@ -1,4 +1,4 @@
-#include "fe_firmware.h"
+﻿#include "fe_firmware.h"
 #include "meta_data.h"
 #include "chromatix_lsc.h"
 #include "chromatix_cc.h"
@@ -592,6 +592,31 @@ static void gamma_reg_calc(gamma_reg_t& gamma_reg)
     gamma_reg.gamma_x1024 = 2253;
 }
 
+static void rgb2yuv_reg_calc(rgb2yuv_reg_t& rgb2yuv_reg)
+{
+    rgb2yuv_reg.bypass = 0;
+    rgb2yuv_reg.rgb2yuv_coeff[0] = 306;// 0.299⋅R + 0.587⋅G + 0.114 B
+    rgb2yuv_reg.rgb2yuv_coeff[1] = 601;
+    rgb2yuv_reg.rgb2yuv_coeff[2] = 117;
+
+    rgb2yuv_reg.rgb2yuv_coeff[3] = -173;
+    rgb2yuv_reg.rgb2yuv_coeff[4] = -339;
+    rgb2yuv_reg.rgb2yuv_coeff[5] = 512;
+
+    rgb2yuv_reg.rgb2yuv_coeff[6] = 512;
+    rgb2yuv_reg.rgb2yuv_coeff[7] = -429;
+    rgb2yuv_reg.rgb2yuv_coeff[8] = -83;
+}
+
+static void sensor_crop_reg_calc(dng_md_t& all_dng_md, sensor_crop_reg_t& sensorcrop_reg)
+{
+    sensorcrop_reg.bypass = 0;
+    sensorcrop_reg.origin_x = all_dng_md.sensor_crop_size_info.origin_x;
+    sensorcrop_reg.origin_y = all_dng_md.sensor_crop_size_info.origin_y;
+    sensorcrop_reg.width = all_dng_md.sensor_crop_size_info.width;
+    sensorcrop_reg.height = all_dng_md.sensor_crop_size_info.height;
+}
+
 void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
     log_info("%s run start\n", __FUNCTION__);
@@ -606,12 +631,13 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     {
         reg_len += 1;
     }
-    data_buffer* output1 = new data_buffer((uint32_t)reg_len, 1, RAW, RGGB, "fe_fw_out1");
+    data_buffer* output1 = new data_buffer((uint32_t)reg_len, 1, DATA_TYPE_RAW, RGGB, "fe_fw_out1");
     fe_module_reg_t* reg_ptr = (fe_module_reg_t*)output1->data_ptr;
 
     out[0] = output0;
     out[1] = output1;
 
+    sensor_crop_reg_calc(g_dng_all_md, reg_ptr->sensor_crop_reg);
     blc_reg_calc(g_dng_all_md, reg_ptr->blc_reg);
     lsc_reg_calc(g_dng_all_md, reg_ptr->lsc_reg);
     awbgain_reg_calc(g_dng_all_md, reg_ptr->awbgain_reg);
@@ -619,6 +645,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     gtm_stat_reg_calc(reg_ptr->gtm_stat_reg);
     gtm_reg_calc(stat_out, reg_ptr->gtm_reg, frame_cnt);
     gamma_reg_calc(reg_ptr->gamma_reg);
+    rgb2yuv_reg_calc(reg_ptr->rgb2yuv_reg);
 
     hw_base::hw_run(stat_out, frame_cnt);
 

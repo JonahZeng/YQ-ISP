@@ -124,12 +124,13 @@ static void get_lsc_md_from_dng(dng_exif* exif, dng_ifd* main_ifd, dng_md_t& all
     all_md.lsc_md.img_w = main_ifd->fImageWidth;
     all_md.lsc_md.img_h = main_ifd->fImageLength;
 
-    all_md.lsc_md.crop_x = 0; //current pipeline no crop
-    all_md.lsc_md.crop_y = 0;
+    all_md.lsc_md.crop_x = (uint32_t)(main_ifd->fDefaultCropOriginH.As_real64());
+    all_md.lsc_md.crop_y = (uint32_t)(main_ifd->fDefaultCropOriginV.As_real64());
 
-    log_info("lsc info: FocalLength %lf mm, FocalPlaneResolutionUnit %d 1:none, 2:inch, 3:cm, 4:mm, 5:microm, \nFocalPlaneXResolution %lf, \
-        FocalPlaneYResolution %lf, FocusDistance %lf m\n",
-        all_md.lsc_md.FocalLength, all_md.lsc_md.FocalPlaneResolutionUnit, all_md.lsc_md.FocalPlaneXResolution, 
+    log_info("lsc info: FocalLength %lf mm, FocalPlaneResolutionUnit %d 1:none, 2:inch, 3:cm, 4:mm, 5:microm\n",
+        all_md.lsc_md.FocalLength, all_md.lsc_md.FocalPlaneResolutionUnit);
+    log_info("FocalPlaneXResolution %lf, \
+        FocalPlaneYResolution %lf, FocusDistance %lf m\n", all_md.lsc_md.FocalPlaneXResolution,
         all_md.lsc_md.FocalPlaneYResolution, all_md.lsc_md.FocusDistance);
     if (all_md.lsc_md.FocalPlaneResolutionUnit == 1)
     {
@@ -264,6 +265,13 @@ static void get_cc_md_from_dng(dng_info* info, dng_md_t& all_md)
     }
 }
 
+static void get_sensor_crop_info_from_dng(dng_info* info, dng_md_t& all_md)
+{
+    all_md.sensor_crop_size_info.origin_x = (uint32_t)(info->fIFD[info->fMainIndex]->fDefaultCropOriginH.As_real64());
+    all_md.sensor_crop_size_info.origin_y = (uint32_t)(info->fIFD[info->fMainIndex]->fDefaultCropOriginV.As_real64());
+    all_md.sensor_crop_size_info.width = (uint32_t)(info->fIFD[info->fMainIndex]->fDefaultCropSizeH.As_real64());
+    all_md.sensor_crop_size_info.height = (uint32_t)(info->fIFD[info->fMainIndex]->fDefaultCropSizeV.As_real64());
+}
 static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* bit_depth)
 {
     dng_file_stream stream(file_name);
@@ -330,7 +338,7 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
 
     if (*out0 == nullptr)
     {
-        *out0 = new data_buffer(stage1->Width(), stage1->Height(), RAW, bayer_tp, "raw_in out0");
+        *out0 = new data_buffer(stage1->Width(), stage1->Height(), DATA_TYPE_RAW, bayer_tp, "raw_in out0");
     }
     void* p_raw = (*out0)->data_ptr;
     dng_pixel_buffer raw_buf(dng_rect(stage1->Height(), stage1->Width()), 0, stage1->Planes(), stage1->PixelType(), pcPlanar, p_raw);
@@ -389,14 +397,19 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         negative->GetLinearizationInfo()->fWhiteLevel[3]);
 
     get_blc_md_from_dng(blc_dim_x, blc_dim_y, negative, bayer_tp, g_dng_all_md);
+
     get_ae_md_from_dng(exif, g_dng_all_md);
-    get_lsc_md_from_dng(exif, info.fIFD[info.fMainIndex], g_dng_all_md);
+    
 
     g_dng_all_md.ae_comp_md.BaselineExposure = info.fShared->fBaselineExposure.As_real64();
     
     get_awb_md_from_dng(&info, g_dng_all_md);
 
     get_cc_md_from_dng(&info, g_dng_all_md);
+
+    get_sensor_crop_info_from_dng(&info, g_dng_all_md);
+
+    get_lsc_md_from_dng(exif, info.fIFD[info.fMainIndex], g_dng_all_md);
 
     log_info("tone curve:\n");
     uint32_t profile_cnt = negative->ProfileCount();
@@ -437,7 +450,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             {
                 raw_bayer = BGGR;
             }
-            data_buffer* out0 = new data_buffer(img_width, img_height, RAW, raw_bayer, "raw_in out0");
+            data_buffer* out0 = new data_buffer(img_width, img_height, DATA_TYPE_RAW, raw_bayer, "raw_in out0");
             out[0] = out0;
 
             FILE* input_f;

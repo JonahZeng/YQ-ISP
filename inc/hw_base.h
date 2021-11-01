@@ -47,5 +47,6 @@ public:
 private:
     void write_raw_for_output(FILE* fp);
     void write_pnm_for_output(FILE* fp);
-    void write_yuv_for_output(FILE* fp);
+    void write_yuv422_for_output(FILE* fp);
+    void write_yuv444_for_output(FILE* fp);
 };

@@ -270,7 +270,7 @@ void hw_base::write_pnm_for_output(FILE* fp)
     }
 }
 
-void hw_base::write_yuv_for_output(FILE* fp)
+void hw_base::write_yuv422_for_output(FILE* fp)
 {
     uint32_t port0 = write_pic_src_pin[0];
     uint32_t port1 = write_pic_src_pin[1];
@@ -286,7 +286,7 @@ void hw_base::write_yuv_for_output(FILE* fp)
     data_buffer* src_data2 = out[port2];
     if (src_data0 != nullptr && src_data1 != nullptr && src_data2 != nullptr &&
         src_data0->width == 2 * src_data1->width && src_data0->width == 2 * src_data2->width &&
-        src_data0->height == src_data1->height && src_data0->width == src_data2->height)
+        src_data0->height == src_data1->height && src_data0->height == src_data2->height)
     {
         if (write_pic_bits > 8 && write_pic_bits <= 16)
         {
@@ -328,6 +328,51 @@ void hw_base::write_yuv_for_output(FILE* fp)
                 }
             }
             fwrite(buffer, sizeof(uint8_t), src_data0->width * 2 * src_data0->height, fp);
+            delete[] buffer;
+        }
+    }
+}
+
+void hw_base::write_yuv444_for_output(FILE* fp)
+{
+    uint32_t port0 = write_pic_src_pin[0];
+    uint32_t port1 = write_pic_src_pin[1];
+    uint32_t port2 = write_pic_src_pin[2];
+    if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
+    {
+        log_error("can't write pic because port = %d %d %d, all outport size = %ld\n", port0, port1, port2, out.size());
+        return;
+    }
+
+    data_buffer* src_data0 = out[port0];
+    data_buffer* src_data1 = out[port1];
+    data_buffer* src_data2 = out[port2];
+    if (src_data0 != nullptr && src_data1 != nullptr && src_data2 != nullptr &&
+        src_data0->width == src_data1->width && src_data0->width == src_data2->width &&
+        src_data0->height == src_data1->height && src_data0->height == src_data2->height)
+    {
+        if (write_pic_bits > 8 && write_pic_bits <= 16)
+        {
+            uint16_t* buffer = new uint16_t[src_data0->width *src_data0->height * 3];
+            for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
+            {
+                buffer[sz * 3 + 0] = (src_data0->data_ptr)[sz] >> (16 - write_pic_bits);
+                buffer[sz * 3 + 1] = (src_data1->data_ptr)[sz] >> (16 - write_pic_bits);
+                buffer[sz * 3 + 2] = (src_data2->data_ptr)[sz] >> (16 - write_pic_bits);
+            }
+            fwrite(buffer, sizeof(uint16_t), src_data0->width *src_data0->height * 3, fp);
+            delete[] buffer;
+        }
+        else if (write_pic_bits <= 8)
+        {
+            uint8_t* buffer = new uint8_t[src_data0->width *src_data0->height * 3];
+            for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
+            {
+                buffer[sz * 3 + 0] = (src_data0->data_ptr)[sz] >> (16 - write_pic_bits);
+                buffer[sz * 3 + 1] = (src_data1->data_ptr)[sz] >> (16 - write_pic_bits);
+                buffer[sz * 3 + 2] = (src_data2->data_ptr)[sz] >> (16 - write_pic_bits);
+            }
+            fwrite(buffer, sizeof(uint8_t), src_data0->width *src_data0->height * 3, fp);
             delete[] buffer;
         }
     }
@@ -377,7 +422,7 @@ void hw_base::write_pic_for_output()
         }
         write_pnm_for_output(fp);
     }
-    else if (strcmp(write_pic_format, "YUV") == 0 && write_pic_src_pin.size() == 3)
+    else if (strcmp(write_pic_format, "YUV422") == 0 && write_pic_src_pin.size() == 3)
     {
 #ifdef _MSC_VER
         fopen_s(&fp, write_pic_path_str.c_str(), "wb");
@@ -389,7 +434,21 @@ void hw_base::write_pic_for_output()
             log_error("open file %s fail\n", write_pic_path_str.c_str());
             return;
         }
-        write_yuv_for_output(fp);
+        write_yuv422_for_output(fp);
+    }
+    else if (strcmp(write_pic_format, "YUV444") == 0 && write_pic_src_pin.size() == 3)
+    {
+#ifdef _MSC_VER
+        fopen_s(&fp, write_pic_path_str.c_str(), "wb");
+#else
+        fp = fopen(write_pic_path, "wb");
+#endif
+        if (fp == nullptr)
+        {
+            log_error("open file %s fail\n", write_pic_path_str.c_str());
+            return;
+        }
+        write_yuv444_for_output(fp);
     }
     else {
         log_error("can't write pic, RAW:1, PNM:3, YUV:3\n");

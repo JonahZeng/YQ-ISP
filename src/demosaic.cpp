@@ -119,15 +119,15 @@ void demosaic::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     uint32_t xsize = input_raw->width;
     uint32_t ysize = input_raw->height;
 
-    data_buffer* output_r = new data_buffer(xsize, ysize, R, BAYER_UNSUPPORT, "demosaic_out0");
+    data_buffer* output_r = new data_buffer(xsize, ysize, DATA_TYPE_R, BAYER_UNSUPPORT, "demosaic_out0");
     uint16_t* r_ptr = output_r->data_ptr;
     out[0] = output_r;
 
-    data_buffer* output_g = new data_buffer(xsize, ysize, G, BAYER_UNSUPPORT, "demosaic_out1");
+    data_buffer* output_g = new data_buffer(xsize, ysize, DATA_TYPE_G, BAYER_UNSUPPORT, "demosaic_out1");
     uint16_t* g_ptr = output_g->data_ptr;
     out[1] = output_g;
 
-    data_buffer* output_b = new data_buffer(xsize, ysize, B, BAYER_UNSUPPORT, "demosaic_out2");
+    data_buffer* output_b = new data_buffer(xsize, ysize, DATA_TYPE_B, BAYER_UNSUPPORT, "demosaic_out2");
     uint16_t* b_ptr = output_b->data_ptr;
     out[2] = output_b;
 

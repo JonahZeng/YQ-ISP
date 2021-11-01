@@ -8,6 +8,8 @@
 #include "gtm.h"
 #include "gamma.h"
 #include "gtm_stat.h"
+#include "rgb2yuv.h"
+#include "sensor_crop.h"
 
 typedef struct fe_module_reg_s {
     blc_reg_t blc_reg;
@@ -18,6 +20,8 @@ typedef struct fe_module_reg_s {
     gtm_reg_t gtm_reg;
     gamma_reg_t gamma_reg;
     gtm_stat_reg_t gtm_stat_reg;
+    rgb2yuv_reg_t rgb2yuv_reg;
+    sensor_crop_reg_t sensor_crop_reg;
 }fe_module_reg_t;
 
 class fe_firmware :public hw_base {

@@ -41,9 +41,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(XML_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2d.lib" 
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib" 
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dlld.lib")
-    # set(SPDLOG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include")
-    # set(SPDLOG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlog.lib")
-    # set(SPDLOG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/spdlogd.lib")
     target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;" 
         "qDNGValidateTarget=1;"
         "WIN64;" 
@@ -82,9 +79,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_release.a")
     set(XML_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_debug.a" 
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_debug.a")
-    # set(SPDLOG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include")
-    # set(SPDLOG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/libspdlog.a")
-    # set(SPDLOG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/spdlog/lib/libspdlogd.a")
     target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;"
         "qDNGValidateTarget=1;"
         "$<$<CONFIG:Debug>:"

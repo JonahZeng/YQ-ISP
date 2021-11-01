@@ -21,13 +21,13 @@ enum pixel_bayer_type{
 };
 
 enum data_type_t {
-    R = 0,
-    G = 1,
-    B = 2,
-    Y = 3,
-    U = 4,
-    V = 5,
-    RAW = 6,
+    DATA_TYPE_R = 0,
+    DATA_TYPE_G = 1,
+    DATA_TYPE_B = 2,
+    DATA_TYPE_Y = 3,
+    DATA_TYPE_U = 4,
+    DATA_TYPE_V = 5,
+    DATA_TYPE_RAW = 6,
     DATA_TYPE_UNSUPPORT = -1
 };
 

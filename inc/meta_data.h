@@ -62,9 +62,17 @@ typedef struct ae_comp_md_s
     double BaselineExposure;
 }ae_comp_md_t;
 
+typedef struct sensor_crop_size_s {
+    uint32_t origin_x;
+    uint32_t origin_y;
+    uint32_t width;
+    uint32_t height;
+}sensor_crop_size_t;
+
 typedef struct dng_md_s
 {
     std::string input_file_name;
+    sensor_crop_size_t sensor_crop_size_info;
     ae_dng_md_t ae_md;
     blc_dng_md_t blc_md;
     lsc_dng_md_t lsc_md;
