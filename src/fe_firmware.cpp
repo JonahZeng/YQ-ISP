@@ -617,6 +617,14 @@ static void sensor_crop_reg_calc(dng_md_t& all_dng_md, sensor_crop_reg_t& sensor
     sensorcrop_reg.height = all_dng_md.sensor_crop_size_info.height;
 }
 
+static void yuv422_conv_reg_calc(yuv422_conv_reg_t& yuv422_conv_reg)
+{
+    yuv422_conv_reg.filter_coeff[0] = 2;
+    yuv422_conv_reg.filter_coeff[1] = 6;
+    yuv422_conv_reg.filter_coeff[2] = 6;
+    yuv422_conv_reg.filter_coeff[3] = 2;
+}
+
 void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
     log_info("%s run start\n", __FUNCTION__);
@@ -646,6 +654,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     gtm_reg_calc(stat_out, reg_ptr->gtm_reg, frame_cnt);
     gamma_reg_calc(reg_ptr->gamma_reg);
     rgb2yuv_reg_calc(reg_ptr->rgb2yuv_reg);
+    yuv422_conv_reg_calc(reg_ptr->yuv422_conv_reg);
 
     hw_base::hw_run(stat_out, frame_cnt);
 

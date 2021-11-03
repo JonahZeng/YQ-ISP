@@ -4,6 +4,7 @@ pipeline construction
 #include "pipeline_manager.h"
 #include "fileRead.h"
 #include "fe_firmware.h"
+#include "yuv_encode.h"
 
 void test_V1_pipeline(pipeline_manager* manager)
 {
@@ -19,6 +20,8 @@ void test_V1_pipeline(pipeline_manager* manager)
     gtm* gtm_hw = new gtm(4, 3, "gtm_hw");
     Gamma* gamma_hw = new Gamma(4, 3, "gamma_hw");
     rgb2yuv* rgb2yuv_hw = new rgb2yuv(4, 3, "rgb2yuv_hw");
+    yuv422_conv* yuv422_conv_hw = new yuv422_conv(4, 3, "yuv422_conv_hw");
+    yuv_encode* yuv_encode_hw = new yuv_encode(3, 0, "yuv_encode_hw");
 
     manager->register_module(raw_in);
     manager->register_module(fe_fw);
@@ -32,6 +35,8 @@ void test_V1_pipeline(pipeline_manager* manager)
     manager->register_module(gtm_hw);
     manager->register_module(gamma_hw);
     manager->register_module(rgb2yuv_hw);
+    manager->register_module(yuv422_conv_hw);
+    manager->register_module(yuv_encode_hw);
 
     raw_in->connect_port(0, fe_fw, 0); //raw data
     fe_fw->connect_port(0, sensor_crop_hw, 0); //raw data
@@ -73,4 +78,13 @@ void test_V1_pipeline(pipeline_manager* manager)
     gamma_hw->connect_port(1, rgb2yuv_hw, 1); //g
     gamma_hw->connect_port(2, rgb2yuv_hw, 2); //b
     fe_fw->connect_port(1, rgb2yuv_hw, 3); //regs
+
+    rgb2yuv_hw->connect_port(0, yuv422_conv_hw, 0); //y
+    rgb2yuv_hw->connect_port(1, yuv422_conv_hw, 1); //u
+    rgb2yuv_hw->connect_port(2, yuv422_conv_hw, 2); //v
+    fe_fw->connect_port(1, yuv422_conv_hw, 3); //regs
+
+    yuv422_conv_hw->connect_port(0, yuv_encode_hw, 0); //y
+    yuv422_conv_hw->connect_port(1, yuv_encode_hw, 1); //u
+    yuv422_conv_hw->connect_port(2, yuv_encode_hw, 2); //v
 }

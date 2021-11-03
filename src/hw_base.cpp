@@ -270,7 +270,7 @@ void hw_base::write_pnm_for_output(FILE* fp)
     }
 }
 
-void hw_base::write_yuv422_for_output(FILE* fp)
+void hw_base::write_yuv422_for_output(FILE* fp)//UYVY
 {
     uint32_t port0 = write_pic_src_pin[0];
     uint32_t port1 = write_pic_src_pin[1];
@@ -333,7 +333,7 @@ void hw_base::write_yuv422_for_output(FILE* fp)
     }
 }
 
-void hw_base::write_yuv444_for_output(FILE* fp)
+void hw_base::write_yuv444_for_output(FILE* fp)//YUV
 {
     uint32_t port0 = write_pic_src_pin[0];
     uint32_t port1 = write_pic_src_pin[1];

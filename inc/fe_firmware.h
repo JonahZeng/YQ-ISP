@@ -10,6 +10,7 @@
 #include "gtm_stat.h"
 #include "rgb2yuv.h"
 #include "sensor_crop.h"
+#include "yuv422_conv.h"
 
 typedef struct fe_module_reg_s {
     blc_reg_t blc_reg;
@@ -22,6 +23,7 @@ typedef struct fe_module_reg_s {
     gtm_stat_reg_t gtm_stat_reg;
     rgb2yuv_reg_t rgb2yuv_reg;
     sensor_crop_reg_t sensor_crop_reg;
+    yuv422_conv_reg_t yuv422_conv_reg;
 }fe_module_reg_t;
 
 class fe_firmware :public hw_base {
