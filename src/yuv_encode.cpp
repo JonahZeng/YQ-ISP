@@ -26,7 +26,11 @@ static int yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buffer_
     jpeg_create_compress(&cinfo);
 
     FILE* outfile = NULL;
+#ifdef _MSC_VER
     fopen_s(&outfile, output_raw_fn.c_str(), "wb");
+#else
+    outfile = fopen(output_raw_fn.c_str(), "wb");
+#endif
     if (outfile == NULL)
     {
         jpeg_destroy_compress(&cinfo);
