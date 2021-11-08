@@ -2,30 +2,32 @@
 #include <cmath>
 #include <assert.h>
 
-Gamma::Gamma(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name)
+Gamma::Gamma(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name), gamma_lut(257)
 {
     bypass = 0;
-    gamma_x1024 = 2253;
 }
 
 static void gamma_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, uint16_t* out_g, uint16_t* out_b,
     uint32_t xsize, uint32_t ysize, const gamma_reg_t* gamma_reg)
 {
-    double inv_gamma_val = 1024.0 / gamma_reg->gamma_x1024;
+    const uint32_t* gamma_lut = gamma_reg->gamma_lut;
 
     uint16_t max_value = (1U << 14) - 1;
     uint16_t* lut = new uint16_t[max_value + 1];
     for (uint16_t i = 0; i < max_value + 1; i++)
     {
-        double tmp = double(i) / max_value;
-        tmp = pow(tmp, inv_gamma_val);
-        tmp = tmp * max_value;
-        uint16_t tmp_i = uint16_t(tmp+0.5);
-        if (tmp_i > max_value)
-            tmp_i = max_value;
-        if (tmp_i < 0)
-            tmp_i = 0;
-        lut[i] = tmp_i >> 4;
+        uint16_t idx0 = i / 64;
+        uint16_t idx1 = idx0 + 1;
+        idx1 = (idx1 > 256) ? 256: idx1;
+        uint32_t delta = i - (idx0 * 64);
+        if(idx0 == 255)
+        {
+            lut[i] = gamma_lut[idx0] + (uint32_t)(gamma_lut[idx1] - gamma_lut[idx0]) * delta / 63;
+        }
+        else
+        {
+            lut[i] = gamma_lut[idx0] + (uint32_t)(gamma_lut[idx1] - gamma_lut[idx0]) * delta / 64;
+        }
     }
 
     for (uint32_t row = 0; row < ysize; row++)
@@ -33,9 +35,9 @@ static void gamma_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r
         for (uint32_t col = 0; col < xsize; col++)
         {
             
-            out_r[row*xsize + col] = lut[r[row*xsize + col]];
-            out_g[row*xsize + col] = lut[g[row*xsize + col]];
-            out_b[row*xsize + col] = lut[b[row*xsize + col]];
+            out_r[row*xsize + col] = lut[r[row*xsize + col]] >> 4;
+            out_g[row*xsize + col] = lut[g[row*xsize + col]] >> 4;
+            out_b[row*xsize + col] = lut[b[row*xsize + col]] >> 4;
         }
     }
 
@@ -55,7 +57,10 @@ void Gamma::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     gamma_reg->bypass = bypass;
     if (xmlConfigValid)
     {
-        gamma_reg->gamma_x1024 = gamma_x1024;
+        for(int32_t i=0; i<257; i++)
+        {
+            gamma_reg->gamma_lut[i] = gamma_lut[i];
+        }
     }
 
     checkparameters(gamma_reg);
@@ -125,10 +130,10 @@ void Gamma::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
 void Gamma::init()
 {
-    log_info("%s run start\n", __FUNCTION__);
+    log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,         &this->bypass          },
-        {"gamma_x1024",            UINT_32,         &this->gamma_x1024     }
+        {"gamma_lut",              VECT_UINT32,     &this->gamma_lut,   257}
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
@@ -136,7 +141,7 @@ void Gamma::init()
     }
 
     hw_base::init();
-    log_info("%s run end\n", __FUNCTION__);
+    log_info("%s init run end\n", name);
 }
 
 Gamma::~Gamma()
@@ -148,9 +153,12 @@ Gamma::~Gamma()
 void Gamma::checkparameters(gamma_reg_t* reg)
 {
     reg->bypass = common_check_bits(reg->bypass, 1, "bypass");
-    reg->gamma_x1024 = common_check_bits(reg->gamma_x1024, 12, "gamma_x1024");
+    for(int32_t i=0; i<257; i++)
+    {
+        reg->gamma_lut[i] = common_check_bits(reg->gamma_lut[i], 14, "gamma_lut");
+    }
     log_info("================= gamma reg=================\n");
     log_info("bypass %d\n", reg->bypass);
-    log_info("bypass %d\n", reg->gamma_x1024);
+    log_array("gamma_lut:\n", "%5d, ", reg->gamma_lut, 257, 16);
     log_info("================= gamma reg=================\n");
 }

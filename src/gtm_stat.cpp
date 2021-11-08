@@ -95,7 +95,7 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
 void gtm_stat::init()
 {
-    log_info("%s run start\n", __FUNCTION__);
+    log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,         &this->bypass          }
     };
@@ -105,7 +105,7 @@ void gtm_stat::init()
     }
 
     hw_base::init();
-    log_info("%s run end\n", __FUNCTION__);
+    log_info("%s init run end\n", name);
 }
 
 gtm_stat::~gtm_stat()

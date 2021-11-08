@@ -118,7 +118,7 @@ void awbgain::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 }
 void awbgain::init()
 {
-    log_info("%s run start\n", __FUNCTION__);
+    log_info("%s init run start\n");
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,     &this->bypass          },
         {"r_gain",                 UINT_32,     &this->r_gain          },
@@ -133,7 +133,7 @@ void awbgain::init()
     }
 
     hw_base::init();
-    log_info("%s run end\n", __FUNCTION__);
+    log_info("%s init run end\n", name);
 }
 awbgain::~awbgain()
 {

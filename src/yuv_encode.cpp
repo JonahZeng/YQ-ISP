@@ -65,7 +65,7 @@ static int yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buffer_
 
     if (cinfo.comp_info[0].width_in_blocks != 2 * cinfo.comp_info[1].width_in_blocks)
     {
-        log_warning("y hor block £¡= 2 * uv hor block\n");
+        log_warning("y hor block ï¿½ï¿½= 2 * uv hor block\n");
         jpeg_destroy_compress(&cinfo);
         fclose(outfile);
         return EXIT_FAILURE;
@@ -91,7 +91,7 @@ static int yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buffer_
 
     if (y_row_stride != y_width || y_col_stride != y_height)
     {
-        log_warning("final y size £¡= y_width, y_height\n");
+        log_warning("final y size ï¿½ï¿½= y_width, y_height\n");
         jpeg_destroy_compress(&cinfo);
         fclose(outfile);
         return EXIT_FAILURE;
@@ -188,7 +188,7 @@ void yuv_encode::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
 void yuv_encode::init()
 {
-    log_info("%s run start\n", __FUNCTION__);
+    log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
         {"bypass",        UINT_32,      &this->bypass}
     };
@@ -198,7 +198,7 @@ void yuv_encode::init()
     }
 
     hw_base::init();
-    log_info("%s run end\n", __FUNCTION__);
+    log_info("%s init run end\n", name);
 }
 
 yuv_encode::~yuv_encode()

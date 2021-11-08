@@ -402,6 +402,7 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
     
 
     g_dng_all_md.ae_comp_md.BaselineExposure = info.fShared->fBaselineExposure.As_real64();
+    log_info("baseline exposure = %lf\n", g_dng_all_md.ae_comp_md.BaselineExposure);
     
     get_awb_md_from_dng(&info, g_dng_all_md);
 
@@ -506,7 +507,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
 void fileRead::init()
 {
-    log_info("%s run start\n", __FUNCTION__);
+    log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
         {"bayer_type",     STRING,     this->bayer_string,      32},
         {"bit_depth",      UINT_32,    &this->bit_depth           },
@@ -521,7 +522,7 @@ void fileRead::init()
     }
 
     hw_base::init();
-    log_info("%s run end\n", __FUNCTION__);
+    log_info("%s init run end\n", name);
 }
 
 fileRead::~fileRead()

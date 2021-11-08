@@ -74,7 +74,7 @@ void rgb2yuv::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
 void rgb2yuv::init()
 {
-    log_info("%s run start\n", __FUNCTION__);
+    log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
         {"bypass",                 UINT_32,      &this->bypass                 },
         {"rgb2yuv_coeff",          VECT_INT32,   &this->rgb2yuv_coeff,        9}
@@ -85,7 +85,7 @@ void rgb2yuv::init()
     }
 
     hw_base::init();
-    log_info("%s run end\n", __FUNCTION__);
+    log_info("%s init run end\n", name);
 }
 
 rgb2yuv::~rgb2yuv()

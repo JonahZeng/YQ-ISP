@@ -75,7 +75,7 @@ void hw_base::connect_port(uint32_t out_port, hw_base* next_hw, uint32_t in_port
 
 void hw_base::init()
 {
-    log_info("%s run start\n", __FUNCTION__);
+    //log_info("%s init run start\n", name);
 
     cfgEntry_t config[] = {
         {"xmlConfigValid",     BOOL_T,           &this->xmlConfigValid             },
@@ -90,7 +90,7 @@ void hw_base::init()
         this->cfgList.push_back(config[i]);
     }
 
-    log_info("%s run end\n", __FUNCTION__);
+    //log_info("%s init run end\n", name);
 }
 
 void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)

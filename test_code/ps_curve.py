@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backend_bases import MouseButton
-from scipy.interpolate import make_interp_spline, CubicSpline
-from matplotlib.ticker import MultipleLocator, AutoMinorLocator
+from scipy.interpolate import CubicSpline
+from matplotlib.ticker import MultipleLocator
 
 class PointBrowser:
     def __init__(self, dots, all_dots):
@@ -77,11 +77,14 @@ class PointBrowser:
             print(all_y_data)
 
 if __name__ == '__main__':
-    xs = np.array([0, 2048, 4096, 8192, 12288, 14336, 16383], dtype=np.float64)
-    ys = np.array([0, 2048, 4096, 8192, 12288, 14336, 16383], dtype=np.float64)
+    xs = np.array([0, 2048, 4096, 6144, 8192, 12288, 14336, 16383], dtype=np.float64)
+    ys = np.array([0, 2048, 4096, 6144, 8192, 12288, 14336, 16383], dtype=np.float64)
 
     all_x = np.arange(0, 16383, step=64)
     all_y = all_x.copy()
+
+    gamma22_x = np.arange(0, 16383, step=64)
+    gamma22_y = np.power((gamma22_x / 16383), 1/2.2) * 16383
 
     fig, ax = plt.subplots(1, 1)
     ax.set_title('click on point to pick')
@@ -94,6 +97,7 @@ if __name__ == '__main__':
     ax.yaxis.set_minor_locator(MultipleLocator(256))
     dots, = ax.plot(xs, ys, 'o', picker=True, pickradius=5)
     all_dots, = ax.plot(all_x, all_y)
+    ax.plot(gamma22_x, gamma22_y, 'b--')
 
     browser = PointBrowser(dots, all_dots)
 

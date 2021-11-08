@@ -104,7 +104,7 @@ void yuv422_conv::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
 void yuv422_conv::init()
 {
-    log_info("%s run start\n", __FUNCTION__);
+    log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
         {"filter_coeff",        VECT_UINT32,      &this->filter_coeff,          4}
     };
@@ -114,7 +114,7 @@ void yuv422_conv::init()
     }
 
     hw_base::init();
-    log_info("%s run end\n", __FUNCTION__);
+    log_info("%s init run end\n", name);
 }
 
 yuv422_conv::~yuv422_conv()

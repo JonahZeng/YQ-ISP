@@ -6,7 +6,7 @@
 typedef struct gamma_reg_s
 {
     uint32_t bypass;
-    uint32_t gamma_x1024;
+    uint32_t gamma_lut[257];
 }gamma_reg_t;
 
 class Gamma :public hw_base {
@@ -21,5 +21,5 @@ public:
 private:
     void checkparameters(gamma_reg_t* reg);
     uint32_t bypass;
-    uint32_t gamma_x1024;
+    vector<uint32_t> gamma_lut;
 };
