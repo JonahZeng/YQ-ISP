@@ -11,7 +11,7 @@ yuv_encode::yuv_encode(uint32_t inpins, uint32_t outpins, const char* inst_name)
     bypass = 0;
 }
 
-static int yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buffer_y, uint8_t* buffer_u, uint8_t* buffer_v)
+static int32_t yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buffer_y, uint8_t* buffer_u, uint8_t* buffer_v)
 {
     std::string* input_file_name = &g_dng_all_md.input_file_name;
     size_t ridx1 = input_file_name->rfind('/');
@@ -65,7 +65,7 @@ static int yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buffer_
 
     if (cinfo.comp_info[0].width_in_blocks != 2 * cinfo.comp_info[1].width_in_blocks)
     {
-        log_warning("y hor block ��= 2 * uv hor block\n");
+        log_warning("y hor block != 2 * uv hor block\n");
         jpeg_destroy_compress(&cinfo);
         fclose(outfile);
         return EXIT_FAILURE;
@@ -128,6 +128,7 @@ static int yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buffer_
     free(y_ptr); free(u_ptr); free(v_ptr);
     jpeg_finish_compress(&cinfo);
     jpeg_destroy_compress(&cinfo);
+    fclose(outfile);
 
     return 0;
 }
