@@ -13,4 +13,6 @@ public:
     ~yuv_encode();
 private:
     uint32_t bypass;
+    uint32_t use_input_file_name;
+    char output_jpg_file_name[256];
 };

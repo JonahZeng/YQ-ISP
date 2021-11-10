@@ -7,6 +7,7 @@ sensor_crop::sensor_crop(uint32_t inpins, uint32_t outpins, const char* inst_nam
     origin_y = 0;
     width = 0;
     height = 0;
+    sensor_crop_reg = new sensor_crop_reg_t;
 }
 
 void sensor_crop::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -14,8 +15,12 @@ void sensor_crop::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_info("%s run start\n", __FUNCTION__);
     data_buffer* input_raw = in[0];
     bayer_type_t bayer_pattern = input_raw->bayer_pattern;
-    fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
-    sensor_crop_reg_t* sensor_crop_reg = &fe_reg->sensor_crop_reg;
+
+    if (in.size() > 1)
+    {
+        fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
+        memcpy(sensor_crop_reg, &fe_reg->sensor_crop_reg, sizeof(sensor_crop_reg_t));
+    }
 
     sensor_crop_reg->bypass = bypass;
     if (xmlConfigValid)
@@ -85,6 +90,10 @@ void sensor_crop::init()
 sensor_crop::~sensor_crop()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    if (sensor_crop_reg != NULL)
+    {
+        delete sensor_crop_reg;
+    }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 

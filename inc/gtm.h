@@ -21,6 +21,7 @@ public:
 
 private:
     void checkparameters(gtm_reg_t* reg);
+    gtm_reg_t* gtm_reg;
     uint32_t bypass;
     vector<uint32_t> rgb2y;
     vector<uint32_t> gain_lut;

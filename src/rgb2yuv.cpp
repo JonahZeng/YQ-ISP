@@ -3,6 +3,7 @@
 rgb2yuv::rgb2yuv(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name), rgb2yuv_coeff(9, 0)
 {
     bypass = 0;
+    rgb2yuv_reg = new rgb2yuv_reg_t;
 }
 
 void rgb2yuv::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -12,8 +13,11 @@ void rgb2yuv::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     data_buffer* input_g = in[1];
     data_buffer* input_b = in[2];
 
-    fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
-    rgb2yuv_reg_t* rgb2yuv_reg = &fe_reg->rgb2yuv_reg;
+    if (in.size() > 3)
+    {
+        fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
+        memcpy(rgb2yuv_reg, &fe_reg->rgb2yuv_reg, sizeof(rgb2yuv_reg_t));
+    }
 
     rgb2yuv_reg->bypass = bypass;
 
@@ -91,6 +95,10 @@ void rgb2yuv::init()
 rgb2yuv::~rgb2yuv()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    if (rgb2yuv_reg != NULL)
+    {
+        delete rgb2yuv_reg;
+    }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 

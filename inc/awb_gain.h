@@ -25,6 +25,7 @@ public:
 
 private:
     void checkparameters(awbgain_reg_t* reg);
+    awbgain_reg_t* awbgain_reg;
     uint32_t bypass;
     uint32_t r_gain;
     uint32_t gr_gain;

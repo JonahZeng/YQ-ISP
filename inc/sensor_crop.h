@@ -22,6 +22,7 @@ public:
 
 private:
     void checkparameters(sensor_crop_reg_t* reg);
+    sensor_crop_reg_t* sensor_crop_reg;
     uint32_t bypass;
     uint32_t origin_x;
     uint32_t origin_y;

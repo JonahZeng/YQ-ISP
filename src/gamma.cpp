@@ -5,6 +5,7 @@
 Gamma::Gamma(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name), gamma_lut(257)
 {
     bypass = 0;
+    gamma_reg = new gamma_reg_t;
 }
 
 static void gamma_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, uint16_t* out_g, uint16_t* out_b,
@@ -51,8 +52,11 @@ void Gamma::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     data_buffer* input1 = in[1];
     data_buffer* input2 = in[2];
 
-    fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
-    gamma_reg_t* gamma_reg = &fe_reg->gamma_reg;
+    if (in.size() > 3)
+    {
+        fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
+        memcpy(gamma_reg, &fe_reg->gamma_reg, sizeof(gamma_reg_t));
+    }
 
     gamma_reg->bypass = bypass;
     if (xmlConfigValid)
@@ -147,6 +151,10 @@ void Gamma::init()
 Gamma::~Gamma()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    if (gamma_reg != NULL)
+    {
+        delete gamma_reg;
+    }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 

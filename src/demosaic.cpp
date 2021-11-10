@@ -4,6 +4,7 @@
 demosaic::demosaic(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
 {
     bypass = 0;
+    demosaic_reg = new demosaic_reg_t;
 }
 
 static pixel_bayer_type get_pixel_bayer_type(uint32_t y, uint32_t x, bayer_type_t by)
@@ -106,8 +107,12 @@ void demosaic::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_info("%s run start\n", __FUNCTION__);
     data_buffer* input_raw = in[0];
     bayer_type_t bayer_pattern = input_raw->bayer_pattern;
-    fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
-    demosaic_reg_t* demosaic_reg = &fe_reg->demosaic_reg;
+
+    if (in.size() > 1)
+    {
+        fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
+        memcpy(demosaic_reg, &fe_reg->demosaic_reg, sizeof(demosaic_reg_t));
+    }
 
     demosaic_reg->bypass = bypass;
     if (xmlConfigValid)
@@ -212,6 +217,10 @@ void demosaic::init()
 demosaic::~demosaic()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    if (demosaic_reg != NULL)
+    {
+        delete demosaic_reg;
+    }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 

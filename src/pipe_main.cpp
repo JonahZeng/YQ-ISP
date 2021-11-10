@@ -3,6 +3,7 @@
 #include "pipeline_manager.h"
 
 extern void test_V1_pipeline(pipeline_manager* manager);
+extern void test_purple_fringing_pipe(pipeline_manager* manager);
 
 typedef struct _pipeline_collection {
     const char* pipeline_name;
@@ -10,7 +11,8 @@ typedef struct _pipeline_collection {
 }pipeline_collection;
 
 pipeline_collection pipelines[] = {
-    {"test_V1_pipeline", test_V1_pipeline}
+    {"test_V1_pipeline", test_V1_pipeline},//0
+    {"test_purple_fringing_pipe", test_purple_fringing_pipe} //1
 };
 
 // -p pipe_number -cfg xml_file -f frame_end 

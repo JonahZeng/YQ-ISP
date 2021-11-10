@@ -11,14 +11,9 @@ yuv_encode::yuv_encode(uint32_t inpins, uint32_t outpins, const char* inst_name)
     bypass = 0;
 }
 
-static int32_t yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buffer_y, uint8_t* buffer_u, uint8_t* buffer_v)
+static int32_t yuv_encode_core(const char* out_name, uint32_t y_width, uint32_t y_height, uint8_t* buffer_y, uint8_t* buffer_u, uint8_t* buffer_v)
 {
-    std::string* input_file_name = &g_dng_all_md.input_file_name;
-    size_t ridx1 = input_file_name->rfind('/');
-    size_t ridx2 = input_file_name->rfind('.');
-    std::string output_raw_fn = input_file_name->substr(ridx1 + 1, ridx2 - ridx1 - 1);
-    output_raw_fn.append(".jpg");
-    log_info("target jpg name: %s\n", output_raw_fn.c_str());
+    
 
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
@@ -27,9 +22,9 @@ static int32_t yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buf
 
     FILE* outfile = NULL;
 #ifdef _MSC_VER
-    fopen_s(&outfile, output_raw_fn.c_str(), "wb");
+    fopen_s(&outfile, out_name, "wb");
 #else
-    outfile = fopen(output_raw_fn.c_str(), "wb");
+    outfile = fopen(out_name, "wb");
 #endif
     if (outfile == NULL)
     {
@@ -71,6 +66,8 @@ static int32_t yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buf
         return EXIT_FAILURE;
     }
 
+    jpeg_set_quality(&cinfo, 100, FALSE);
+
     JSAMPARRAY yuvbuffer[3];
     JSAMPARRAY y_ptr;
     JSAMPARRAY u_ptr;
@@ -91,7 +88,7 @@ static int32_t yuv_encode_core(uint32_t y_width, uint32_t y_height, uint8_t* buf
 
     if (y_row_stride != y_width || y_col_stride != y_height)
     {
-        log_warning("final y size ��= y_width, y_height\n");
+        log_warning("final y size != y_width, y_height\n");
         jpeg_destroy_compress(&cinfo);
         fclose(outfile);
         return EXIT_FAILURE;
@@ -172,7 +169,21 @@ void yuv_encode::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     if (bypass == 0)
     {
-        int32_t ret = yuv_encode_core(full_xsize, full_ysize, buffer_y, buffer_u, buffer_v);
+        std::string* input_file_name = &g_dng_all_md.input_file_name;
+        std::string output_raw_fn;
+        if (use_input_file_name > 0)
+        {
+            size_t ridx1 = input_file_name->rfind('/');
+            size_t ridx2 = input_file_name->rfind('.');
+            std::string output_raw_fn = input_file_name->substr(ridx1 + 1, ridx2 - ridx1 - 1);
+            output_raw_fn.append(".jpg");
+            log_info("target jpg name: %s\n", output_raw_fn.c_str());
+        }
+        else
+        {
+            output_raw_fn = std::string(output_jpg_file_name);
+        }
+        int32_t ret = yuv_encode_core(output_raw_fn.c_str(), full_xsize, full_ysize, buffer_y, buffer_u, buffer_v);
         if (ret != 0)
         {
             log_warning("write jpg fail\n");
@@ -191,7 +202,9 @@ void yuv_encode::init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
-        {"bypass",        UINT_32,      &this->bypass}
+        {"bypass",               UINT_32,      &this->bypass},
+        {"use_input_file_name",  UINT_32,      &this->use_input_file_name},
+        {"output_jpg_file_name", STRING,       this->output_jpg_file_name, 256}
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {

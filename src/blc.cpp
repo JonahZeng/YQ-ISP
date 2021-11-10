@@ -7,6 +7,8 @@ blc::blc(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpi
     blc_gr = 0;
     blc_gb = 0;
     blc_b = 0;
+
+    blc_reg = new blc_reg_t;
 }
 
 static void blc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uint32_t ysize, bayer_type_t by, const blc_reg_t* blc_reg)
@@ -75,8 +77,12 @@ void blc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) //input 2pins, 
     log_info("%s run start\n", __FUNCTION__);
     data_buffer* input_raw = in[0];
     bayer_type_t bayer_pattern = input_raw->bayer_pattern;
-    fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
-    blc_reg_t* blc_reg = &fe_reg->blc_reg;
+
+    if (in.size() > 1)
+    {
+        fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
+        memcpy(blc_reg, &fe_reg->blc_reg, sizeof(blc_reg_t));
+    }
 
     blc_reg->bypass = bypass;
     if (xmlConfigValid)
@@ -142,6 +148,10 @@ void blc::init()
 blc::~blc()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    if (blc_reg != NULL)
+    {
+        delete blc_reg;
+    }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 void blc::checkparameters(blc_reg_t* reg)

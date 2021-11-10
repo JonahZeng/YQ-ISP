@@ -26,6 +26,7 @@ public:
     
 private:
     void checkparameters(blc_reg_t* reg);
+    blc_reg_t* blc_reg;
     uint32_t bypass;
     int32_t blc_r;
     int32_t blc_gr;

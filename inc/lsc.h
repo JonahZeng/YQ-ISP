@@ -32,6 +32,7 @@ public:
 
 private:
     void checkparameters(lsc_reg_t* reg);
+    lsc_reg_t* lsc_reg;
     uint32_t bypass;
     uint32_t block_size_x;
     uint32_t block_size_y;

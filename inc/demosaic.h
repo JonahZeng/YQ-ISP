@@ -18,5 +18,6 @@ public:
 
 private:
     void checkparameters(demosaic_reg_t* reg);
+    demosaic_reg_t* demosaic_reg;
     uint32_t bypass;
 };

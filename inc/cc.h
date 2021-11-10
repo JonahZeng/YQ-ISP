@@ -20,6 +20,7 @@ public:
 
 private:
     void checkparameters(cc_reg_t* reg);
+    cc_reg_t* cc_reg;
     uint32_t bypass;
     vector<int32_t> ccm;
 };

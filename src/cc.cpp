@@ -8,6 +8,8 @@ cc::cc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins,
     ccm[0] = 1024; ccm[1] = 0; ccm[2] = 0;
     ccm[3] = 0; ccm[4] = 1024; ccm[5] = 0;
     ccm[6] = 0; ccm[7] = 0; ccm[8] = 1024;
+
+    cc_reg = new cc_reg_t;
 }
 
 
@@ -48,8 +50,11 @@ void cc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     data_buffer* input1 = in[1];
     data_buffer* input2 = in[2];
 
-    fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
-    cc_reg_t* cc_reg = &fe_reg->cc_reg;
+    if (in.size() > 3)
+    {
+        fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
+        memcpy(cc_reg, &fe_reg->cc_reg, sizeof(cc_reg_t));
+    }
 
     cc_reg->bypass = bypass;
     if (xmlConfigValid)
@@ -134,6 +139,10 @@ void cc::init()
 cc::~cc()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    if (cc_reg != NULL)
+    {
+        delete cc_reg;
+    }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 

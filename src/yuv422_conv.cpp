@@ -8,6 +8,8 @@ yuv422_conv::yuv422_conv(uint32_t inpins, uint32_t outpins, const char* inst_nam
     filter_coeff[1] = 96;
     filter_coeff[2] = 96;
     filter_coeff[0] = 32;
+
+    yuv422_conv_reg = new yuv422_conv_reg_t;
 }
 
 void yuv422_conv::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -17,9 +19,11 @@ void yuv422_conv::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     data_buffer* input_u = in[1];
     data_buffer* input_v = in[2];
 
-    fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
-    yuv422_conv_reg_t* yuv422_conv_reg = &fe_reg->yuv422_conv_reg;
-
+    if (in.size() > 3)
+    {
+        fe_module_reg_t*fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
+        memcpy(yuv422_conv_reg, &fe_reg->yuv422_conv_reg, sizeof(yuv422_conv_reg_t));
+    }
 
     if (xmlConfigValid)
     {
@@ -39,6 +43,8 @@ void yuv422_conv::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     uint32_t cr_xsize = input_v->width;
     uint32_t cr_ysize = input_v->height;
+
+    log_debug("y size= %d, %d, u size = %d, %d, v size = %d, %d\n", full_xsize, full_ysize, cb_xsize, cb_ysize, cr_xsize, cr_ysize);
 
     assert(cb_xsize % 2 == 0);
     assert(cb_xsize == cr_xsize && cb_ysize == cr_ysize);
@@ -120,6 +126,10 @@ void yuv422_conv::init()
 yuv422_conv::~yuv422_conv()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    if (yuv422_conv_reg != NULL)
+    {
+        delete yuv422_conv_reg;
+    }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 

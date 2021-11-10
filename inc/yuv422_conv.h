@@ -20,4 +20,5 @@ public:
 private:
     void checkparameters(yuv422_conv_reg_t* reg);
     vector<uint32_t> filter_coeff;
+    yuv422_conv_reg_t* yuv422_conv_reg;
 };

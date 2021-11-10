@@ -20,6 +20,7 @@ public:
 
 private:
     void checkparameters(gamma_reg_t* reg);
+    gamma_reg_t* gamma_reg;
     uint32_t bypass;
     vector<uint32_t> gamma_lut;
 };

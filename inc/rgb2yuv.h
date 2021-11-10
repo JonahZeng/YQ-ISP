@@ -20,6 +20,7 @@ public:
 
 private:
     void checkparameters(rgb2yuv_reg_t* reg);
+    rgb2yuv_reg_t* rgb2yuv_reg;
     uint32_t bypass;
     vector<int32_t> rgb2yuv_coeff;
 };

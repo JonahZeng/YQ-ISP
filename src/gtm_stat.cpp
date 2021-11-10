@@ -9,6 +9,7 @@ gtm_stat::gtm_stat(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw
     rgb2y.resize(3);
     w_ratio = 2;
     h_ratio = 2;
+    gtm_stat_reg = new gtm_stat_reg_t;
 }
 
 static void gtm_stat_hw_core(gtm_stat_info_t* stat_gtm, uint16_t* r, uint16_t* g, uint16_t* b, uint32_t xsize, uint32_t ysize, const gtm_stat_reg_t* gtm_stat_reg)
@@ -38,8 +39,11 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     data_buffer* input1 = in[1];
     data_buffer* input2 = in[2];
 
-    fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
-    gtm_stat_reg_t* gtm_stat_reg = &fe_reg->gtm_stat_reg;
+    if (in.size() > 3)
+    {
+        fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
+        memcpy(gtm_stat_reg, &fe_reg->gtm_stat_reg, sizeof(gtm_stat_reg_t));
+    }
 
     gtm_stat_reg->bypass = bypass;
     if (xmlConfigValid)
@@ -111,6 +115,10 @@ void gtm_stat::init()
 gtm_stat::~gtm_stat()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    if (gtm_stat_reg != NULL)
+    {
+        delete gtm_stat_reg;
+    }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 

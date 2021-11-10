@@ -11,6 +11,7 @@ lsc::lsc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpin
 
     block_start_y_idx = 0;
     block_start_y_oft = 0;
+    lsc_reg = new lsc_reg_t;
 }
 
 static void lsc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uint32_t ysize, const lsc_reg_t* lsc_reg)
@@ -64,8 +65,11 @@ void lsc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_info("%s run start\n", __FUNCTION__);
     data_buffer* input_raw = in[0];
     //bayer_type_t bayer_pattern = input_raw->bayer_pattern;
-    fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
-    lsc_reg_t* lsc_reg = &fe_reg->lsc_reg;
+    if (in.size() > 1)
+    {
+        fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
+        memcpy(lsc_reg, &fe_reg->lsc_reg, sizeof(lsc_reg_t));
+    }
 
     lsc_reg->bypass = bypass;
 
@@ -142,6 +146,10 @@ void lsc::init()
 lsc::~lsc()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    if (lsc_reg != NULL)
+    {
+        delete lsc_reg;
+    }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 

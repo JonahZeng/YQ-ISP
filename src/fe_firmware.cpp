@@ -670,7 +670,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     {
         reg_len += 1;
     }
-    data_buffer* output1 = new data_buffer((uint32_t)reg_len, 1, DATA_TYPE_RAW, RGGB, "fe_fw_out1");
+    data_buffer* output1 = new data_buffer((uint32_t)reg_len, 1, DATA_TYPE_RAW, BAYER_UNSUPPORT, "fe_fw_out1");
     fe_module_reg_t* reg_ptr = (fe_module_reg_t*)output1->data_ptr;
 
     out[0] = output0;

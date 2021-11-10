@@ -22,6 +22,7 @@ public:
 
 private:
     void checkparameters(gtm_stat_reg_t* reg);
+    gtm_stat_reg_t* gtm_stat_reg;
     uint32_t bypass;
     vector<uint32_t> rgb2y;
     uint32_t w_ratio;

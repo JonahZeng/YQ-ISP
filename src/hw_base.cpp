@@ -386,14 +386,19 @@ void hw_base::write_pic_for_output()
         return;
     }
     FILE* fp = nullptr;
-    std::string* input_file_name = &g_dng_all_md.input_file_name;
-    size_t ridx1 = input_file_name->rfind('/');
-    size_t ridx2 = input_file_name->rfind('.');
-    std::string input_raw_fn = input_file_name->substr(ridx1 + 1, ridx2 - ridx1 - 1);
 
     std::string write_pic_path_str(write_pic_path);
-    ridx1 = write_pic_path_str.rfind('/');
-    write_pic_path_str.insert(ridx1 + 1, input_raw_fn.c_str(), input_raw_fn.size());
+
+    std::string* input_file_name = &g_dng_all_md.input_file_name;
+    if (input_file_name->length() > 0)
+    {
+        size_t ridx1 = input_file_name->rfind('/');
+        size_t ridx2 = input_file_name->rfind('.');
+        std::string input_raw_fn = input_file_name->substr(ridx1 + 1, ridx2 - ridx1 - 1);
+
+        ridx1 = write_pic_path_str.rfind('/');
+        write_pic_path_str.insert(ridx1 + 1, input_raw_fn.c_str(), input_raw_fn.size());
+    }
     if (strcmp(write_pic_format, "RAW") == 0 && write_pic_src_pin.size() == 1)
     {
 #ifdef _MSC_VER
