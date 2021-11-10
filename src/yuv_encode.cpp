@@ -29,6 +29,7 @@ static int32_t yuv_encode_core(const char* out_name, uint32_t y_width, uint32_t 
     if (outfile == NULL)
     {
         jpeg_destroy_compress(&cinfo);
+        log_error("open %s fail\n", out_name);
         return EXIT_FAILURE;
     }
     jpeg_stdio_dest(&cinfo, outfile);
@@ -175,7 +176,7 @@ void yuv_encode::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         {
             size_t ridx1 = input_file_name->rfind('/');
             size_t ridx2 = input_file_name->rfind('.');
-            std::string output_raw_fn = input_file_name->substr(ridx1 + 1, ridx2 - ridx1 - 1);
+            output_raw_fn = input_file_name->substr(ridx1 + 1, ridx2 - ridx1 - 1);
             output_raw_fn.append(".jpg");
             log_info("target jpg name: %s\n", output_raw_fn.c_str());
         }
@@ -186,7 +187,7 @@ void yuv_encode::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         int32_t ret = yuv_encode_core(output_raw_fn.c_str(), full_xsize, full_ysize, buffer_y, buffer_u, buffer_v);
         if (ret != 0)
         {
-            log_warning("write jpg fail\n");
+            log_warning("write jpg fail %d\n", ret);
         }
     }
 

@@ -1,6 +1,9 @@
 #include "yuv_decode.h"
 #include "jpeglib.h"
 #include <setjmp.h>
+#ifndef _MSC_VER
+#include <cstdlib>
+#endif
 
 yuv_decode::yuv_decode(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name)
 {
