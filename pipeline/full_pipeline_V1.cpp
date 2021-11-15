@@ -13,6 +13,7 @@ void test_V1_pipeline(pipeline_manager* manager)
     sensor_crop* sensor_crop_hw = new sensor_crop(2, 1, "sensor_crop_hw");
     blc* blc_hw = new blc(2, 1, "blc_hw");
     lsc* lsc_hw = new lsc(2, 1, "lsc_hw");
+    ae_stat* ae_stat_hw = new ae_stat(2, 0, "ae_stat_hw");
     awbgain* awbgain_hw = new awbgain(2, 1, "awbgain_hw");
     demosaic* demosaic_hw = new demosaic(2, 3, "demosaic_hw");
     cc* cc_hw = new cc(4, 3, "cc_hw");
@@ -28,6 +29,7 @@ void test_V1_pipeline(pipeline_manager* manager)
     manager->register_module(sensor_crop_hw);
     manager->register_module(blc_hw);
     manager->register_module(lsc_hw);
+    manager->register_module(ae_stat_hw);
     manager->register_module(awbgain_hw);
     manager->register_module(demosaic_hw);
     manager->register_module(cc_hw);
@@ -47,6 +49,9 @@ void test_V1_pipeline(pipeline_manager* manager)
 
     blc_hw->connect_port(0, lsc_hw, 0); //raw data
     fe_fw->connect_port(1, lsc_hw, 1);  //regs
+
+    lsc_hw->connect_port(0, ae_stat_hw, 0); //raw data
+    fe_fw->connect_port(1, ae_stat_hw, 1); //regs
 
     lsc_hw->connect_port(0, awbgain_hw, 0); //raw data
     fe_fw->connect_port(1, awbgain_hw, 1); //regs

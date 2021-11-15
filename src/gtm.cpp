@@ -65,7 +65,7 @@ void gtm::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     if (in.size() > 3)
     {
         fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[3]->data_ptr);
-        memcpy(gtm_reg, &fe_reg->gtm_reg, sizeof(gamma_reg_t));
+        memcpy(gtm_reg, &fe_reg->gtm_reg, sizeof(gtm_reg_t));
     }
 
     gtm_reg->bypass = bypass;

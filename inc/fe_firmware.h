@@ -2,6 +2,7 @@
 
 #include "blc.h"
 #include "lsc.h"
+#include "ae_stat.h"
 #include "awb_gain.h"
 #include "demosaic.h"
 #include "cc.h"
@@ -11,10 +12,12 @@
 #include "rgb2yuv.h"
 #include "sensor_crop.h"
 #include "yuv422_conv.h"
+#include "cac_rgb.h"
 
 typedef struct fe_module_reg_s {
     blc_reg_t blc_reg;
     lsc_reg_t lsc_reg;
+    ae_stat_reg_t ae_stat_reg;
     awbgain_reg_t awbgain_reg;
     demosaic_reg_t demosaic_reg;
     cc_reg_t cc_reg;
@@ -24,6 +27,7 @@ typedef struct fe_module_reg_s {
     rgb2yuv_reg_t rgb2yuv_reg;
     sensor_crop_reg_t sensor_crop_reg;
     yuv422_conv_reg_t yuv422_conv_reg;
+    cac_rgb_reg_t cac_rgb_reg;
 }fe_module_reg_t;
 
 class fe_firmware :public hw_base {

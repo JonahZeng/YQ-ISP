@@ -254,6 +254,45 @@ static void lsc_reg_calc(dng_md_t& all_dng_md, lsc_reg_t& lsc_reg)
     }
 }
 
+static void ae_stat_reg_cal(dng_md_t& all_dng_md, ae_stat_reg_t& ae_stat_reg)
+{
+    ae_stat_reg.bypass = 0;
+    ae_stat_reg.skip_step_x = 2;
+    ae_stat_reg.skip_step_y = 2;
+    ae_stat_reg.block_width = all_dng_md.sensor_crop_size_info.width / 32;
+    if (ae_stat_reg.block_width % 2 == 1)
+    {
+        ae_stat_reg.block_width -= 1;
+    }
+    ae_stat_reg.block_height = all_dng_md.sensor_crop_size_info.height / 32;
+    if (ae_stat_reg.block_height % 2 == 1)
+    {
+        ae_stat_reg.block_height -= 1;
+    }
+
+    double step_x_lf = double(all_dng_md.sensor_crop_size_info.width) / 32.0;
+    double step_y_lf = double(all_dng_md.sensor_crop_size_info.height) / 32.0;
+    for (int32_t i = 0; i < 32; i++)
+    {
+        double tmp_x = step_x_lf * i;
+        tmp_x = round(tmp_x);
+        uint32_t x_ = uint32_t(tmp_x);
+        if (x_ % 2 == 1)
+        {
+            x_ += 1;
+        }
+        ae_stat_reg.start_x[i] = x_;
+        double tmp_y = step_y_lf * i;
+        tmp_y = round(tmp_y);
+        uint32_t y_ = uint32_t(tmp_y);
+        if (y_ % 2 == 1)
+        {
+            y_ += 1;
+        }
+        ae_stat_reg.start_y[i] = y_;
+    }
+}
+
 static void awbgain_reg_calc(dng_md_t& all_dng_md, awbgain_reg_t& awbgain_reg)
 {
     double r_gain = 1.0 / all_dng_md.awb_md.r_Neutral;
@@ -272,7 +311,6 @@ static void awbgain_reg_calc(dng_md_t& all_dng_md, awbgain_reg_t& awbgain_reg)
 
     awbgain_reg.ae_compensat_gain = (uint32_t)(compensat_gain * 1024);
 }
-
 
 static void get_xy_wp(uint32_t CalibrationIlluminant1, uint32_t CalibrationIlluminant2, dng_xy_coord& xy1, dng_xy_coord& xy2)
 {
@@ -679,6 +717,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     sensor_crop_reg_calc(g_dng_all_md, reg_ptr->sensor_crop_reg);
     blc_reg_calc(g_dng_all_md, reg_ptr->blc_reg);
     lsc_reg_calc(g_dng_all_md, reg_ptr->lsc_reg);
+    ae_stat_reg_cal(g_dng_all_md, reg_ptr->ae_stat_reg);
     awbgain_reg_calc(g_dng_all_md, reg_ptr->awbgain_reg);
     cc_reg_calc(g_dng_all_md, reg_ptr->cc_reg);
     gtm_stat_reg_calc(reg_ptr->gtm_stat_reg);
