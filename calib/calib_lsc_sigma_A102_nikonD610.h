@@ -1,4 +1,4 @@
-0.5, 0.5, //center x, y
+﻿0.5, 0.5, //center x, y
 {
     {
         0.970854, //aperture

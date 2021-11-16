@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 typedef struct lsc_focusDist_coeff_s
 {
     double focusDist;

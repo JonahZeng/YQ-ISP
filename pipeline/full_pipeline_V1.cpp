@@ -1,4 +1,4 @@
-/*
+﻿/*
 pipeline construction
 */
 #include "pipeline_manager.h"

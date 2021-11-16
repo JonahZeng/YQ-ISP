@@ -1,4 +1,4 @@
-﻿#include "fe_firmware.h"
+#include "fe_firmware.h"
 #include "meta_data.h"
 #include "chromatix_lsc.h"
 #include "chromatix_cc.h"

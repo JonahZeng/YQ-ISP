@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "blc.h"
 #include "lsc.h"
