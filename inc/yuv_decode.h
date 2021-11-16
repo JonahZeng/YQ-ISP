@@ -14,4 +14,5 @@ public:
 private:
     uint32_t bypass;
     char jpg_file_name[256];
+    uint32_t do_fancy_upsampling;
 };

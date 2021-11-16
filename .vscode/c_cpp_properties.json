@@ -4,18 +4,20 @@
             "name": "Linux",
             "includePath": [
                 "${default}",
-                "${workspaceFolder}/inc",
                 "${workspaceFolder}/thirdparty/dng_sdk/include",
                 "${workspaceFolder}/thirdparty/libjpeg9b/include",
                 "${workspaceFolder}/thirdparty/libxml2/include",
                 "${workspaceFolder}/calib",
-                "/usr/local/include/opencv4"
+                "/usr/local/include/opencv4",
+                "${workspaceFolder}/inc"
             ],
             "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-gcc-x64",
-            "defines": ["qLinux"]
+            "defines": [
+                "qLinux"
+            ]
         }
     ],
     "version": 4

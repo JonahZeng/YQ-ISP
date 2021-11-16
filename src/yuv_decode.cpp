@@ -8,6 +8,7 @@
 yuv_decode::yuv_decode(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name)
 {
     bypass = 0;
+    do_fancy_upsampling = 1;
 }
 
 typedef struct _Tiff_header
@@ -196,7 +197,7 @@ static uint32_t get_orientation(jpeg_saved_marker_ptr marker_ptr)
 
 
 
-static int32_t read_raw_data_from_JPEG_file(const char* filename, decoded_yuv_t* out_yuv)
+static int32_t read_raw_data_from_JPEG_file(const char* filename, uint32_t do_fancy_upsample, decoded_yuv_t* out_yuv)
 {
     struct jpeg_decompress_struct cinfo;
 
@@ -248,7 +249,13 @@ static int32_t read_raw_data_from_JPEG_file(const char* filename, decoded_yuv_t*
     //设置输出raw data，也就是yuv数据
     cinfo.raw_data_out = TRUE;
     //如果想得到yuv444，这个值设置为TRUE。如果想得到yuv422/420，则设置为FALSE
-    cinfo.do_fancy_upsampling = TRUE;
+    if(do_fancy_upsample > 0)
+    {
+        cinfo.do_fancy_upsampling = TRUE;
+    }
+    else{
+        cinfo.do_fancy_upsampling = FALSE;
+    }
     log_info("    JCS_UNKNOWN=0,		 error/unspecified\n \
     JCS_GRAYSCALE=1,		monochrome\n \
     JCS_RGB=2,		red/green/blue, standard RGB (sRGB)\n \
@@ -440,7 +447,7 @@ void yuv_decode::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     if (strlen(jpg_file_name) > 0)
     {
-        ret = read_raw_data_from_JPEG_file(jpg_file_name, &out_yuv);
+        ret = read_raw_data_from_JPEG_file(jpg_file_name, do_fancy_upsampling, &out_yuv);
     }
     if (ret == 0)
     {
@@ -489,7 +496,8 @@ void yuv_decode::init()
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
         {"bypass",        UINT_32,      &this->bypass},
-        {"jpg_file_name", STRING,       this->jpg_file_name, 256}
+        {"jpg_file_name", STRING,       this->jpg_file_name, 256},
+        {"do_fancy_upsampling", UINT_32, &this->do_fancy_upsampling}
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {

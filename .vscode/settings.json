@@ -1,6 +1,7 @@
 {
     "cmake.configureOnOpen": false,
     "files.associations": {
-        "ctime": "cpp"
+        "ctime": "cpp",
+        "*.tcc": "cpp"
     }
 }

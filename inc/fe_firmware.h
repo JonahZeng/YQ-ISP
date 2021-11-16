@@ -13,6 +13,7 @@
 #include "sensor_crop.h"
 #include "yuv422_conv.h"
 #include "cac_rgb.h"
+#include "yuv2rgb_8bit.h"
 
 typedef struct fe_module_reg_s {
     blc_reg_t blc_reg;
@@ -28,6 +29,7 @@ typedef struct fe_module_reg_s {
     sensor_crop_reg_t sensor_crop_reg;
     yuv422_conv_reg_t yuv422_conv_reg;
     cac_rgb_reg_t cac_rgb_reg;
+    yuv2rgb_8b_reg_t yuv2rgb_8b_reg;
 }fe_module_reg_t;
 
 class fe_firmware :public hw_base {

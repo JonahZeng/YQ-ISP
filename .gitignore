@@ -26,3 +26,5 @@ build/Makefile
 *.sln
 build/CMakeCache.txt
 build/cmake_install.cmake
+build/.cmake
+build/compile_commands.json
