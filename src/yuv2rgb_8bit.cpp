@@ -49,9 +49,9 @@ void yuv2rgb_8b::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
-        uint16_t y = (input_y->data_ptr[sz]) >> (16 - 8);
-        uint16_t u = (input_u->data_ptr[sz]) >> (16 - 8);
-        uint16_t v = (input_v->data_ptr[sz]) >> (16 - 8);
+        int32_t y = (input_y->data_ptr[sz]) >> (16 - 8);
+        int32_t u = (input_u->data_ptr[sz]) >> (16 - 8);
+        int32_t v = (input_v->data_ptr[sz]) >> (16 - 8);
         u = u - 128;
         v = v - 128;
 
@@ -111,7 +111,7 @@ void yuv2rgb_8b::checkparameters(yuv2rgb_8b_reg_t* reg)
     reg->bypass = common_check_bits(reg->bypass, 1, "bypass");
     for (int32_t i = 0; i < 9; i++)
     {
-        reg->yuv2rgb_coeff[i] = common_check_bits_ex(reg->yuv2rgb_coeff[i], 11, "yuv2rgb_coeff");
+        reg->yuv2rgb_coeff[i] = common_check_bits_ex(reg->yuv2rgb_coeff[i], 12, "yuv2rgb_coeff");
     }
 
     log_info("================= yuv2rgb 8b reg=================\n");

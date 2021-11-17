@@ -101,10 +101,19 @@ static void cac_rgb_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out
     uint16_t* y_gradient = new uint16_t[ori_height*ori_width];
     //cv::Mat out_rgb(ori_height, ori_width, CV_8UC3);
 
+    bool flag = false;
+
     for (uint32_t row = 0; row < ori_height; row++)
     {
         for (uint32_t col = 0; col < ori_width; col++)
         {
+            if (col == 630 && row == 124)
+            {
+                flag = true;
+            }
+            else {
+                flag = false;
+            }
             uint32_t row_ = KERNEL_SIZE / 2 + row;
             uint32_t col_ = KERNEL_SIZE / 2 + col;
             uint32_t h_grad_sum = 0;
@@ -206,9 +215,12 @@ static void cac_rgb_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out
             uint32_t g_cur = g_ext[row_*ext_width + col_];
             uint32_t b_cur = b_ext[row_*ext_width + col_];
 
-            int32_t cr = (int32_t(r_cur) - int32_t(luma_cur))*0.713;
-            int32_t cb = (int32_t(b_cur) - int32_t(luma_cur))*0.564;
-            int32_t sat = sqrt(cr * cr + cb * cb);
+            //int32_t cb = -0.169 * int32_t(r_cur) - 0.331*int32_t(g_cur) + 0.5*int32_t(b_cur);
+            //int32_t cr = 0.5 * int32_t(r_cur) - 0.419*int32_t(g_cur) - 0.081*int32_t(b_cur);
+
+            int32_t cb = (-173 * int32_t(r_cur) - 339*int32_t(g_cur) + 512*int32_t(b_cur) + 512)>>10;
+            int32_t cr = (512 * int32_t(r_cur) - 429*int32_t(g_cur) - 83*int32_t(b_cur) + 512)>>10;
+            int32_t sat = int32_t(sqrt(cr * cr + cb * cb));
             double theta = double(cr) / cb;
 
             if (sat > 20 && sat<80 && theta>0.1 && theta < 0.6 && luma_cur < 210
@@ -220,19 +232,33 @@ static void cac_rgb_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out
             {
                 y_gradient[row*ori_width + col] = 0;
             }
+            if (flag)
+            {
+                log_info("y grad = %d\n", y_gradient[row*ori_width + col]);
+            }
             uint32_t prob_thr[4] = { 3, 8, 18, 30 };
             uint32_t prob_weight[4] = { 0, 192, 224,256 };
             y_gradient[row*ori_width + col] = interp_1d(y_gradient[row*ori_width + col], prob_thr, prob_weight, 4);
+            if (flag)
+            {
+                log_info("y grad = %d\n", y_gradient[row*ori_width + col]);
+            }
 
-            int32_t new_cr = cr * (256 - y_gradient[row*ori_width + col] / 256);
-            int32_t new_cb = cb * (256 - y_gradient[row*ori_width + col] / 256);
+            int32_t new_cr = cr * (256 - y_gradient[row*ori_width + col]) / 256;
+            int32_t new_cb = cb * (256 - y_gradient[row*ori_width + col]) / 256;
 
-            int32_t new_r = luma_cur + 1.403 * new_cr;
-            int32_t new_b = luma_cur + 1.773 * new_cb;
-            int32_t new_g = luma_cur - 0.714*new_cr - 0.344*new_cb;
+            int32_t new_r = (1024 * (int32_t)luma_cur - 1 * new_cb + 1436 * new_cr + 512) >> 10;
+            int32_t new_g = (1024 * (int32_t)luma_cur - 353 * new_cb - 731 * new_cr + 512) >> 10;
+            int32_t new_b = (1024 * (int32_t)luma_cur + 1815 * new_cb - 1 * new_cr + 512) >> 10;
             new_r = CLIP3(new_r, 0, 255);
             new_g = CLIP3(new_g, 0, 255);
             new_b = CLIP3(new_b, 0, 255);
+
+            if (flag)
+            {
+                log_info("input rgb= %d, %d, %d, output rgb= %d, %d, %d\n", r_cur, g_cur, b_cur, new_r, new_g, new_b);
+                log_info("input yuv= %d, %d, %d, output yuv= %d, %d, %d\n", luma_cur, cb, cr, luma_cur, new_cb, new_cr);
+            }
 
             out_r[row*ori_width + col] = new_r;
             out_g[row*ori_width + col] = new_g;
@@ -243,6 +269,12 @@ static void cac_rgb_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out
         }
     }
     //cv::imwrite("./new_rgb.jpg", out_rgb);
+
+    delete[] r_ext;
+    delete[] g_ext;
+    delete[] b_ext;
+    delete[] luma_ext;
+    delete[] y_gradient;
 }
 
 
@@ -354,7 +386,7 @@ void cac_rgb::checkparameters(cac_rgb_reg_t* reg)
 {
     reg->bypass = common_check_bits(reg->bypass, 1, "bypass");
 
-    log_info("================= cc reg=================\n");
+    log_info("================= cac rgb reg=================\n");
     log_info("bypass %d\n", reg->bypass);
-    log_info("================= cc reg=================\n");
+    log_info("================= cac rgb reg=================\n");
 }
