@@ -80,7 +80,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(XMP_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreDebug.ar" "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesDebug.ar")
     set(JPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/include_linux")
     set(JPEG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib_linux/libjpeg.a")
-    set(JPEG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib_linux/libjpeg.a")
+    set(JPEG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib_linux/libjpeg_d.a")
     set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2_linux")
     set(XML_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_release.a" 
     "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_release.a")
@@ -126,9 +126,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(isp_emulation 
-        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} z lzma)
+        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} z lzma dl)
     target_link_libraries(isp_emulation 
-        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} z lzma)
+        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} z lzma dl)
 endif()
 target_link_libraries(isp_emulation ${OpenCV_LIBS})
 
