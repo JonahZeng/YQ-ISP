@@ -1,15 +1,10 @@
 /*****************************************************************************/
-// Copyright 2006-2007 Adobe Systems Incorporated
+// Copyright 2006-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
 /*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_exceptions.h#3 $ */ 
-/* $DateTime: 2016/01/19 15:23:55 $ */
-/* $Change: 1059947 $ */
-/* $Author: erichan $ */
 
 /** \file
  * C++ exception support for DNG SDK.
@@ -40,7 +35,7 @@
 /// Display a warning message. Note that this may just eat the message.
 
 void ReportWarning (const char *message,
-				    const char *sub_message = NULL);
+					const char *sub_message = NULL);
 	
 /*****************************************************************************/
 
@@ -178,7 +173,7 @@ inline void ThrowUserCanceled ()
 /// dng_error_host_insufficient .
 
 inline void ThrowHostInsufficient (const char * sub_message = NULL,
-                                   bool silent = false)
+								   bool silent = false)
 	{
 	
 	Throw_dng_error (dng_error_host_insufficient, NULL, sub_message, silent);

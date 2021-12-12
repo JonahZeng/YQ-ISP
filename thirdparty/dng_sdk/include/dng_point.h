@@ -1,16 +1,9 @@
 /*****************************************************************************/
-// Copyright 2006 Adobe Systems Incorporated
+// Copyright 2006-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
-/*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_point.h#3 $ */ 
-/* $DateTime: 2016/03/10 15:52:07 $ */
-/* $Change: 1066836 $ */
-/* $Author: erichan $ */
-
 /*****************************************************************************/
 
 #ifndef __dng_point__
@@ -133,7 +126,7 @@ class dng_point_real64
 /*****************************************************************************/
 
 inline dng_point operator+ (const dng_point &a,
-				  			const dng_point &b)
+							const dng_point &b)
 				  
 				  
 	{
@@ -146,20 +139,20 @@ inline dng_point operator+ (const dng_point &a,
 /*****************************************************************************/
 
 inline dng_point_real64 operator+ (const dng_point_real64 &a,
-				  				   const dng_point_real64 &b)
+								   const dng_point_real64 &b)
 				  
 				  
 	{
 	
 	return dng_point_real64 (a.v + b.v,
-					  		 a.h + b.h);
+							 a.h + b.h);
 					  
 	}
 
 /*****************************************************************************/
 
 inline dng_point operator- (const dng_point &a,
-				  			const dng_point &b)
+							const dng_point &b)
 				  
 				  
 	{
@@ -172,13 +165,13 @@ inline dng_point operator- (const dng_point &a,
 /*****************************************************************************/
 
 inline dng_point_real64 operator- (const dng_point_real64 &a,
-				  				   const dng_point_real64 &b)
+								   const dng_point_real64 &b)
 				  
 				  
 	{
 	
 	return dng_point_real64 (a.v - b.v,
-					         a.h - b.h);
+							 a.h - b.h);
 					  
 	}
 
@@ -213,32 +206,32 @@ inline real64 DistanceSquared (const dng_point_real64 &a,
 // Finds distance squared from point p to line segment from v to w.
 
 inline real64 DistanceSquared (const dng_point_real64 &p,
-                               const dng_point_real64 &v,
-                               const dng_point_real64 &w)
-    {
-    
-    real64 len2 = DistanceSquared (v, w);
-    
-    if (len2 == 0.0)
-        return DistanceSquared (p, v);
-        
-    real64 t = ((p.h - v.h) * (w.h - v.h) +
-                (p.v - v.v) * (w.v - v.v)) / len2;
-        
-    if (t <= 0.0)
-        return DistanceSquared (p, v);
-    
-    if (t >= 1.0)
-        return DistanceSquared (p, w);
+							   const dng_point_real64 &v,
+							   const dng_point_real64 &w)
+	{
+	
+	real64 len2 = DistanceSquared (v, w);
+	
+	if (len2 == 0.0)
+		return DistanceSquared (p, v);
+		
+	real64 t = ((p.h - v.h) * (w.h - v.h) +
+				(p.v - v.v) * (w.v - v.v)) / len2;
+		
+	if (t <= 0.0)
+		return DistanceSquared (p, v);
+	
+	if (t >= 1.0)
+		return DistanceSquared (p, w);
   
-    dng_point_real64 z;
+	dng_point_real64 z;
   
-    z.h = v.h + t * (w.h - v.h);
-    z.v = v.v + t * (w.v - v.v);
+	z.h = v.h + t * (w.h - v.h);
+	z.v = v.v + t * (w.v - v.v);
   
-    return DistanceSquared (p, z);
-     
-    }
+	return DistanceSquared (p, z);
+	 
+	}
 
 /*****************************************************************************/
 

@@ -1,15 +1,10 @@
 /*****************************************************************************/
-// Copyright 2006-2007 Adobe Systems Incorporated
+// Copyright 2006-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
 /*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_bottlenecks.h#2 $ */ 
-/* $DateTime: 2015/06/09 23:32:35 $ */
-/* $Change: 1026104 $ */
-/* $Author: aksherry $ */
 
 /** \file
  * Indirection mechanism for performance-critical routines that might be replaced
@@ -550,7 +545,8 @@ typedef void (Vignette32Proc)
 			  int32 sRowStep,
 			  int32 sPlaneStep,
 			  int32 mRowStep,
-			  uint32 mBits);
+			  uint32 mBits,
+			  uint16 blackLevel);
 
 /*****************************************************************************/
 
@@ -574,7 +570,41 @@ typedef void (BaselineMapPoly32Proc)
 			  const uint32 rowPitch,
 			  const uint32 colPitch,
 			  const real32 *coefficients,
-			  const uint32 degree);
+			  const uint32 degree,
+			  uint16 blackLevel);
+
+/*****************************************************************************/
+
+typedef void (DecodeLosslessJPEGProc) (dng_stream &stream,
+									   dng_spooler &spooler,
+									   uint32 minDecodedSize,
+									   uint32 maxDecodedSize,
+									   bool bug16,
+									   uint64 endOfData);
+
+typedef void (EncodeLosslessJPEGProc) (const uint16 *srcData,
+									   uint32 srcRows,
+									   uint32 srcCols,
+									   uint32 srcChannels,
+									   uint32 srcBitDepth,
+									   int32 srcRowStep,
+									   int32 srcColStep,
+									   dng_stream &stream);
+
+/*****************************************************************************/
+
+typedef void (BaselineProfileGainTableMapProc) (const real32 *rSrcPtr,
+												const real32 *gSrcPtr,
+												const real32 *bSrcPtr,
+												real32 *rDstPtr,
+												real32 *gDstPtr,
+												real32 *bDstPtr,
+												const uint32 cols,
+												const int32 top,
+												const int32 left,
+												const dng_rect &imageArea,
+												const real32 exposureWeightGain,
+												const dng_gain_table_map &gainTableMap);
 
 /*****************************************************************************/
 
@@ -626,7 +656,12 @@ struct dng_suite
 	Vignette16Proc			*Vignette16;
 	Vignette32Proc			*Vignette32;
 	MapArea16Proc			*MapArea16;
-	BaselineMapPoly32Proc   *BaselineMapPoly32;
+	BaselineMapPoly32Proc	*BaselineMapPoly32;
+	DecodeLosslessJPEGProc	*DecodeLosslessJPEG;
+	EncodeLosslessJPEGProc	*EncodeLosslessJPEG;
+	#if qDNGProfileGainTableMap
+	BaselineProfileGainTableMapProc *BaselineProfileGainTableMap;
+	#endif
 	};
 
 /*****************************************************************************/
@@ -662,7 +697,7 @@ inline void DoSwapBytes16 (uint16 *dPtr,
 	{
 	
 	(gDNGSuite.SwapBytes16) (dPtr,
-						     count);
+							 count);
 	
 	}
 
@@ -671,14 +706,14 @@ inline void DoSwapBytes32 (uint32 *dPtr,
 	{
 	
 	(gDNGSuite.SwapBytes32) (dPtr,
-						     count);
+							 count);
 	
 	}
 
 /*****************************************************************************/
 
 inline void DoSetArea8 (uint8 *dPtr,
-					    uint8 value,
+						uint8 value,
 						uint32 rows,
 						uint32 cols,
 						uint32 planes,
@@ -824,16 +859,16 @@ inline void DoCopyArea32 (const uint32 *sPtr,
 	}
 
 inline void DoCopyArea8_16 (const uint8 *sPtr,
-						    uint16 *dPtr,
-						    uint32 rows,
-						    uint32 cols,
-						    uint32 planes,
-						    int32 sRowStep,
-						    int32 sColStep,
-						    int32 sPlaneStep,
-						    int32 dRowStep,
-						    int32 dColStep,
-						    int32 dPlaneStep)
+							uint16 *dPtr,
+							uint32 rows,
+							uint32 cols,
+							uint32 planes,
+							int32 sRowStep,
+							int32 sColStep,
+							int32 sPlaneStep,
+							int32 dRowStep,
+							int32 dColStep,
+							int32 dPlaneStep)
 	{
 	
 	(gDNGSuite.CopyArea8_16) (sPtr,
@@ -851,16 +886,16 @@ inline void DoCopyArea8_16 (const uint8 *sPtr,
 	}
 
 inline void DoCopyArea8_S16 (const uint8 *sPtr,
-						     int16 *dPtr,
-						     uint32 rows,
-						     uint32 cols,
-						     uint32 planes,
-						     int32 sRowStep,
-						     int32 sColStep,
-						     int32 sPlaneStep,
-						     int32 dRowStep,
-						     int32 dColStep,
-						     int32 dPlaneStep)
+							 int16 *dPtr,
+							 uint32 rows,
+							 uint32 cols,
+							 uint32 planes,
+							 int32 sRowStep,
+							 int32 sColStep,
+							 int32 sPlaneStep,
+							 int32 dRowStep,
+							 int32 dColStep,
+							 int32 dPlaneStep)
 	{
 	
 	(gDNGSuite.CopyArea8_S16) (sPtr,
@@ -878,16 +913,16 @@ inline void DoCopyArea8_S16 (const uint8 *sPtr,
 	}
 
 inline void DoCopyArea8_32 (const uint8 *sPtr,
-						    uint32 *dPtr,
-						    uint32 rows,
-						    uint32 cols,
-						    uint32 planes,
-						    int32 sRowStep,
-						    int32 sColStep,
-						    int32 sPlaneStep,
-						    int32 dRowStep,
-						    int32 dColStep,
-						    int32 dPlaneStep)
+							uint32 *dPtr,
+							uint32 rows,
+							uint32 cols,
+							uint32 planes,
+							int32 sRowStep,
+							int32 sColStep,
+							int32 sPlaneStep,
+							int32 dRowStep,
+							int32 dColStep,
+							int32 dPlaneStep)
 	{
 	
 	(gDNGSuite.CopyArea8_32) (sPtr,
@@ -905,43 +940,43 @@ inline void DoCopyArea8_32 (const uint8 *sPtr,
 	}
 
 inline void DoCopyArea16_S16 (const uint16 *sPtr,
-						      int16 *dPtr,
-						      uint32 rows,
-						      uint32 cols,
-						      uint32 planes,
-						      int32 sRowStep,
-						      int32 sColStep,
-						      int32 sPlaneStep,
-						      int32 dRowStep,
-						      int32 dColStep,
-						      int32 dPlaneStep)
+							  int16 *dPtr,
+							  uint32 rows,
+							  uint32 cols,
+							  uint32 planes,
+							  int32 sRowStep,
+							  int32 sColStep,
+							  int32 sPlaneStep,
+							  int32 dRowStep,
+							  int32 dColStep,
+							  int32 dPlaneStep)
 	{
 	
 	(gDNGSuite.CopyArea16_S16) (sPtr,
-							    dPtr,
-							    rows,
-							    cols,
-							    planes,
-							    sRowStep,
-							    sColStep,
-							    sPlaneStep,
-							    dRowStep,
-							    dColStep,
-							    dPlaneStep);
+								dPtr,
+								rows,
+								cols,
+								planes,
+								sRowStep,
+								sColStep,
+								sPlaneStep,
+								dRowStep,
+								dColStep,
+								dPlaneStep);
 
 	}
 
 inline void DoCopyArea16_32 (const uint16 *sPtr,
-						     uint32 *dPtr,
-						     uint32 rows,
-						     uint32 cols,
-						     uint32 planes,
-						     int32 sRowStep,
-						     int32 sColStep,
-						     int32 sPlaneStep,
-						     int32 dRowStep,
-						     int32 dColStep,
-						     int32 dPlaneStep)
+							 uint32 *dPtr,
+							 uint32 rows,
+							 uint32 cols,
+							 uint32 planes,
+							 int32 sRowStep,
+							 int32 sColStep,
+							 int32 sPlaneStep,
+							 int32 dRowStep,
+							 int32 dColStep,
+							 int32 dPlaneStep)
 	{
 	
 	(gDNGSuite.CopyArea16_32) (sPtr,
@@ -1002,17 +1037,17 @@ inline void DoCopyArea16_R32 (const uint16 *sPtr,
 	{
 	
 	(gDNGSuite.CopyArea16_R32) (sPtr,
-							    dPtr,
-							    rows,
-							    cols,
-							    planes,
-							    sRowStep,
-							    sColStep,
-							    sPlaneStep,
-							    dRowStep,
-							    dColStep,
-							    dPlaneStep,
-							    pixelRange);
+								dPtr,
+								rows,
+								cols,
+								planes,
+								sRowStep,
+								sColStep,
+								sPlaneStep,
+								dRowStep,
+								dColStep,
+								dPlaneStep,
+								pixelRange);
 
 	}
 
@@ -1031,17 +1066,17 @@ inline void DoCopyAreaS16_R32 (const int16 *sPtr,
 	{
 	
 	(gDNGSuite.CopyAreaS16_R32) (sPtr,
-							     dPtr,
-							     rows,
-							     cols,
-							     planes,
-							     sRowStep,
-							     sColStep,
-							     sPlaneStep,
-							     dRowStep,
-							     dColStep,
-							     dPlaneStep,
-							     pixelRange);
+								 dPtr,
+								 rows,
+								 cols,
+								 planes,
+								 sRowStep,
+								 sColStep,
+								 sPlaneStep,
+								 dRowStep,
+								 dColStep,
+								 dPlaneStep,
+								 pixelRange);
 
 	}
 
@@ -1089,17 +1124,17 @@ inline void DoCopyAreaR32_16 (const real32 *sPtr,
 	{
 	
 	(gDNGSuite.CopyAreaR32_16) (sPtr,
-							    dPtr,
-							    rows,
-							    cols,
-							    planes,
-							    sRowStep,
-							    sColStep,
-							    sPlaneStep,
-							    dRowStep,
-							    dColStep,
-							    dPlaneStep,
-							    pixelRange);
+								dPtr,
+								rows,
+								cols,
+								planes,
+								sRowStep,
+								sColStep,
+								sPlaneStep,
+								dRowStep,
+								dColStep,
+								dPlaneStep,
+								pixelRange);
 
 	}
 
@@ -1118,17 +1153,17 @@ inline void DoCopyAreaR32_S16 (const real32 *sPtr,
 	{
 	
 	(gDNGSuite.CopyAreaR32_S16) (sPtr,
-							     dPtr,
-							     rows,
-							     cols,
-							     planes,
-							     sRowStep,
-							     sColStep,
-							     sPlaneStep,
-							     dRowStep,
-							     dColStep,
-							     dPlaneStep,
-							     pixelRange);
+								 dPtr,
+								 rows,
+								 cols,
+								 planes,
+								 sRowStep,
+								 sColStep,
+								 sPlaneStep,
+								 dRowStep,
+								 dColStep,
+								 dPlaneStep,
+								 pixelRange);
 
 	}
 
@@ -1149,17 +1184,17 @@ inline void DoRepeatArea8 (const uint8 *sPtr,
 	{
 	
 	(gDNGSuite.RepeatArea8) (sPtr,
-						     dPtr,
-						     rows,
-						     cols,
-						     planes,
-						     rowStep,
-						     colStep,
-						     planeStep,
-						     repeatV,
-						     repeatH,
-						     phaseV,
-						     phaseH);
+							 dPtr,
+							 rows,
+							 cols,
+							 planes,
+							 rowStep,
+							 colStep,
+							 planeStep,
+							 repeatV,
+							 repeatH,
+							 phaseV,
+							 phaseH);
 
 	}
 
@@ -1178,17 +1213,17 @@ inline void DoRepeatArea16 (const uint16 *sPtr,
 	{
 	
 	(gDNGSuite.RepeatArea16) (sPtr,
-						      dPtr,
-						      rows,
-						      cols,
-						      planes,
-						      rowStep,
-						      colStep,
-						      planeStep,
-						      repeatV,
-						      repeatH,
-						      phaseV,
-						      phaseH);
+							  dPtr,
+							  rows,
+							  cols,
+							  planes,
+							  rowStep,
+							  colStep,
+							  planeStep,
+							  repeatV,
+							  repeatH,
+							  phaseV,
+							  phaseH);
 
 	}
 
@@ -1207,30 +1242,30 @@ inline void DoRepeatArea32 (const uint32 *sPtr,
 	{
 	
 	(gDNGSuite.RepeatArea32) (sPtr,
-						      dPtr,
-						      rows,
-						      cols,
-						      planes,
-						      rowStep,
-						      colStep,
-						      planeStep,
-						      repeatV,
-						      repeatH,
-						      phaseV,
-						      phaseH);
+							  dPtr,
+							  rows,
+							  cols,
+							  planes,
+							  rowStep,
+							  colStep,
+							  planeStep,
+							  repeatV,
+							  repeatH,
+							  phaseV,
+							  phaseH);
 
 	}
 		
 /*****************************************************************************/
 
 inline void DoShiftRight16 (uint16 *dPtr,
-						    uint32 rows,
-						    uint32 cols,
-						    uint32 planes,
-						    int32 rowStep,
-						    int32 colStep,
-						    int32 planeStep,
-						    uint32 shift)
+							uint32 rows,
+							uint32 cols,
+							uint32 planes,
+							int32 rowStep,
+							int32 colStep,
+							int32 planeStep,
+							uint32 shift)
 	{
 	
 	(gDNGSuite.ShiftRight16) (dPtr,
@@ -1683,7 +1718,8 @@ inline void DoVignette32 (real32 *sPtr,
 						  int32 sRowStep,
 						  int32 sPlaneStep,
 						  int32 mRowStep,
-						  uint32 mBits)
+						  uint32 mBits,
+						  uint16 blackLevel)
 	{
 	
 	(gDNGSuite.Vignette32) (sPtr,
@@ -1694,7 +1730,8 @@ inline void DoVignette32 (real32 *sPtr,
 							sRowStep,
 							sPlaneStep,
 							mRowStep,
-							mBits);
+							mBits,
+							blackLevel);
 
 	}
 
@@ -1730,7 +1767,8 @@ inline void DoBaselineMapPoly32 (real32 *dPtr,
 								 const uint32 rowPitch,
 								 const uint32 colPitch,
 								 const real32 *coefficients,
-								 const uint32 degree)
+								 const uint32 degree,
+								 uint16 blackLevel)
 	{
 	
 	(gDNGSuite.BaselineMapPoly32) (dPtr,
@@ -1740,12 +1778,94 @@ inline void DoBaselineMapPoly32 (real32 *dPtr,
 								   rowPitch,
 								   colPitch,
 								   coefficients,
-								   degree);
+								   degree,
+								   blackLevel);
 	
 	}
 
 /*****************************************************************************/
 
-#endif
+inline void DoDecodeLosslessJPEG (dng_stream &stream,
+								  dng_spooler &spooler,
+								  uint32 minDecodedSize,
+								  uint32 maxDecodedSize,
+								  bool bug16,
+								  uint64 endOfData)
+	{
+	
+	(gDNGSuite.DecodeLosslessJPEG) (stream,
+									spooler,
+									minDecodedSize,
+									maxDecodedSize,
+									bug16,
+									endOfData);
+	
+	}
+
+/*****************************************************************************/
+
+inline void DoEncodeLosslessJPEG (const uint16 *srcData,
+								  uint32 srcRows,
+								  uint32 srcCols,
+								  uint32 srcChannels,
+								  uint32 srcBitDepth,
+								  int32 srcRowStep,
+								  int32 srcColStep,
+								  dng_stream &stream)
+	{
+	
+	(gDNGSuite.EncodeLosslessJPEG) (srcData,
+									srcRows,
+									srcCols,
+									srcChannels,
+									srcBitDepth,
+									srcRowStep,
+									srcColStep,
+									stream);
+	
+	}
+
+/*****************************************************************************/
+
+#if qDNGProfileGainTableMap
+
+/*****************************************************************************/
+
+inline void DoBaselineProfileGainTableMap (const real32 *rSrcPtr,
+										   const real32 *gSrcPtr,
+										   const real32 *bSrcPtr,
+										   real32 *rDstPtr,
+										   real32 *gDstPtr,
+										   real32 *bDstPtr,
+										   const uint32 cols,
+										   const int32 top,
+										   const int32 left,
+										   const dng_rect &imageArea,
+										   const real32 exposureWeightGain,
+										   const dng_gain_table_map &gainTableMap)
+	{
+	
+	(gDNGSuite.BaselineProfileGainTableMap) (rSrcPtr,
+											 gSrcPtr,
+											 bSrcPtr,
+											 rDstPtr,
+											 gDstPtr,
+											 bDstPtr,
+											 cols,
+											 top,
+											 left,
+											 imageArea,
+											 exposureWeightGain,
+											 gainTableMap);
+
+	}
+
+/*****************************************************************************/
+
+#endif	// qDNGProfileGainTableMap
+
+/*****************************************************************************/
+
+#endif	// __dng_bottlenecks__
 	
 /*****************************************************************************/

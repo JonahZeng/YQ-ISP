@@ -4,6 +4,7 @@
 #include <libxml/tree.h>
 #include <string>
 #include <list>
+#include <typeinfo>
 #include "fileRead.h"
 
 using std::list;

@@ -1,15 +1,10 @@
 /*****************************************************************************/
-// Copyright 2008-2009 Adobe Systems Incorporated
+// Copyright 2008-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
 /*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_opcode_list.h#3 $ */ 
-/* $DateTime: 2016/01/19 15:23:55 $ */
-/* $Change: 1059947 $ */
-/* $Author: erichan $ */
 
 /** \file
  * List of opcodes.
@@ -148,6 +143,13 @@ class dng_opcode_list: private dng_uncopyable
 					dng_stream &stream,
 					uint32 byteCount,
 					uint64 streamOffset);
+
+		/// Apply an area scale factor to all opcodes in the list. Useful if
+		/// one of the image stages is scaled to a different resolution.
+		/// Example is stage 3 image being scaled to 2x the linear dimension
+		/// of the stage 2 image.
+
+		void ApplyAreaScale (const dng_urational &scale);
 		
 	};
 

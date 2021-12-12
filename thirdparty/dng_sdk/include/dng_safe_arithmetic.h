@@ -1,3 +1,11 @@
+/*****************************************************************************/
+// Copyright 2015-2019 Adobe Systems Incorporated
+// All Rights Reserved.
+//
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
+// accordance with the terms of the Adobe license agreement accompanying it.
+/*****************************************************************************/
+
 /*
  *
  * Copyright (C) 2015 The Android Open Source Project
@@ -120,32 +128,32 @@ bool ConvertUint32ToInt32(uint32 val, int32 *result);
 template <class TSrc, class TDest>
 static void ConvertUnsigned(TSrc src, TDest *dest) {
 #if 0
-// sub-optimal run-time implementation pre-C++11
- if (!(std::numeric_limits<TSrc>::is_integer &&
-	   !std::numeric_limits<TSrc>::is_signed &&
-	   std::numeric_limits<TDest>::is_integer &&
-	   !std::numeric_limits<TDest>::is_signed))
-	 {
-	 ThrowProgramError ("TSrc and TDest must be unsigned integer types");
-	 }
+	// sub-optimal run-time implementation pre-C++11
+	if (!(std::numeric_limits<TSrc>::is_integer &&
+		  !std::numeric_limits<TSrc>::is_signed &&
+		  std::numeric_limits<TDest>::is_integer &&
+		  !std::numeric_limits<TDest>::is_signed))
+	{
+	ThrowProgramError ("TSrc and TDest must be unsigned integer types");
+	}
 #else
- // preferred compile-time implementation; requires C++11
-  static_assert(std::numeric_limits<TSrc>::is_integer &&
-					!std::numeric_limits<TSrc>::is_signed &&
-					std::numeric_limits<TDest>::is_integer &&
-					!std::numeric_limits<TDest>::is_signed,
-				"TSrc and TDest must be unsigned integer types");
+	// preferred compile-time implementation; requires C++11
+	static_assert(std::numeric_limits<TSrc>::is_integer &&
+				  !std::numeric_limits<TSrc>::is_signed &&
+				  std::numeric_limits<TDest>::is_integer &&
+				  !std::numeric_limits<TDest>::is_signed,
+				  "TSrc and TDest must be unsigned integer types");
 #endif
 
-  const TDest converted = static_cast<TDest>(src);
+	const TDest converted = static_cast<TDest>(src);
 
-  // Convert back to TSrc to check whether truncation occurred in the
-  // conversion to TDest.
-  if (static_cast<TSrc>(converted) != src) {
-	ThrowProgramError("Overflow in unsigned integer conversion");
-  }
+	// Convert back to TSrc to check whether truncation occurred in the
+	// conversion to TDest.
+	if (static_cast<TSrc>(converted) != src) {
+		ThrowProgramError("Overflow in unsigned integer conversion");
+	}
 
-  *dest = converted;
+	*dest = converted;
 }
 
 /*****************************************************************************/

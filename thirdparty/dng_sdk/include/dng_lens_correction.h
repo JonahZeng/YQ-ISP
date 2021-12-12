@@ -1,15 +1,10 @@
 /*****************************************************************************/
-// Copyright 2008 Adobe Systems Incorporated
+// Copyright 2008-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
 // NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
 /*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_lens_correction.h#3 $ */ 
-/* $DateTime: 2016/01/19 15:23:55 $ */
-/* $Change: 1059947 $ */
-/* $Author: erichan $ */
 
 /** \file
  * Opcodes to fix lens aberrations such as geometric distortion, lateral chromatic
@@ -225,6 +220,83 @@ class dng_warp_params
 
 /*****************************************************************************/
 
+#if qDNGExtendedRadialLensWarp
+
+class dng_warp_params_radial
+	{
+
+	public:
+
+		// Let N be kMaxTerms. The radial polynomial model is
+		//
+		// f(r) = sum_{i=0 to N-1} (k_i * r^i)
+		//
+		//		= k_0 + (k_1 * r) + (k_2 * r^2) + ... (k_{N-1} * r^{N-1})
+		//
+		// where r is the normalized ideal radius in [0,1].
+		//
+		// If fUseReciprocal is false, then the mapping from ideal to real
+		// radius is:
+		//
+		//	 r_real = r_ideal * f(r_ideal)
+		//
+		// If fUseReciprocal is true, then the mapping from ideal to real
+		// radius is:
+		//
+		//	 r_real = r_ideal / f(r_ideal)
+
+		static const uint32 kMaxTerms = 15;
+		
+		real64 fData [kMaxColorPlanes] [kMaxTerms];
+
+		// Index 0: min_valid_radius
+		// Index 1: max_valid_radius
+
+		real64 fValidRange [kMaxColorPlanes] [2];
+
+		bool fUseReciprocal = false;
+
+	public:
+
+		dng_warp_params_radial ();
+
+		bool IsValid (uint32 plane) const;
+
+		bool IsNOP (uint32 plane) const;
+
+		void SetNOP ();
+
+		void SetNOP (uint32 plane);
+
+		// Convenience method to set DNG 1.3 WarpRectilinear opcode radial
+		// parameters.
+
+		void SetWarpRectilinear_1_3 (uint32 plane,
+									 const dng_vector &params);
+
+		// Returns true if the radial parameters are compatible with the DNG
+		// 1.3 WarpRectilinear opcode model.
+
+		bool CompatibleWithWarpRectilinear_1_3 (uint32 plane) const;
+
+		// Evaluate the ideal (dst, corrected) to real (src, uncorrected)
+		// radial warp model for the specified plane. r is the normalized
+		// ideal image radius in the domain [0,1], where 0 is the image center
+		// and 1 is the farthest image corner. Results are undefined outside
+		// that domain.
+		
+		real64 Evaluate (uint32 plane,
+						 real64 r) const;
+
+		real64 EvaluateRatio (uint32 plane,
+							  real64 r2) const;
+
+	};
+
+#endif	// qDNGExtendedRadialLensWarp
+
+/*****************************************************************************/
+
 /// \brief Warp parameters for pinhole perspective rectilinear (not fisheye)
 /// camera model. Supports radial and tangential (decentering) distortion
 /// correction parameters.
@@ -240,12 +312,7 @@ class dng_warp_params_rectilinear: public dng_warp_params
 		// from corrected pixel coordinates (xDst, yDst) to uncorrected pixel
 		// coordinates (xSrc, ySrc) for each plane P as follows:
 		//
-		// Let kr0 = fRadParams [P][0]
-		//	   kr1 = fRadParams [P][1]
-		//	   kr2 = fRadParams [P][2]
-		//	   kr3 = fRadParams [P][3]
-		//
-		//	   kt0 = fTanParams [P][0]
+		// Let kt0 = fTanParams [P][0]
 		//	   kt1 = fTanParams [P][1]
 		//
 		// Let (xCenter, yCenter) be the optical image center (see fCenter,
@@ -261,12 +328,11 @@ class dng_warp_params_rectilinear: public dng_warp_params
 		//
 		//	   r^2 = dx^2 + dy^2
 		//
-		// Compute the radial correction term:
+		// Compute the radial correction term f(r) per dng_warp_params_radial
+		// (see above) and apply as follows:
 		//
-		//	   ratio = kr0 + (kr1 * r^2) + (kr2 * r^4) + (kr3 * r^6)
-		//
-		//	   dxRad = dx * ratio
-		//	   dyRad = dy * ratio
+		//	   dxRad = dx * f(r)
+		//	   dyRad = dy * f(r)
 		//
 		// Compute the tangential correction term:
 		//
@@ -290,16 +356,12 @@ class dng_warp_params_rectilinear: public dng_warp_params
 		//
 		// fx (x, y) must be an increasing function of x.
 		// fy (x, y) must be an increasing function of x.
-		//
-		// The parameters kr0, kr1, kr2, and kr3 must define an increasing
-		// radial warp function. Specifically, let w (r) be the radial warp
-		// function:
-		//
-		//	   w (r) = (kr0 * r) + (kr1 * r^3) + (kr2 * r^5) + (kr3 * r^7).
-		//
-		// w (r) must be an increasing function.
 
+		#if qDNGExtendedRadialLensWarp
+		dng_warp_params_radial fRadParams;
+		#else
 		dng_vector fRadParams [kMaxColorPlanes];
+		#endif
 		dng_vector fTanParams [kMaxColorPlanes];
 
 	public:
@@ -313,7 +375,11 @@ class dng_warp_params_rectilinear: public dng_warp_params
 		/// image center in relative coordinates.
 
 		dng_warp_params_rectilinear (uint32 planes,
+									 #if qDNGExtendedRadialLensWarp
+									 const dng_warp_params_radial &radParams,
+									 #else
 									 const dng_vector radParams [],
+									 #endif
 									 const dng_vector tanParams [],
 									 const dng_point_real64 &fCenter);
 
@@ -465,15 +531,61 @@ class dng_warp_params_fisheye: public dng_warp_params
 
 /*****************************************************************************/
 
-/// \brief Warp opcode for pinhole perspective (rectilinear) camera model.
+/// \brief Abstract base class for WarpRectilinear and WarpRectilinear2 opcodes.
 
-class dng_opcode_WarpRectilinear: public dng_opcode
+class dng_opcode_BaseWarpRectilinear: public dng_opcode
 	{
 		
 	protected:
 
 		dng_warp_params_rectilinear fWarpParams;
 
+	public:
+	
+		// Overridden methods.
+
+		bool IsNOP () const override;
+		
+		bool IsValidForNegative (const dng_negative &negative) const override;
+	
+		void Apply (dng_host &host,
+					dng_negative &negative,
+					AutoPtr<dng_image> &image) override;
+
+		// Other methods.
+
+		bool HasDistort () const;
+
+		bool HasLateralCA () const;
+
+		const dng_warp_params_rectilinear & Params () const
+			{
+			return fWarpParams;
+			}
+
+	protected:
+
+		// Abstract base class.
+
+		dng_opcode_BaseWarpRectilinear (uint32 opcodeTag,
+										uint32 minVersion,
+										const dng_warp_params_rectilinear &params,
+										uint32 flags);
+		
+		dng_opcode_BaseWarpRectilinear (uint32 opcodeTag,
+										const char *name,
+										dng_stream &stream);
+	
+	};
+
+/*****************************************************************************/
+
+/// \brief Warp opcode for pinhole perspective (rectilinear) camera model
+/// introduced in DNG 1.3.
+
+class dng_opcode_WarpRectilinear: public dng_opcode_BaseWarpRectilinear
+	{
+		
 	public:
 	
 		dng_opcode_WarpRectilinear (const dng_warp_params_rectilinear &params,
@@ -483,27 +595,42 @@ class dng_opcode_WarpRectilinear: public dng_opcode
 	
 		// Overridden methods.
 
-		virtual bool IsNOP () const;
-		
-		virtual bool IsValidForNegative (const dng_negative &negative) const;
-	
-		virtual void PutData (dng_stream &stream) const;
-
-		virtual void Apply (dng_host &host,
-							dng_negative &negative,
-							AutoPtr<dng_image> &image);
-
-		// Other methods.
-
-		bool HasDistort () const;
-
-		bool HasLateralCA () const;
+		void PutData (dng_stream &stream) const override;
 
 	protected:
 
 		static uint32 ParamBytes (uint32 planes);
 
 	};
+
+/*****************************************************************************/
+
+/// \brief Warp opcode for pinhole perspective (rectilinear) camera model
+/// introduced in DNG 1.6.
+
+#if qDNGExtendedRadialLensWarp
+
+class dng_opcode_WarpRectilinear2: public dng_opcode_BaseWarpRectilinear
+	{
+		
+	public:
+	
+		dng_opcode_WarpRectilinear2 (const dng_warp_params_rectilinear &params,
+									 uint32 flags);
+		
+		explicit dng_opcode_WarpRectilinear2 (dng_stream &stream);
+	
+		// Overridden methods.
+
+		void PutData (dng_stream &stream) const override;
+
+	protected:
+
+		static uint32 ParamBytes (uint32 planes);
+
+	};
+
+#endif	// qDNGExtendedRadialLensWarp
 
 /*****************************************************************************/
 
@@ -580,6 +707,8 @@ class dng_vignette_radial_params
 		dng_vignette_radial_params (const dng_std_vector<real64> &params,
 									const dng_point_real64 &center);
 
+		dng_vignette_radial_params (const dng_vignette_radial_params &params);
+
 		bool IsNOP () const;
 
 		bool IsValid () const;
@@ -623,6 +752,11 @@ class dng_opcode_FixVignetteRadial: public dng_inplace_opcode
 		
 		explicit dng_opcode_FixVignetteRadial (dng_stream &stream);
 	
+		const dng_vignette_radial_params & Params () const
+			{
+			return fParams;
+			}
+
 		virtual bool IsNOP () const;
 		
 		virtual bool IsValidForNegative (const dng_negative &) const;
@@ -651,6 +785,8 @@ class dng_opcode_FixVignetteRadial: public dng_inplace_opcode
 	protected:
 
 		static uint32 ParamBytes ();
+
+		virtual dng_vignette_radial_params MakeParamsForRender (const dng_negative &negative);
 
 	};
 

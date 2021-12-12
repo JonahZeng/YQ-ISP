@@ -493,22 +493,41 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
         cv::Mat FM = FM_1 * weight1 + FM_2 * weight2;
         log_array("camera2XYZ_mat\n", "%lf, ", FM.ptr<double>(), (uint32_t)FM.cols*FM.rows, (uint32_t)FM.cols);
 
-        //cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
-        //    3.2404542, -1.5371385, -0.4985314,
-        //    -0.9692660, 1.8760108, 0.0415560,
-        //    0.0556434, -0.2040259, 1.0572252);
-        cv::Mat XYZ2photoRGB = (cv::Mat_<double>(3, 3) <<
-            1.3459433, -0.2556075, -0.0511118,
-            -0.5445989, 1.5081673, 0.0205351,
-            0.0000000, 0.0000000, 1.2118128);
-        cv::Mat ccm = XYZ2photoRGB * FM;
+        cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
+            3.2404542, -1.5371385, -0.4985314,
+            -0.9692660, 1.8760108, 0.0415560,
+            0.0556434, -0.2040259, 1.0572252);
+        cv::Mat ccm = XYZ2sRGB * FM;
+        //cv::Mat XYZ2photoRGB = (cv::Mat_<double>(3, 3) <<
+        //    1.3459433, -0.2556075, -0.0511118,
+        //    -0.5445989, 1.5081673, 0.0205351,
+        //    0.0000000, 0.0000000, 1.2118128);
+        //cv::Mat ccm = XYZ2photoRGB * FM;
         log_array("ccm:\n", "%lf, ", ccm.ptr<double>(), (uint32_t)ccm.cols*FM.rows, (uint32_t)ccm.cols);
+
+        double* ccm_ptr = ccm.ptr<double>();
+        double row0_sum = ccm_ptr[0] + ccm_ptr[1] + ccm_ptr[2];
+        ccm_ptr[0] = ccm_ptr[0] / row0_sum;
+        ccm_ptr[1] = ccm_ptr[1] / row0_sum;
+        ccm_ptr[2] = ccm_ptr[2] / row0_sum;
+        double row1_sum = ccm_ptr[3] + ccm_ptr[4] + ccm_ptr[5];
+        ccm_ptr[3] = ccm_ptr[3] / row1_sum;
+        ccm_ptr[4] = ccm_ptr[4] / row1_sum;
+        ccm_ptr[5] = ccm_ptr[5] / row1_sum;
+        double row2_sum = ccm_ptr[6] + ccm_ptr[7] + ccm_ptr[8];
+        ccm_ptr[6] = ccm_ptr[6] / row2_sum;
+        ccm_ptr[7] = ccm_ptr[7] / row2_sum;
+        ccm_ptr[8] = ccm_ptr[8] / row2_sum;
 
         cc_reg.bypass = 0;
         for (int32_t i = 0; i < 9; i++)
         {
             cc_reg.ccm[i] = (int32_t)(ccm.at<double>(i / 3, i % 3) * 1024);
         }
+
+        cc_reg.ccm[0] = 1024 - cc_reg.ccm[1] - cc_reg.ccm[2];
+        cc_reg.ccm[4] = 1024 - cc_reg.ccm[3] - cc_reg.ccm[5];
+        cc_reg.ccm[8] = 1024 - cc_reg.ccm[6] - cc_reg.ccm[7];
     }
 }
 
@@ -556,20 +575,58 @@ static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_
     else 
     {
         const uint32_t* luma_hist = stat_out->gtm_stat.luma_hist;
-        const uint32_t total_cnt = stat_out->gtm_stat.total_pixs;
+        uint32_t total_cnt = stat_out->gtm_stat.total_pixs;
+        uint32_t hist_mean_val = total_cnt / 256;
+        
+        uint64_t square_sum = 0;
+        uint32_t great_bins_cnt = 0;
+        for (int32_t i = 0; i < 256; i++)
+        {
+            if (luma_hist[i] > hist_mean_val)
+            {
+                square_sum += (luma_hist[i] - hist_mean_val) * (luma_hist[i] - hist_mean_val);
+                great_bins_cnt += 1;
+            }
+        }
+        square_sum = square_sum / great_bins_cnt;
+        uint32_t std_err = (uint32_t)sqrt(square_sum);
+
+        uint32_t* hist_adapt = new uint32_t[256];
+        square_sum = 0;
+        for (int32_t i = 0; i < 256; i++)
+        {
+            if (luma_hist[i] > (hist_mean_val + std_err))
+            {
+                hist_adapt[i] = hist_mean_val + std_err;
+                square_sum += luma_hist[i] - (hist_mean_val + std_err);
+            }
+            else
+            {
+                hist_adapt[i] = luma_hist[i];
+            }
+        }
+        uint32_t low_addition = (uint32_t)(square_sum + 128)/ 256;
+        for (int32_t i = 0; i < 256; i++)
+        {
+            hist_adapt[i] += low_addition;
+        }
+
         uint32_t* hist_equal = new uint32_t[256];
         double* hist_equal_db = new double[256 + 8]; //savgol window size=9, order=3
         double* hist_equal_res = new double[256];
 
-        hist_equal[0] = luma_hist[0];
+        hist_equal[0] = hist_adapt[0];
+        
         for (int32_t i = 1; i < 256; i++)
         {
-            hist_equal[i] = hist_equal[i - 1] + luma_hist[i];
+            hist_equal[i] = hist_equal[i - 1] + hist_adapt[i];
         }
-        assert(hist_equal[255] == total_cnt);
+        //assert(hist_equal[255] == total_cnt);
+
+        
         for (int32_t i = 0; i < 256; i++)
         {
-            hist_equal_db[i + 4] = double(hist_equal[i]) * 255.0 / total_cnt;
+            hist_equal_db[i + 4] = double(hist_equal[i]) * 255.0 / hist_equal[255];
         }
         for (int32_t i = 0; i < 4; i++)
         {
@@ -608,6 +665,7 @@ static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_
 #else
         memcpy(gtm_reg.gain_lut, gain_map, sizeof(uint32_t) * 257);
 #endif
+        delete[] hist_adapt;
         delete[] hist_equal;
         delete[] hist_equal_db;
         delete[] hist_equal_res;

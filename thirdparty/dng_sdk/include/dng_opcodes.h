@@ -1,15 +1,10 @@
 /*****************************************************************************/
-// Copyright 2008 Adobe Systems Incorporated
+// Copyright 2008-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
 /*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_opcodes.h#2 $ */ 
-/* $DateTime: 2015/06/09 23:32:35 $ */
-/* $Change: 1026104 $ */
-/* $Author: aksherry $ */
 
 /** \file
  * Base class and common data structures for opcodes (introduced in DNG 1.3).
@@ -41,7 +36,7 @@ enum dng_opcode_id
 	// Warp image to correct distortion and lateral chromatic aberration for
 	// rectilinear lenses.
 	
-	dngOpcode_WarpRectilinear 		= 1,
+	dngOpcode_WarpRectilinear		= 1,
 	
 	// Warp image to correction distortion for fisheye lenses (i.e., map the
 	// fisheye projection to a perspective projection).
@@ -54,7 +49,7 @@ enum dng_opcode_id
 	
 	// Patch bad Bayer pixels which are marked with a special value in the image.
 	
-	dngOpcode_FixBadPixelsConstant  = 4,
+	dngOpcode_FixBadPixelsConstant	= 4,
 	
 	// Patch bad Bayer pixels/rectangles at a list of specified coordinates.
 	
@@ -90,7 +85,16 @@ enum dng_opcode_id
 	
 	// Apply a per-column scale to an area.
 	
-	dngOpcode_ScalePerColumn		= 13
+	dngOpcode_ScalePerColumn		= 13,
+
+	// Opcodes introduced in DNG 1.6.
+	
+	// Warp image to correct distortion and lateral chromatic aberration for
+	// rectilinear lenses. Extension of WarpRectilinear.
+
+	#if qDNGExtendedRadialLensWarp
+	dngOpcode_WarpRectilinear2		= 14,
+	#endif
 	
 	};
 
@@ -108,7 +112,7 @@ class dng_opcode
 		enum
 			{
 			kFlag_None			= 0,	//!< No flag.
-			kFlag_Optional      = 1,	//!< This opcode is optional.
+			kFlag_Optional		= 1,	//!< This opcode is optional.
 			kFlag_SkipIfPreview = 2		//!< May skip opcode for preview images.
 			};
 	
@@ -133,6 +137,18 @@ class dng_opcode
 		dng_opcode (uint32 opcodeID,
 					dng_stream &stream,
 					const char *name);
+
+		// This helper routine will be called by AboutToApply if AboutToApply
+		// passes its internal checking and plans to return true. This is an
+		// opportunity for subclasses to perform some internal preparation
+		// based on the negative, image bounds, and number of image planes.
+
+		virtual void DoAboutToApply (dng_host & /* host */,
+									 dng_negative & /* negative */,
+									 const dng_rect & /* imageBounds */,
+									 uint32 /* imagePlanes */)
+			{
+			}
 					
 	public:
 		
@@ -223,14 +239,25 @@ class dng_opcode
 		/// the negative, false otherwise.
 		
 		bool AboutToApply (dng_host &host,
-						   dng_negative &negative);
+						   dng_negative &negative,
+						   const dng_rect &imageBounds,
+						   uint32 imagePlanes);
 
 		/// Apply this opcode to the specified image with associated negative.
 
 		virtual void Apply (dng_host &host,
 							dng_negative &negative,
 							AutoPtr<dng_image> &image) = 0;
-							
+
+		/// Apply scale factor to account for a resized image. Example is
+		/// stage 3 image being scaled to 2x the linear dimension of the stage
+		/// 2 image. Opcodes that express their internal parameters using
+		/// normalized (relative) image coordinates do not need any changes.
+
+		virtual void ApplyAreaScale (const dng_urational & /* scale */)
+			{
+			}
+		
 	};
 
 /*****************************************************************************/
@@ -308,8 +335,9 @@ class dng_filter_opcode: public dng_opcode
 		/// \retval The source pixel area needed to process the specified dstArea.
 
 		virtual dng_rect SrcArea (const dng_rect &dstArea,
-								  const dng_rect & /* imageBounds */)
+								  const dng_rect &imageBounds)
 			{
+			(void) imageBounds;
 			return dstArea;
 			}
 
@@ -336,9 +364,6 @@ class dng_filter_opcode: public dng_opcode
 		///
 		/// \param negative The negative object to be processed.
 		///
-		/// \param threadCount The number of threads to be used to perform the
-		/// processing.
-		///
 		/// \param threadCount Total number of threads that will be used for
 		/// processing. Less than or equal to MaxThreads.
 		///
@@ -355,14 +380,21 @@ class dng_filter_opcode: public dng_opcode
 		/// \param allocator dng_memory_allocator to use for allocating temporary
 		/// buffers, etc.
 
-		virtual void Prepare (dng_negative & /* negative */,
-							  uint32 /* threadCount */,
-							  const dng_point & /* tileSize */,
-							  const dng_rect & /* imageBounds */,
-							  uint32 /* imagePlanes */,
-							  uint32 /* bufferPixelType */,
-							  dng_memory_allocator & /* allocator */)
+		virtual void Prepare (dng_negative &negative,
+							  uint32 threadCount,
+							  const dng_point &tileSize,
+							  const dng_rect &imageBounds,
+							  uint32 imagePlanes,
+							  uint32 bufferPixelType,
+							  dng_memory_allocator &allocator)
 			{
+			(void) negative;
+			(void) threadCount;
+			(void) tileSize;
+			(void) imageBounds;
+			(void) imagePlanes;
+			(void) bufferPixelType;
+			(void) allocator;
 			}
 
 		/// Implements filtering operation from one buffer to another. Source
@@ -409,12 +441,12 @@ class dng_inplace_opcode: public dng_opcode
 	protected:
 	
 		dng_inplace_opcode (uint32 opcodeID,
-						    uint32 minVersion,
-						    uint32 flags);
+							uint32 minVersion,
+							uint32 flags);
 					
 		dng_inplace_opcode (uint32 opcodeID,
-						    dng_stream &stream,
-						    const char *name);
+							dng_stream &stream,
+							const char *name);
 					
 	public:
 	
@@ -438,9 +470,6 @@ class dng_inplace_opcode: public dng_opcode
 		///
 		/// \param negative The negative object to be processed.
 		///
-		/// \param threadCount The number of threads to be used to perform the
-		/// processing.
-		///
 		/// \param threadCount Total number of threads that will be used for
 		/// processing. Less than or equal to MaxThreads.
 		///
@@ -457,14 +486,21 @@ class dng_inplace_opcode: public dng_opcode
 		/// \param allocator dng_memory_allocator to use for allocating temporary
 		/// buffers, etc.
 
-		virtual void Prepare (dng_negative & /* negative */,
-							  uint32 /* threadCount */,
-							  const dng_point & /* tileSize */,
-							  const dng_rect & /* imageBounds */,
-							  uint32 /* imagePlanes */,
-							  uint32 /* bufferPixelType */,
-							  dng_memory_allocator & /* allocator */)
+		virtual void Prepare (dng_negative &negative,
+							  uint32 threadCount,
+							  const dng_point &tileSize,
+							  const dng_rect &imageBounds,
+							  uint32 imagePlanes,
+							  uint32 bufferPixelType,
+							  dng_memory_allocator &allocator)
 			{
+			(void) negative;
+			(void) threadCount;
+			(void) tileSize;
+			(void) imageBounds;
+			(void) imagePlanes;
+			(void) bufferPixelType;
+			(void) allocator;
 			}
 
 		/// Implements image processing operation in a single buffer. The source
@@ -479,9 +515,7 @@ class dng_inplace_opcode: public dng_opcode
 		/// between 0 and threadCount - 1 for the threadCount passed to Prepare
 		/// method.
 		///
-		/// \param srcBuffer Input area and source pixels.
-		///
-		/// \param dstBuffer Destination pixels.
+		/// \param buffer Source and Destination pixels.
 		///
 		/// \param dstArea Destination pixel processing area.
 		///

@@ -1,16 +1,9 @@
 /*****************************************************************************/
-// Copyright 2006-2007 Adobe Systems Incorporated
+// Copyright 2006-2020 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
-/*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_string_list.h#2 $ */ 
-/* $DateTime: 2015/06/09 23:32:35 $ */
-/* $Change: 1026104 $ */
-/* $Author: aksherry $ */
-
 /*****************************************************************************/
 
 #ifndef __dng_string_list__
@@ -19,22 +12,19 @@
 /*****************************************************************************/
 
 #include "dng_classes.h"
+#include "dng_memory.h"
+#include "dng_string.h"
 #include "dng_types.h"
-#include "dng_uncopyable.h"
 
 /*****************************************************************************/
 
-class dng_string_list: private dng_uncopyable
+class dng_string_list
 	{
 	
 	private:
 	
-		uint32 fCount;
-		
-		uint32 fAllocated;
+		dng_std_vector<dng_string> fList;
 	
-		dng_string **fList;
-		
 	public:
 	
 		dng_string_list ();
@@ -43,17 +33,17 @@ class dng_string_list: private dng_uncopyable
 		
 		uint32 Count () const
 			{
-			return fCount;
+			return (uint32) fList.size ();
 			}
 			
 		dng_string & operator[] (uint32 index)
 			{
-			return *(fList [index]);
+			return fList [index];
 			}
 		
 		const dng_string & operator[] (uint32 index) const
 			{
-			return *(fList [index]);
+			return fList [index];
 			}
 		
 		void Allocate (uint32 minSize);

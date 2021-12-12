@@ -1,20 +1,17 @@
 /*****************************************************************************/
-// Copyright 2006-2011 Adobe Systems Incorporated
+// Copyright 2006-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
-/*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_tag_codes.h#3 $ */ 
-/* $DateTime: 2016/01/19 15:23:55 $ */
-/* $Change: 1059947 $ */
-/* $Author: erichan $ */
-
 /*****************************************************************************/
 
 #ifndef __dng_tag_codes__
 #define __dng_tag_codes__
+
+/*****************************************************************************/
+
+#include "dng_flags.h"
 
 /*****************************************************************************/
 
@@ -78,9 +75,12 @@
 // http://partners.adobe.com/asn/tech/tiff/tiffregister.jsp
 // on 2011-10-25, purpose "Digital Negative".
 
-// TIFF tags number 51125 registered at:
+// TIFF tag number 51125 registered at:
 // http://partners.adobe.com/asn/tech/tiff/tiffregister.jsp
 // on 2012-05-31, purpose "Digital Negative".
+
+// TIFF tags numbers 51177 through 51191 registered at:
+// Manual update on 2018-06-17, purpose "Digital Negative".
 
 /*****************************************************************************/
 
@@ -175,6 +175,9 @@ enum
 	tcExifVersion					= 36864,
 	tcDateTimeOriginal				= 36867,
 	tcDateTimeDigitized				= 36868,
+	tcOffsetTime					= 36880,
+	tcOffsetTimeOriginal			= 36881,
+	tcOffsetTimeDigitized			= 36882,
 	tcComponentsConfiguration		= 37121,
 	tcCompressedBitsPerPixel		= 37122,
 	tcShutterSpeedValue				= 37377,
@@ -206,6 +209,12 @@ enum
 	tcSubsecTimeOriginal			= 37521,
 	tcSubsecTimeDigitized			= 37522,
 	tcAdobeLayerData				= 37724,
+	tcTemperature					= 37888,
+	tcHumidity						= 37889,
+	tcPressure						= 37890,
+	tcWaterDepth					= 37891,
+	tcAcceleration					= 37892,
+	tcCameraElevationAngle			= 37893,
 	tcFlashPixVersion				= 40960,
 	tcColorSpace					= 40961,
 	tcPixelXDimension				= 40962,
@@ -335,6 +344,38 @@ enum
 	tcCacheBlob						= 51113,
 	tcCacheVersion					= 51114,
 	tcDefaultUserCrop				= 51125,
+	tcDepthFormat					= 51177,
+	tcDepthNear						= 51178,
+	tcDepthFar						= 51179,
+	tcDepthUnits					= 51180,
+	tcDepthMeasureType				= 51181,
+	tcEnhanceParams					= 51182,
+	#if qDNGProfileGainTableMap
+	tcProfileGainTableMap			= 52525, // Added in DNG 1.6
+	#endif
+	#if qDNGSemanticMask
+	tcSemanticName					= 52526, // Added in DNG 1.6
+	tcSemanticInstanceID			= 52528, // Added in DNG 1.6
+	#endif
+	#if qDNGTripleIlluminantProfile
+	tcCalibrationIlluminant3		= 52529,
+	tcCameraCalibration3			= 52530,
+	tcColorMatrix3					= 52531,
+	tcForwardMatrix3				= 52532,
+	tcIlluminantData1				= 52533,
+	tcIlluminantData2				= 52534,
+	tcIlluminantData3				= 52535,
+	tcMaskSubArea					= 52536,
+	tcProfileHueSatMapData3			= 52537,
+	tcReductionMatrix3				= 52538,
+	#endif	// qDNGTripleIlluminantProfile
+	#if qDNGRGBTables
+	tcRGBTablesDraft				= 52539, // Added in earlier draft of DNG 1.6
+	tcRGBTables						= 52543, // Added in DNG 1.6
+	#endif	// qDNGRGBTables
+	tcBigTableDigests				= 52540,
+	tcBigTableOffsets				= 52541,
+	tcBigTableByteCounts			= 52542,
 	tcKodakKDCPrivateIFD			= 65024
 	};
 
@@ -378,6 +419,7 @@ enum
 	tcRicohMakerNote,
 	tcRicohMakerNoteCameraInfo,
 	tcSamsungMakerNote,
+	tcSIGMAMakerNote,
 	tcSonyMakerNote,
 	tcSonyMakerNoteSubInfo,
 	tcSonyPrivateIFD1,
@@ -399,7 +441,9 @@ enum
 	tcFoveonX3F,
 	tcJPEG,
 	tcAdobePSD,
-	tcPNG
+	tcPNG,
+	tcHEIC,
+	tcCanonCR3
 	
 	};
 

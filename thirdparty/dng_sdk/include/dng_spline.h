@@ -1,16 +1,9 @@
 /*****************************************************************************/
-// Copyright 2006-2007 Adobe Systems Incorporated
+// Copyright 2006-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
-/*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_spline.h#3 $ */ 
-/* $DateTime: 2016/01/19 15:23:55 $ */
-/* $Change: 1059947 $ */
-/* $Author: erichan $ */
-
 /*****************************************************************************/
 
 #ifndef __dng_spline__
@@ -24,12 +17,12 @@
 /*****************************************************************************/
 
 inline real64 EvaluateSplineSegment (real64 x,
-								     real64 x0,
-								     real64 y0,
-								     real64 s0,
-								     real64 x1,
-								     real64 y1,
-								     real64 s1)
+									 real64 x0,
+									 real64 y0,
+									 real64 s0,
+									 real64 x1,
+									 real64 y1,
+									 real64 s1)
 	{
 	
 	real64 A = x1 - x0;

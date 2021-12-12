@@ -1,16 +1,9 @@
 /*****************************************************************************/
-// Copyright 2006-2007 Adobe Systems Incorporated
+// Copyright 2006-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
-/*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_resample.h#3 $ */ 
-/* $DateTime: 2016/01/19 15:23:55 $ */
-/* $Change: 1059947 $ */
-/* $Author: erichan $ */
-
 /*****************************************************************************/
 
 #ifndef __dng_resample__
@@ -63,9 +56,9 @@ class dng_resample_bicubic: public dng_resample_function
 	
 /******************************************************************************/
 
-const uint32 kResampleSubsampleBits  = 7;
+const uint32 kResampleSubsampleBits	 = 7;
 const uint32 kResampleSubsampleCount = 1 << kResampleSubsampleBits;
-const uint32 kResampleSubsampleMask  = kResampleSubsampleCount - 1;
+const uint32 kResampleSubsampleMask	 = kResampleSubsampleCount - 1;
 
 /*****************************************************************************/
 
@@ -95,7 +88,7 @@ class dng_resample_coords
 			return fCoords->Buffer_int32 () + (index - fOrigin);
 			}
 						 
-		const int32 Pixel (int32 index) const
+		int32 Pixel (int32 index) const
 			{
 			return Coords (index) [0] >> kResampleSubsampleBits;
 			}
@@ -162,6 +155,13 @@ class dng_resample_weights
 			
 			}
 
+		uint32 Weights32BufferLogicalSize () const
+			{
+
+			return fWeights32->LogicalSize ();
+
+			}
+
 		const int16 *Weights16 (uint32 fract) const
 			{
 			
@@ -176,6 +176,13 @@ class dng_resample_weights
 			
 			return fWeights16->Buffer_int16 () + fract * fWeightStep;
 			
+			}
+
+		uint32 Weights16BufferLogicalSize () const
+			{
+
+			return fWeights16->LogicalSize ();
+
 			}
 
 	};

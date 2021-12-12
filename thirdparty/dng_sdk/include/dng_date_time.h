@@ -1,15 +1,10 @@
 /*****************************************************************************/
-// Copyright 2006-2012 Adobe Systems Incorporated
+// Copyright 2006-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
 /*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_date_time.h#2 $ */ 
-/* $DateTime: 2015/06/09 23:32:35 $ */
-/* $Change: 1026104 $ */
-/* $Author: aksherry $ */
 
 /** \file
  * Functions and classes for working with dates and times in DNG files.
@@ -81,10 +76,10 @@ class dng_date_time
 
 		bool operator== (const dng_date_time &dt) const
 			{
-			return fYear   == dt.fYear   &&
-				   fMonth  == dt.fMonth  &&
-				   fDay    == dt.fDay    &&
-				   fHour   == dt.fHour   &&
+			return fYear   == dt.fYear	 &&
+				   fMonth  == dt.fMonth	 &&
+				   fDay	   == dt.fDay	 &&
+				   fHour   == dt.fHour	 &&
 				   fMinute == dt.fMinute &&
 				   fSecond == dt.fSecond;
 			}
@@ -130,7 +125,7 @@ class dng_time_zone
 			
 			};
 			
-		// Offset from GMT in minutes.  Positive numbers are
+		// Offset from GMT in minutes.	Positive numbers are
 		// ahead of GMT, negative number are behind GMT.
 	
 		int32 fOffsetMinutes;
@@ -233,6 +228,11 @@ class dng_date_time_info
 			{
 			*this = dng_date_time_info ();
 			}
+   
+		bool IsDateOnly () const
+			{
+			return fDateOnly;
+			}
 			
 		const dng_date_time & DateTime () const
 			{
@@ -264,6 +264,15 @@ class dng_date_time_info
 			{
 			fTimeZone = zone;
 			}
+   
+		void ClearZone ()
+			{
+			fTimeZone.Clear ();
+			}
+   
+		void SetOffsetTime (const dng_string &s);
+		
+		dng_string OffsetTime () const;
 			
 		void Decode_ISO_8601 (const char *s);
 		
@@ -317,10 +326,10 @@ dng_time_zone LocalTimeZone (const dng_date_time &dt);
 
 enum dng_date_time_format
 	{
-	dng_date_time_format_unknown            = 0, /// Date format not known
-	dng_date_time_format_exif               = 1, /// EXIF date string
+	dng_date_time_format_unknown			= 0, /// Date format not known
+	dng_date_time_format_exif				= 1, /// EXIF date string
 	dng_date_time_format_unix_little_endian = 2, /// 32-bit UNIX time as 4-byte little endian
-	dng_date_time_format_unix_big_endian    = 3  /// 32-bit UNIX time as 4-byte big endian
+	dng_date_time_format_unix_big_endian	= 3	 /// 32-bit UNIX time as 4-byte big endian
 	};
 
 /*****************************************************************************/

@@ -1,16 +1,9 @@
 /*****************************************************************************/
-// Copyright 2002-2008 Adobe Systems Incorporated
+// Copyright 2002-2019 Adobe Systems Incorporated
 // All Rights Reserved.
 //
-// NOTICE:  Adobe permits you to use, modify, and distribute this file in
+// NOTICE:	Adobe permits you to use, modify, and distribute this file in
 // accordance with the terms of the Adobe license agreement accompanying it.
-/*****************************************************************************/
-
-/* $Id: //mondo/camera_raw_main/camera_raw/dng_sdk/source/dng_pthread.h#3 $ */ 
-/* $DateTime: 2015/07/08 12:06:54 $ */
-/* $Change: 1029827 $ */
-/* $Author: krishnas $ */
-
 /*****************************************************************************/
 
 #ifndef __dng_pthread__
@@ -60,7 +53,7 @@ extern "C"
 
 /*****************************************************************************/
 
-#define DNG_ETIMEDOUT       60              /* Operation timed out */
+#define DNG_ETIMEDOUT		60				/* Operation timed out */
 
 struct dng_timespec {
 	long tv_sec;
@@ -137,7 +130,7 @@ int dng_pthread_rwlock_tryrdlock(dng_pthread_rwlock_t * rwlock);
 int dng_pthread_rwlock_trywrlock(dng_pthread_rwlock_t * rwlock);
 int dng_pthread_rwlock_unlock(dng_pthread_rwlock_t * rwlock);
 int dng_pthread_rwlock_wrlock(dng_pthread_rwlock_t * rwlock);
-    
+	
 // dng_pthread may maintain per-thread global state. This routine frees that global state.
 // there is no need to call this for threads created by dng_pthread and one can call
 // dng_pthread routines of a thread after dng_pthread_disassociate as the global state will
@@ -168,8 +161,8 @@ void dng_pthread_terminate();
 #undef PTHREAD_ONCE_INIT
 #define PTHREAD_ONCE_INIT DNG_PTHREAD_ONCE_INIT
 
-#if !qWinUniversal
-//#define timespec dng_timespec
+#if _MSC_VER < 1900
+#define timespec dng_timespec
 #endif
 
 /* If it is defined on Windows, it probably has the wrong value... */
@@ -240,7 +233,7 @@ extern "C"
 {
 #endif
 
-int dng_pthread_now (struct dng_timespec *now);
+int dng_pthread_now (struct timespec *now);
 
 #ifdef __cplusplus
 }
