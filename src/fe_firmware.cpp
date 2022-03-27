@@ -531,7 +531,7 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
     }
 }
 
-static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_t frame_cnt)
+static void gtm_reg_calc(dng_md_t& all_dng_md, statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_t frame_cnt)
 {
     //uint32_t rgb2y[3] = { 306, 601, 117 };
     //uint32_t rgb2y[3] = { 217,  732,  75 };
@@ -566,109 +566,94 @@ static void gtm_reg_calc(statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_
         1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
         1024, 1024, 1024, 1024, 1024
         };
-#ifdef _MSC_VER
-        memcpy_s(gtm_reg.gain_lut, sizeof(uint32_t) * 257, gain_map, sizeof(uint32_t) * 257);
-#else
         memcpy(gtm_reg.gain_lut, gain_map, sizeof(uint32_t) * 257);
-#endif
     }
     else 
     {
-        const uint32_t* luma_hist = stat_out->gtm_stat.luma_hist;
-        uint32_t total_cnt = stat_out->gtm_stat.total_pixs;
-        uint32_t hist_mean_val = total_cnt / 256;
-        
-        uint64_t square_sum = 0;
-        uint32_t great_bins_cnt = 0;
-        for (int32_t i = 0; i < 256; i++)
+        uint32_t* luma_hist = stat_out->gtm_stat.luma_hist;
+        if(stat_out->gtm_stat.stat_en == 0)
         {
-            if (luma_hist[i] > hist_mean_val)
+            uint32_t gain_map[257] =
             {
-                square_sum += (luma_hist[i] - hist_mean_val) * (luma_hist[i] - hist_mean_val);
-                great_bins_cnt += 1;
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+                1024, 1024, 1024, 1024, 1024
+            };
+            memcpy(gtm_reg.gain_lut, gain_map, sizeof(uint32_t) * 257);
+        }
+        else
+        {
+            uint32_t luma_sum = 0;
+            for (uint32_t i = 0; i < 256; i++)
+            {
+                luma_sum += luma_hist[i] * i;
+            }
+            uint32_t luma_mean = luma_sum / stat_out->gtm_stat.total_pixs;
+
+            double Bv = all_dng_md.ae_md.Bv;
+            log_debug("luma mean = %d, Bv=%lf\n", luma_mean, Bv);
+
+            double Bv_thr[10] = { -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0 };
+            double luma_tar[10] = { 15.0, 25.0, 35.0, 45.0, 45.0, 50.0, 55.0, 55.0, 55.0, 55.0 };
+
+            int32_t idx0, idx1;
+            double luma_out = 0.0;
+            if (Bv < Bv_thr[0])
+            {
+                idx0 = 0;
+                idx1 = 0;
+                luma_out = luma_tar[0];
+            }
+            else if (Bv >= Bv_thr[9])
+            {
+                idx0 = 9;
+                idx1 = 9;
+                luma_out = luma_tar[9];
+            }
+            else 
+            {
+                int32_t i = 0;
+                for (; i < 9; i++)
+                {
+                    if (Bv >= Bv_thr[i] && Bv < Bv_thr[i + 1])
+                    {
+                        break;
+                    }
+                }
+                idx0 = i;
+                idx1 = i + 1;
+                double delta = Bv - Bv_thr[idx0];
+                double step = Bv_thr[idx1] - Bv_thr[idx0];
+
+                luma_out = luma_tar[idx0] + (luma_tar[idx1] - luma_tar[idx0]) * delta / step;
+            }
+
+            double global_gain = luma_out / luma_mean;
+
+            for (int32_t i = 0; i < 257; i++)
+            {
+                gtm_reg.gain_lut[i] = uint32_t(1024 * global_gain + 0.5);
             }
         }
-        square_sum = square_sum / great_bins_cnt;
-        uint32_t std_err = (uint32_t)sqrt(square_sum);
-
-        uint32_t* hist_adapt = new uint32_t[256];
-        square_sum = 0;
-        for (int32_t i = 0; i < 256; i++)
-        {
-            if (luma_hist[i] > (hist_mean_val + std_err))
-            {
-                hist_adapt[i] = hist_mean_val + std_err;
-                square_sum += luma_hist[i] - (hist_mean_val + std_err);
-            }
-            else
-            {
-                hist_adapt[i] = luma_hist[i];
-            }
-        }
-        uint32_t low_addition = (uint32_t)(square_sum + 128)/ 256;
-        for (int32_t i = 0; i < 256; i++)
-        {
-            hist_adapt[i] += low_addition;
-        }
-
-        uint32_t* hist_equal = new uint32_t[256];
-        double* hist_equal_db = new double[256 + 8]; //savgol window size=9, order=3
-        double* hist_equal_res = new double[256];
-
-        hist_equal[0] = hist_adapt[0];
-        
-        for (int32_t i = 1; i < 256; i++)
-        {
-            hist_equal[i] = hist_equal[i - 1] + hist_adapt[i];
-        }
-        //assert(hist_equal[255] == total_cnt);
-
-        
-        for (int32_t i = 0; i < 256; i++)
-        {
-            hist_equal_db[i + 4] = double(hist_equal[i]) * 255.0 / hist_equal[255];
-        }
-        for (int32_t i = 0; i < 4; i++)
-        {
-            hist_equal_db[i] = hist_equal_db[8 - i];
-        }
-        for (int32_t i = 256 + 4; i < 256 + 8; i++)
-        {
-            hist_equal_db[i] = hist_equal_db[259 * 2 - i];
-        }
-
-        double coeff[9] = {-0.09090909, 0.06060606, 0.16883117, 0.23376623, 0.25541126, 0.23376623, 0.16883117, 0.06060606, -0.09090909};
-
-        for (int32_t i = 0; i < 256; i++)
-        {
-            hist_equal_res[i] = hist_equal_db[i + 0] * coeff[0] + hist_equal_db[i + 1] * coeff[1] + hist_equal_db[i + 2] * coeff[2] +
-                                hist_equal_db[i + 3] * coeff[3] + hist_equal_db[i + 4] * coeff[4] + hist_equal_db[i + 5] * coeff[5] +
-                                hist_equal_db[i + 6] * coeff[6] + hist_equal_db[i + 7] * coeff[7] + hist_equal_db[i + 8] * coeff[8];
-            if (hist_equal_res[i] < 0.0)
-            {
-                hist_equal_res[i] = 0.0;
-            }
-        }
-
-        uint32_t gain_map[257] = { 0 };
-
-        for (int32_t i = 1; i < 256; i++)
-        {
-            hist_equal_res[i] = hist_equal_res[i] * 1024 / i;
-            gain_map[i] = uint32_t(hist_equal_res[i]);
-        }
-        gain_map[0] = 0;
-        gain_map[256] = gain_map[255];
-        log_array("gain_map:\n", "%6d, ", gain_map, 257, 16);
-#ifdef _MSC_VER
-        memcpy_s(gtm_reg.gain_lut, sizeof(uint32_t) * 257, gain_map, sizeof(uint32_t) * 257);
-#else
-        memcpy(gtm_reg.gain_lut, gain_map, sizeof(uint32_t) * 257);
-#endif
-        delete[] hist_adapt;
-        delete[] hist_equal;
-        delete[] hist_equal_db;
-        delete[] hist_equal_res;
     }
 }
 
@@ -779,7 +764,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     awbgain_reg_calc(g_dng_all_md, reg_ptr->awbgain_reg);
     cc_reg_calc(g_dng_all_md, reg_ptr->cc_reg);
     gtm_stat_reg_calc(reg_ptr->gtm_stat_reg);
-    gtm_reg_calc(stat_out, reg_ptr->gtm_reg, frame_cnt);
+    gtm_reg_calc(g_dng_all_md, stat_out, reg_ptr->gtm_reg, frame_cnt);
     gamma_reg_calc(reg_ptr->gamma_reg);
     rgb2yuv_reg_calc(reg_ptr->rgb2yuv_reg);
     yuv422_conv_reg_calc(reg_ptr->yuv422_conv_reg);

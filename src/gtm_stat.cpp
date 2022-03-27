@@ -1,5 +1,6 @@
 ﻿#include "fe_firmware.h"
 #include <assert.h>
+#include <memory>
 
 #define CLIP3(x, min, max) (x>max)?max:((x<min)?min:x)
 
@@ -22,8 +23,8 @@ static void gtm_stat_hw_core(gtm_stat_info_t* stat_gtm, uint16_t* r, uint16_t* g
         for (uint32_t col = 0; col < xsize; col += gtm_stat_reg->w_ratio)
         {
             tmp_y = (r[row*xsize + col] * rgb2y[0] + g[row*xsize + col] * rgb2y[1] + b[row*xsize + col] * rgb2y[2] + 512) >> 10;
-            tmp_y = CLIP3(tmp_y, 0, 16383);
-            idx = tmp_y / 64;
+            tmp_y = CLIP3(tmp_y, 0, 4095);
+            idx = tmp_y / 16;
             idx = CLIP3(idx, 0, 255);
 
             stat_gtm->luma_hist[idx] += 1;
@@ -67,6 +68,24 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     uint16_t* in_g = input1->data_ptr;
     uint16_t* in_b = input2->data_ptr;
 
+    std::unique_ptr<uint16_t[]> in_r_ptr = std::make_unique<uint16_t[]>(input0->width * input0->height);
+    std::unique_ptr<uint16_t[]> in_g_ptr = std::make_unique<uint16_t[]>(input1->width * input1->height);
+    std::unique_ptr<uint16_t[]> in_b_ptr = std::make_unique<uint16_t[]>(input2->width * input2->height);
+    if (!in_r_ptr | !in_g_ptr | !in_b_ptr)
+    {
+        log_error("alloc memory fail\n");
+        exit(EXIT_FAILURE);
+    }
+    uint16_t* in_r_data = in_r_ptr.get();
+    uint16_t* in_g_data = in_g_ptr.get();
+    uint16_t* in_b_data = in_b_ptr.get();
+    for (uint32_t i = 0; i < input0->width * input0->height; i++)
+    {
+        in_r_data[i] = in_r[i] >> (16 - 12);
+        in_g_data[i] = in_g[i] >> (16 - 12);
+        in_b_data[i] = in_b[i] >> (16 - 12);
+    }
+
     uint32_t output_size = sizeof(gtm_stat_info_t)/sizeof(uint16_t);
 
     data_buffer* output0 = new data_buffer(output_size, 1, DATA_TYPE_UNSUPPORT, BAYER_UNSUPPORT, "gtm_stat_out0");
@@ -78,17 +97,14 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     if (gtm_stat_reg->bypass == 0)
     {
         stat_gtm->stat_en = 1;
-        gtm_stat_hw_core(stat_gtm, in_r, in_g, in_b, xsize, ysize, gtm_stat_reg);
+        gtm_stat_hw_core(stat_gtm, in_r_data, in_g_data, in_b_data, xsize, ysize, gtm_stat_reg);
     }
     else 
     {
         stat_gtm->stat_en = 0;
     }
-#ifdef _MSC_VER
-    memcpy_s(&stat_out->gtm_stat, sizeof(gtm_stat_info_t), stat_gtm, sizeof(gtm_stat_info_t));
-#else
+
     memcpy(&stat_out->gtm_stat, stat_gtm, sizeof(gtm_stat_info_t));
-#endif
 
     log_array("luma hist[256]:\n", "%7d, ", stat_gtm->luma_hist, 256, 16);
 

@@ -7,7 +7,7 @@ typedef struct ae_dng_md_s
     double ExposureTime;
     double ApertureValue;
     uint32_t ISOSpeedRatings[3];
-    double BrightnessValue;
+    double Bv;
 }ae_dng_md_t;
 
 typedef struct blc_dng_md_s

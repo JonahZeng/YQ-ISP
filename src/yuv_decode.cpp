@@ -214,11 +214,9 @@ static int32_t read_raw_data_from_JPEG_file(const char* filename, uint32_t do_fa
     int u_row_stride, u_col_stride, v_row_stride, v_col_stride;
 
     log_info("run %s\n", __FUNCTION__);
-#ifdef _MSC_VER
-    fopen_s(&infile, filename, "rb");
-#else
+
     infile = fopen(filename, "rb");
-#endif
+
     if (infile == NULL)
     {
         log_error("can't open %s\n", filename);

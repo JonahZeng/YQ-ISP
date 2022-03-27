@@ -21,10 +21,6 @@ static void gtm_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, 
     {
         for (uint32_t col = 0; col < xsize; col++)
         {
-            if (col == 2314 && row == 1446)
-            {
-                printf("\n");
-            }
             y_tmp = r[row * xsize + col] * rgb2y[0] + g[row * xsize + col] * rgb2y[1] + b[row * xsize + col] * rgb2y[2];
             y_tmp = (y_tmp + 512) >> 10;
 

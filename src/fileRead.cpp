@@ -146,14 +146,15 @@ static void get_ae_md_from_dng(dng_exif* exif, dng_md_t& all_md)
     all_md.ae_md.ISOSpeedRatings[1] = exif->fISOSpeedRatings[1];
     all_md.ae_md.ISOSpeedRatings[2] = exif->fISOSpeedRatings[2];
     all_md.ae_md.ExposureTime = exif->fExposureTime.As_real64();
-    double tmp = (1.0 / all_md.ae_md.ApertureValue) * (1.0 / all_md.ae_md.ApertureValue) / all_md.ae_md.ExposureTime;
-    double Ev = log2(tmp);
-    double Sv = log2(0.297*all_md.ae_md.ISOSpeedRatings[0]);
-    all_md.ae_md.BrightnessValue = Ev - Sv;
+    double Av = 2 * log2(all_md.ae_md.ApertureValue);
+    double Tv = -log2(all_md.ae_md.ExposureTime);
+    double Ev = Av + Tv;
+    double Sv = log2(all_md.ae_md.ISOSpeedRatings[0]/3.125);
+    all_md.ae_md.Bv = Ev - Sv;
 
     log_info("ae info: apertureValue F 1/%lf, ISO %d %d %d, ExposureTime %lf s, BV %.4lf\n", 
-        all_md.ae_md.ApertureValue, all_md.ae_md.ISOSpeedRatings[0], all_md.ae_md.ISOSpeedRatings[1], 
-        all_md.ae_md.ISOSpeedRatings[2], all_md.ae_md.ExposureTime, all_md.ae_md.BrightnessValue);
+        all_md.ae_md.ApertureValue, all_md.ae_md.ISOSpeedRatings[0], all_md.ae_md.ISOSpeedRatings[1],
+        all_md.ae_md.ISOSpeedRatings[2], all_md.ae_md.ExposureTime, all_md.ae_md.Bv);
     
 }
 
@@ -454,12 +455,8 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             data_buffer* out0 = new data_buffer(img_width, img_height, DATA_TYPE_RAW, raw_bayer, "raw_in out0");
             out[0] = out0;
 
-            FILE* input_f;
-#ifdef _MSC_VER
-            fopen_s(&input_f, file_name, "rb");
-#else
-            input_f = fopen(file_name, "rb");
-#endif
+            FILE* input_f = fopen(file_name, "rb");
+
             if (input_f != nullptr)
             {
                 if (bit_depth > 8 && bit_depth <= 16)

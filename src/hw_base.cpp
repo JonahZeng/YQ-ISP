@@ -17,19 +17,11 @@ hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name) :
     if (name != nullptr) {
         if (namelen > 63)
         {
-#ifdef _MSC_VER
-            memcpy_s(this->name, 63, inst_name, 63);
-#else
             memcpy(this->name, inst_name, 63);
-#endif
             this->name[63] = '\0';
         }
         else {
-#ifdef _MSC_VER
-            memcpy_s(this->name, namelen, inst_name, namelen);
-#else
             memcpy(this->name, inst_name, namelen);
-#endif
             this->name[namelen] = '\0';
         }
     }
@@ -218,18 +210,12 @@ void hw_base::write_pnm_for_output(FILE* fp)
         && src_data0->height == src_data1->height && src_data1->height == src_data2->height)
     {
         char header0[64] = { 0 };
-#ifdef _MSC_VER
-        sprintf_s(header0, "P6\n%d %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
-#else
+
         int len = sprintf(header0, "P6\n%d %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
-#endif
+
         if (strlen(header0) % 2 == 1)
         {
-#ifdef _MSC_VER
-            sprintf_s(header0, "P6\n%d  %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
-#else
             len = sprintf(header0, "P6\n%d  %d\n%d\n", src_data0->width, src_data0->height, (1U << write_pic_bits) - 1);
-#endif
         }
         fwrite(header0, sizeof(char), strlen(header0), fp);
 
@@ -401,11 +387,8 @@ void hw_base::write_pic_for_output()
     }
     if (strcmp(write_pic_format, "RAW") == 0 && write_pic_src_pin.size() == 1)
     {
-#ifdef _MSC_VER
-        fopen_s(&fp, write_pic_path_str.c_str(), "wb");
-#else
-        fp = fopen(write_pic_path, "wb");
-#endif
+        fp = fopen(write_pic_path_str.c_str(), "wb");
+
         if (fp == nullptr)
         {
             log_error("open file %s fail\n", write_pic_path_str.c_str());
@@ -415,11 +398,7 @@ void hw_base::write_pic_for_output()
     }
     else if (strcmp(write_pic_format, "PNM") == 0 && write_pic_src_pin.size() == 3)
     {
-#ifdef _MSC_VER
-        fopen_s(&fp, write_pic_path_str.c_str(), "wb");
-#else
-        fp = fopen(write_pic_path, "wb");
-#endif
+        fp = fopen(write_pic_path_str.c_str(), "wb");
         if (fp == nullptr)
         {
             log_error("open file %s fail\n", write_pic_path_str.c_str());
@@ -429,11 +408,7 @@ void hw_base::write_pic_for_output()
     }
     else if (strcmp(write_pic_format, "YUV422") == 0 && write_pic_src_pin.size() == 3)
     {
-#ifdef _MSC_VER
-        fopen_s(&fp, write_pic_path_str.c_str(), "wb");
-#else
-        fp = fopen(write_pic_path, "wb");
-#endif
+        fp = fopen(write_pic_path_str.c_str(), "wb");
         if (fp == nullptr)
         {
             log_error("open file %s fail\n", write_pic_path_str.c_str());
@@ -443,11 +418,7 @@ void hw_base::write_pic_for_output()
     }
     else if (strcmp(write_pic_format, "YUV444") == 0 && write_pic_src_pin.size() == 3)
     {
-#ifdef _MSC_VER
-        fopen_s(&fp, write_pic_path_str.c_str(), "wb");
-#else
-        fp = fopen(write_pic_path, "wb");
-#endif
+        fp = fopen(write_pic_path_str.c_str(), "wb");
         if (fp == nullptr)
         {
             log_error("open file %s fail\n", write_pic_path_str.c_str());

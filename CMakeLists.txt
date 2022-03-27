@@ -71,7 +71,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         "BIB_MULTI_THREAD=1;"
         "qDNGUseStdInt=1;"
         "qDNGPrintMessages=1;"
-        "qDNGPreferGPSMetadataFromXMP=1")
+        "qDNGPreferGPSMetadataFromXMP=1;"
+        "_CRT_SECURE_NO_WARNINGS")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
     set(DNG_SDK_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_release.a")
