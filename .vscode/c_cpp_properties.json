@@ -5,7 +5,7 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/thirdparty/dng_sdk/include",
-                "${workspaceFolder}/thirdparty/libjpeg9b/include",
+                "${workspaceFolder}/thirdparty/libjpeg9c/include",
                 "${workspaceFolder}/thirdparty/libxml2/include",
                 "${workspaceFolder}/calib",
                 "/usr/local/include/opencv4",
