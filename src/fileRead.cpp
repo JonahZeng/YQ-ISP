@@ -413,19 +413,41 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
 
     get_lsc_md_from_dng(exif, info.fIFD[info.fMainIndex], g_dng_all_md);
 
-    log_info("tone curve:\n");
+    
     uint32_t profile_cnt = negative->ProfileCount();
+    g_dng_all_md.hsv_lut_md.twoD_enable = 0;
+    g_dng_all_md.hsv_lut_md.threeD_enable = 0;
     for (uint32_t i = 0; i < profile_cnt; i++)
     {
         const dng_camera_profile& pf= negative->ProfileByIndex(i);
-        const dng_tone_curve& curve = pf.ToneCurve();
-        size_t sz = curve.fCoord.size();
-        for (size_t j = 0; j < sz; j++)
+        log_info("profile name:%s\n", pf.Name().Get());
+        if (info.fShared->fCameraProfile.fProfileName == pf.Name().Get())
         {
-            log_info("%lf, %lf\n", curve.fCoord[j].h, curve.fCoord[j].v);
+            const dng_tone_curve& curve = pf.ToneCurve();
+            size_t sz = curve.fCoord.size();
+            log_info("tone curve size %lld:\n", sz);
+            for (size_t j = 0; j < sz; j++)
+            {
+                log_info("%lf, %lf\n", curve.fCoord[j].h, curve.fCoord[j].v);
+            }
+            if (pf.HasHueSatDeltas())
+            {
+                g_dng_all_md.hsv_lut_md.twoD_enable = 1;
+                g_dng_all_md.hsv_lut_md.fHueSatMapEncoding = pf.HueSatMapEncoding();
+                g_dng_all_md.hsv_lut_md.fHueSatDeltas1 = pf.HueSatDeltas1();
+                g_dng_all_md.hsv_lut_md.fHueSatDeltas2 = pf.HueSatDeltas2();
+                g_dng_all_md.hsv_lut_md.fCalibrationIlluminant1 = pf.CalibrationIlluminant1();
+                g_dng_all_md.hsv_lut_md.fCalibrationIlluminant2 = pf.CalibrationIlluminant2();
+
+                if (pf.HasLookTable())
+                {
+                    g_dng_all_md.hsv_lut_md.threeD_enable = 1;
+                    g_dng_all_md.hsv_lut_md.fLookTable = pf.LookTable();
+                    g_dng_all_md.hsv_lut_md.fLookTableEncoding = pf.LookTableEncoding();
+                }
+            }
         }
     }
-
 }
 
 void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -493,8 +515,9 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
                 }
             }
         }
-        else {
-            log_warning("{0} not support yet", file_type_string);
+        else
+        {
+            log_warning("%s not support yet\n", file_type_string);
         }
     }
 

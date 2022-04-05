@@ -28,6 +28,9 @@ enum data_type_t {
     DATA_TYPE_U = 4,
     DATA_TYPE_V = 5,
     DATA_TYPE_RAW = 6,
+    DATA_TYPE_H = 7,
+    DATA_TYPE_S = 8,
+    DATA_TYPE_VAL = 9,
     DATA_TYPE_UNSUPPORT = -1
 };
 

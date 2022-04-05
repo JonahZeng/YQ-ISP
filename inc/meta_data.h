@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <stdint.h>
 #include <string>
+#include "dng_hue_sat_map.h"
+#include "dng_xy_coord.h"
 
 typedef struct ae_dng_md_s
 {
@@ -69,6 +71,24 @@ typedef struct sensor_crop_size_s {
     uint32_t height;
 }sensor_crop_size_t;
 
+typedef struct hsv_lut_md_s
+{
+    uint32_t twoD_enable;
+    uint32_t threeD_enable;
+    dng_hue_sat_map fHueSatDeltas1;
+    dng_hue_sat_map fHueSatDeltas2;
+    //dng_hue_sat_map fHueSatDeltas3; //dng1.6 asshot map, general no use
+
+    uint32_t fCalibrationIlluminant1;
+    uint32_t fCalibrationIlluminant2;
+    //uint32 fCalibrationIlluminant3;		 // DNG 1.6
+
+    uint32_t fHueSatMapEncoding;
+
+    dng_hue_sat_map fLookTable;
+    uint32_t fLookTableEncoding;
+}hsv_lut_md_t;
+
 typedef struct dng_md_s
 {
     std::string input_file_name;
@@ -79,4 +99,5 @@ typedef struct dng_md_s
     awb_dng_md_t awb_md;
     cc_dng_md_t cc_md;
     ae_comp_md_t ae_comp_md;
+    hsv_lut_md_t hsv_lut_md;
 }dng_md_t;

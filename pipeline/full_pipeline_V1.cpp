@@ -17,6 +17,8 @@ void test_V1_pipeline(pipeline_manager* manager)
     awbgain* awbgain_hw = new awbgain(2, 1, "awbgain_hw");
     demosaic* demosaic_hw = new demosaic(2, 3, "demosaic_hw");
     cc* cc_hw = new cc(4, 3, "cc_hw");
+    hsv_lut* hsv_lut_hw = new hsv_lut(4, 3, "hsv_lut_hw");
+    prophoto2srgb* prophoto2srgb_hw = new prophoto2srgb(4, 3, "prophoto2srgb_hw");
     gtm_stat* gtm_stat_hw = new gtm_stat(4, 1, "gtm_stat_hw");
     gtm* gtm_hw = new gtm(4, 3, "gtm_hw");
     Gamma* gamma_hw = new Gamma(4, 3, "gamma_hw");
@@ -33,6 +35,8 @@ void test_V1_pipeline(pipeline_manager* manager)
     manager->register_module(awbgain_hw);
     manager->register_module(demosaic_hw);
     manager->register_module(cc_hw);
+    manager->register_module(hsv_lut_hw);
+    manager->register_module(prophoto2srgb_hw);
     manager->register_module(gtm_stat_hw);
     manager->register_module(gtm_hw);
     manager->register_module(gamma_hw);
@@ -69,9 +73,19 @@ void test_V1_pipeline(pipeline_manager* manager)
     cc_hw->connect_port(2, gtm_stat_hw, 2); //b
     fe_fw->connect_port(1, gtm_stat_hw, 3); //regs
 
-    cc_hw->connect_port(0, gtm_hw, 0); //r
-    cc_hw->connect_port(1, gtm_hw, 1); //g
-    cc_hw->connect_port(2, gtm_hw, 2); //b
+    cc_hw->connect_port(0, hsv_lut_hw, 0); //r
+    cc_hw->connect_port(1, hsv_lut_hw, 1); //g
+    cc_hw->connect_port(2, hsv_lut_hw, 2); //b
+    fe_fw->connect_port(1, hsv_lut_hw, 3); //regs
+
+    hsv_lut_hw->connect_port(0, prophoto2srgb_hw, 0); //r
+    hsv_lut_hw->connect_port(1, prophoto2srgb_hw, 1); //g
+    hsv_lut_hw->connect_port(2, prophoto2srgb_hw, 2); //b
+    fe_fw->connect_port(1, prophoto2srgb_hw, 3); //regs
+
+    prophoto2srgb_hw->connect_port(0, gtm_hw, 0); //r
+    prophoto2srgb_hw->connect_port(1, gtm_hw, 1); //g
+    prophoto2srgb_hw->connect_port(2, gtm_hw, 2); //b
     fe_fw->connect_port(1, gtm_hw, 3); //regs
 
     gtm_hw->connect_port(0, gamma_hw, 0); //r

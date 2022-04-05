@@ -8,6 +8,14 @@
 
 extern dng_md_t g_dng_all_md;
 
+typedef struct global_ref_out_s
+{
+    double wp_x;
+    double wp_y;
+    double ccm[9];
+    double FM[9];
+}global_ref_out_t;
+
 fe_firmware::fe_firmware(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name)
 {
     bypass = 0;
@@ -435,7 +443,7 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
     *weight1 = weight_2;
 }
 
-static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
+static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg, global_ref_out_t& global_ref_out)
 {
     chromatix_cc_t cc_calib = {
 #include "calib_cc_sigma_A102_nikonD610.h"
@@ -490,30 +498,35 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
         calc_xy_coordinate_by_cameraNeutral(&x, &y, cameraNeutral, wp1, wp2,
             CM_1, CM_2, &weight1, &weight2);
 
+        global_ref_out.wp_x = x;
+        global_ref_out.wp_y = y;
+
         cv::Mat FM = FM_1 * weight1 + FM_2 * weight2;
         log_array("camera2XYZ_mat\n", "%lf, ", FM.ptr<double>(), (uint32_t)FM.cols*FM.rows, (uint32_t)FM.cols);
 
-        cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
-            3.2404542, -1.5371385, -0.4985314,
-            -0.9692660, 1.8760108, 0.0415560,
-            0.0556434, -0.2040259, 1.0572252);
-        cv::Mat D50_to_D65 = (cv::Mat_<double>(3, 3) <<
-            0.9857398,  0.0000000,  0.0000000,
-            0.0000000,  1.0000000,  0.0000000,
-            0.0000000,  0.0000000,  1.3194581
-            );
-        cv::Mat ccm = XYZ2sRGB * D50_to_D65 * FM;
-        //cv::Mat XYZ2photoRGB = (cv::Mat_<double>(3, 3) <<
-        //    1.3459433, -0.2556075, -0.0511118,
-        //    -0.5445989, 1.5081673, 0.0205351,
-        //    0.0000000, 0.0000000, 1.2118128);
-        //cv::Mat ccm = XYZ2photoRGB * FM;
+        for (int32_t i = 0; i < 9; i++)
+        {
+            global_ref_out.FM[i] = FM.at<double>(i/3, i%3);
+        }
+
+        // ref: http://www.brucelindbloom.com/index.html?ColorCalculator.html
+        
+        cv::Mat XYZ2photoRGB = (cv::Mat_<double>(3, 3) <<
+            1.3459433, -0.2556075, -0.0511118,
+            -0.5445989, 1.5081673, 0.0205351,
+            0.0000000, 0.0000000, 1.2118128);
+        cv::Mat ccm = XYZ2photoRGB * FM;
         //cv::Mat XYZ2RGB2020 = (cv::Mat_<double>(3, 3) <<
         //    1.7166512, -0.3556708, -0.2533663, 
         //    -0.66668445,  1.6164814,   0.01576855,
         //    0.01763986, -0.04277062,  0.9421031);
-        //cv::Mat ccm = XYZ2RGB2020 * FM;
-        log_array("ccm:\n", "%lf, ", ccm.ptr<double>(), (uint32_t)ccm.cols*FM.rows, (uint32_t)ccm.cols);
+        //cv::Mat D50_to_D65 = (cv::Mat_<double>(3, 3) <<
+        //    0.9857398,  0.0000000,  0.0000000,
+        //    0.0000000,  1.0000000,  0.0000000,
+        //    0.0000000,  0.0000000,  1.3194581
+        //    );
+        //cv::Mat ccm = XYZ2RGB2020 * D50_to_D65 * FM;
+        log_array("sensor RGB to ProPhoto RGB ccm:\n", "%lf, ", ccm.ptr<double>(), (uint32_t)ccm.cols*FM.rows, (uint32_t)ccm.cols);
 
         double* ccm_ptr = ccm.ptr<double>();
         double row0_sum = ccm_ptr[0] + ccm_ptr[1] + ccm_ptr[2];
@@ -533,12 +546,101 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg)
         for (int32_t i = 0; i < 9; i++)
         {
             cc_reg.ccm[i] = (int32_t)(ccm.at<double>(i / 3, i % 3) * 1024);
+            global_ref_out.ccm[i] = ccm.at<double>(i / 3, i % 3);
         }
 
         cc_reg.ccm[0] = 1024 - cc_reg.ccm[1] - cc_reg.ccm[2];
         cc_reg.ccm[4] = 1024 - cc_reg.ccm[3] - cc_reg.ccm[5];
         cc_reg.ccm[8] = 1024 - cc_reg.ccm[6] - cc_reg.ccm[7];
+
+        log_array("final ccm:\n", "%d, ", cc_reg.ccm, 9, 3);
     }
+}
+
+static void hsv_lut_reg_calc(dng_md_t& g_dng_all_md, hsv_lut_reg_t& hsv_lut_reg, global_ref_out_t& global_ref_out)
+{
+    hsv_lut_reg.bypass = 0;
+    hsv_lut_reg.twoD_enable = g_dng_all_md.hsv_lut_md.twoD_enable;
+    hsv_lut_reg.threeD_enable = g_dng_all_md.hsv_lut_md.threeD_enable;
+    hsv_lut_reg.twoD_map_encoding = g_dng_all_md.hsv_lut_md.fHueSatMapEncoding;
+    hsv_lut_reg.threeD_map_encoding = g_dng_all_md.hsv_lut_md.fLookTableEncoding;
+
+    uint32_t light1 = g_dng_all_md.hsv_lut_md.fCalibrationIlluminant1;
+    uint32_t light2 = g_dng_all_md.hsv_lut_md.fCalibrationIlluminant2;
+    dng_xy_coord wp1, wp2;
+    get_xy_wp(light1, light2, wp1, wp2);
+
+    double x1 = wp1.x - global_ref_out.wp_x;
+    double y1 = wp1.y - global_ref_out.wp_y;
+    double dist1 = sqrt(x1 * x1 + y1 * y1);
+    double x2 = wp2.x - global_ref_out.wp_x;
+    double y2 = wp2.y - global_ref_out.wp_y;
+    double dist2 = sqrt(x2 * x2 + y2 * y2);
+
+    double weight = dist1 / (dist1 + dist2);
+
+    dng_hue_sat_map* result = dng_hue_sat_map::Interpolate(g_dng_all_md.hsv_lut_md.fHueSatDeltas1, g_dng_all_md.hsv_lut_md.fHueSatDeltas2, weight);
+    if (result->IsValid())
+    {
+        uint32_t hD=0, sD=0, vD=0;
+        result->GetDivisions(hD, sD, vD);
+        hsv_lut_reg.twoDHueDivisions = hD;
+        hsv_lut_reg.twoDSatDivisions = sD;
+
+        memcpy(hsv_lut_reg.twoDmap, result->GetConstDeltas(), sizeof(dng_hue_sat_map::HSBModify) * hD * sD * vD);
+    }
+    delete result;
+
+    uint32_t hD = 0, sD = 0, vD = 0;
+    g_dng_all_md.hsv_lut_md.fLookTable.GetDivisions(hD, sD, vD);
+    hsv_lut_reg.threeDHueDivisions = hD;
+    hsv_lut_reg.threeDSatDivisions = sD;
+    hsv_lut_reg.threeDValDivisions = vD;
+
+    memcpy(hsv_lut_reg.threeDmap, g_dng_all_md.hsv_lut_md.fLookTable.GetConstDeltas(), sizeof(dng_hue_sat_map::HSBModify) * hD * sD * vD);
+}
+
+static void prophoto2srgb_reg_calc(prophoto2srgb_reg_t& prophoto2srgb_reg, global_ref_out_t& global_ref_out)
+{
+    cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
+        3.2404542, -1.5371385, -0.4985314,
+        -0.9692660, 1.8760108, 0.0415560,
+        0.0556434, -0.2040259, 1.0572252);
+    cv::Mat D50_to_D65 = (cv::Mat_<double>(3, 3) <<
+        0.9857398,  0.0000000,  0.0000000,
+        0.0000000,  1.0000000,  0.0000000,
+        0.0000000,  0.0000000,  1.3194581
+        );
+    cv::Mat FM(3, 3, CV_64FC1, global_ref_out.FM);
+    cv::Mat old_ccm(3, 3, CV_64FC1, global_ref_out.ccm);
+    cv::Mat iccm = old_ccm.inv();
+    cv::Mat ccm = XYZ2sRGB * D50_to_D65 * FM * iccm;
+
+    double* ccm_ptr = ccm.ptr<double>();
+    double row0_sum = ccm_ptr[0] + ccm_ptr[1] + ccm_ptr[2];
+    ccm_ptr[0] = ccm_ptr[0] / row0_sum;
+    ccm_ptr[1] = ccm_ptr[1] / row0_sum;
+    ccm_ptr[2] = ccm_ptr[2] / row0_sum;
+    double row1_sum = ccm_ptr[3] + ccm_ptr[4] + ccm_ptr[5];
+    ccm_ptr[3] = ccm_ptr[3] / row1_sum;
+    ccm_ptr[4] = ccm_ptr[4] / row1_sum;
+    ccm_ptr[5] = ccm_ptr[5] / row1_sum;
+    double row2_sum = ccm_ptr[6] + ccm_ptr[7] + ccm_ptr[8];
+    ccm_ptr[6] = ccm_ptr[6] / row2_sum;
+    ccm_ptr[7] = ccm_ptr[7] / row2_sum;
+    ccm_ptr[8] = ccm_ptr[8] / row2_sum;
+
+    prophoto2srgb_reg.bypass = 0;
+    for (int32_t i = 0; i < 9; i++)
+    {
+        prophoto2srgb_reg.ccm[i] = (int32_t)(ccm.at<double>(i / 3, i % 3) * 1024);
+    }
+
+    prophoto2srgb_reg.ccm[0] = 1024 - prophoto2srgb_reg.ccm[1] - prophoto2srgb_reg.ccm[2];
+    prophoto2srgb_reg.ccm[4] = 1024 - prophoto2srgb_reg.ccm[3] - prophoto2srgb_reg.ccm[5];
+    prophoto2srgb_reg.ccm[8] = 1024 - prophoto2srgb_reg.ccm[6] - prophoto2srgb_reg.ccm[7];
+
+    log_array("prophoto2srgb ccm:\n", "%d, ", prophoto2srgb_reg.ccm, 9, 3);
 }
 
 static void gtm_reg_calc(dng_md_t& all_dng_md, statistic_info_t* stat_out, gtm_reg_t& gtm_reg, uint32_t frame_cnt)
@@ -659,9 +761,35 @@ static void gtm_reg_calc(dng_md_t& all_dng_md, statistic_info_t* stat_out, gtm_r
 
             double global_gain = luma_out / luma_mean;
 
+            uint32_t exceed_pos = 0;
+            if (global_gain > 1.0)
+            {
+                for (int32_t i = 0; i < 257; i++)
+                {
+                    if (global_gain * i >= 257)
+                    {
+                        exceed_pos = i - 1;
+                        break;
+                    }
+                }
+                uint32_t delta = 2 * (256 - exceed_pos);
+                delta = (delta >= 256) ? 256 : delta;
+                exceed_pos = 256 - delta;
+            }
+
             for (int32_t i = 0; i < 257; i++)
             {
                 gtm_reg.gain_lut[i] = uint32_t(1024 * global_gain + 0.5);
+            }
+
+            if (global_gain > 1.0)
+            {
+                uint32_t gain_fixed = gtm_reg.gain_lut[exceed_pos];
+                double step = double(gain_fixed - 1024) / (256 - exceed_pos);
+                for (uint32_t i = exceed_pos; i < 257U; i++)
+                {
+                    gtm_reg.gain_lut[i] = uint32_t(gain_fixed - (i - exceed_pos)*step + 0.5);
+                }
             }
         }
     }
@@ -795,12 +923,19 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     out[0] = output0;
     out[1] = output1;
 
+    global_ref_out_t global_ref_out;
+
+    global_ref_out.wp_x = 0.0;
+    global_ref_out.wp_y = 0.0; //for hs map interpolate
+
     sensor_crop_reg_calc(g_dng_all_md, reg_ptr->sensor_crop_reg);
     blc_reg_calc(g_dng_all_md, reg_ptr->blc_reg);
     lsc_reg_calc(g_dng_all_md, reg_ptr->lsc_reg);
     ae_stat_reg_cal(g_dng_all_md, reg_ptr->ae_stat_reg);
     awbgain_reg_calc(g_dng_all_md, reg_ptr->awbgain_reg);
-    cc_reg_calc(g_dng_all_md, reg_ptr->cc_reg);
+    cc_reg_calc(g_dng_all_md, reg_ptr->cc_reg, global_ref_out);
+    hsv_lut_reg_calc(g_dng_all_md, reg_ptr->hsv_lut_reg, global_ref_out);
+    prophoto2srgb_reg_calc(reg_ptr->prophoto2srgb_reg, global_ref_out);
     gtm_stat_reg_calc(reg_ptr->gtm_stat_reg);
     gtm_reg_calc(g_dng_all_md, stat_out, reg_ptr->gtm_reg, frame_cnt);
     gamma_reg_calc(reg_ptr->gamma_reg);
