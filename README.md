@@ -2,8 +2,31 @@
 -------
 tiny ISP simulation
 
-我手上的相机是NIKON D610，镜头有两个sigma 35 F1.4和NIKON 85 F1.8，考虑到FOV和shading，畸变存在的多少，后续只使用sigma 35 F1.4拍摄NEF，转换到DNG后做仿真；
+相机是NIKON D610，镜头有两个sigma 35 F1.4和NIKON 85 F1.8，考虑到FOV和shading，畸变存在的多少，后续只使用sigma 35 F1.4拍摄NEF，转换到DNG后做仿真；
 
+![Nikon](./doc/nikon_d610.jpg)
+
+**环境**：
+>版本	Windows 10 专业版 <br>
+>版本号	21H2<br>
+>安装日期   2020/11/14<br>
+>操作系统内部版本	19044.1586<br>
+>体验	Windows Feature Experience Pack 120.2212.4170.0<br>
+>设备名称	DESKTOP-6ORRKMN<br>
+>处理器	Intel(R) Core(TM) i3-8100 CPU @ 3.60GHz   3.60 GHz<br>
+>机带 RAM	16.0 GB<br>
+>设备 ID	xxxxx-xxxx-xxxx-A642-C4EC5ADB8789<br>
+>产品 ID	xxxxx-80000-00000-xxxxx<br>
+>系统类型	64 位操作系统, 基于 x64 的处理器<br>
+>笔和触控	没有可用于此显示器的笔或触控输入<br>
+
+**依赖**：<br>
+第三方库用到了dng_sdk, libjpeg, libxml2，均放置在thirdparty目录下，包含vs2019 v142和gcc9.3.0预编译二进制lib；
+
+此外还有OpenCV，这部分需要自行配置，使得cmake可以检测到；
+新建环境变量`OPENCV_DIR`，指向你的opencv安装目录，比如：
+
+![opencv_dir](./doc/opencv_dir.png)
 ## 规划
 - [x] DNG/RAW支持
 
@@ -11,11 +34,10 @@ tiny ISP simulation
 
 - [x] cmake支持
 
-- [ ] opencl支持
+- [ ] opencl加速耗时模块
 
 - [ ] 多stripe支持
 
-- [ ] wxWidgets支持GUI
 
 ![结构图](https://github.com/JonahZeng/YQ-ISP/blob/master/doc/pipeline_v1.png?raw=true)
 
@@ -29,7 +51,7 @@ cd build
 打开.sln文件使用vs编译, 设置isp_emulation为启动项目;
 vs设置启动参数：
 
->>-p [pipe_number] -cfg [xml_file] -f [frame_end]
+>-p [pipe_number] -cfg [xml_file] -f [frame_end]
 
 
 ubuntu生成makefile并编译:
