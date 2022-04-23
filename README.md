@@ -14,6 +14,7 @@ tiny ISP simulation
 >体验	Windows Feature Experience Pack 120.2212.4170.0<br>
 >设备名称	DESKTOP-6ORRKMN<br>
 >处理器	Intel(R) Core(TM) i3-8100 CPU @ 3.60GHz   3.60 GHz<br>
+>显示适配卡 NVIDIA GeForce GTX1650<br>
 >机带 RAM	16.0 GB<br>
 >设备 ID	xxxxx-xxxx-xxxx-A642-C4EC5ADB8789<br>
 >产品 ID	xxxxx-80000-00000-xxxxx<br>
@@ -23,10 +24,7 @@ tiny ISP simulation
 **依赖**：<br>
 第三方库用到了dng_sdk, libjpeg, libxml2，均放置在thirdparty目录下，包含vs2019 v142和gcc9.3.0预编译二进制lib；
 
-此外还有OpenCV，这部分需要自行配置，使得cmake可以检测到；
-新建环境变量`OPENCV_DIR`，指向你的opencv安装目录，比如：
 
-![opencv_dir](./doc/opencv_dir.png)
 ## 规划
 - [x] DNG/RAW支持
 
@@ -39,7 +37,7 @@ tiny ISP simulation
 - [ ] 多stripe支持
 
 
-![结构图](https://github.com/JonahZeng/YQ-ISP/blob/master/doc/pipeline_v1.png?raw=true)
+![结构图](./doc/pipeline_v1.png)
 
 ## 使用方法
 采用cmake进行跨平台构建，已在VS2019 c++工具集v142，ubuntu20.04 gcc 9.3.0下测试通过;
@@ -403,7 +401,7 @@ C:\ProgramData\Adobe\CameraRaw\LensProfiles\1.0\Sigma\Nikon #我的是nikon相�
 
 abobe的vignette model:
 
-![vignette model](https://github.com/JonahZeng/YQ-ISP/blob/master/doc/adobe_vignette_model.png?raw=true)
+![vignette model](./doc/adobe_vignette_model.png)
 
 
 

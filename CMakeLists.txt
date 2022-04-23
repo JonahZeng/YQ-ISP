@@ -19,7 +19,7 @@ source_group("src" FILES ${SRC_FILES})
 source_group("pipeline" FILES ${PIPELINE_FILES})
 source_group("cfg" FILES ${CFG_FILES})
 
-find_package(OpenCV REQUIRED)
+#find_package(OpenCV REQUIRED)
 
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
@@ -131,7 +131,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(isp_emulation 
         debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} z lzma dl)
 endif()
-target_link_libraries(isp_emulation ${OpenCV_LIBS})
+#target_link_libraries(isp_emulation ${OpenCV_LIBS})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E 

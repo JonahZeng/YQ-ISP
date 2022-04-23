@@ -5,11 +5,9 @@
 
 #include "meta_data.h"
 
-extern dng_md_t g_dng_all_md;
-
 hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name) :
     in(inpins), out(outpins), previous_hw(inpins), outport_of_previous_hw(inpins),
-    next_hw_of_outport(outpins), next_hw_cnt_of_outport(outpins), name(new char[64]), write_pic_src_pin()
+    next_hw_of_outport(outpins), next_hw_cnt_of_outport(outpins), name(new char[64]), write_pic_src_pin(), input_file_name(nullptr)
 {
     this->inpins = inpins;
     this->outpins = outpins;
@@ -111,6 +109,7 @@ void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     if (this->write_pic)
     {
+        input_file_name = &(stat_out->input_file_name);
         write_pic_for_output();
     }
 }
@@ -375,8 +374,7 @@ void hw_base::write_pic_for_output()
 
     std::string write_pic_path_str(write_pic_path);
 
-    std::string* input_file_name = &g_dng_all_md.input_file_name;
-    if (input_file_name->length() > 0)
+    if (input_file_name != nullptr && input_file_name->length() > 0)
     {
         size_t ridx1 = input_file_name->rfind('/');
         size_t ridx2 = input_file_name->rfind('.');

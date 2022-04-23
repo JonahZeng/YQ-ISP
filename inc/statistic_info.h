@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <string>
 
 typedef struct awb_stat_info_s {
     uint32_t r_sum[32 * 32];
@@ -40,6 +41,7 @@ typedef struct ce_stat_info_s {
 }ce_stat_info_t;
 
 typedef struct statistic_info_s {
+    std::string input_file_name;
     awb_stat_info_t awb_stat;
     ae_stat_info_t ae_stat;
     af_stat_info_t af_stat;

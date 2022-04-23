@@ -4,7 +4,8 @@
 #include "chromatix_cc.h"
 #include "dng_tag_values.h"
 #include "dng_xy_coord.h"
-#include "opencv2/opencv.hpp"
+#include "mat3_3lf.h"
+#include <assert.h>
 
 extern dng_md_t g_dng_all_md;
 
@@ -367,9 +368,9 @@ static void get_xy_wp(uint32_t CalibrationIlluminant1, uint32_t CalibrationIllum
     }
 }
 
-static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat cameraNeutral,
+static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, Vector3lf cameraNeutral,
     dng_xy_coord& wp1, dng_xy_coord& wp2,
-    cv::Mat CM_1, cv::Mat CM_2, double* weight1, double* weight2)
+    Mat3_3lf CM_1, Mat3_3lf CM_2, double* weight1, double* weight2)
 {
 
     double white_point1_xy[2] = { wp1.x, wp1.y };
@@ -388,8 +389,8 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
     for (int32_t i = 0; i < 25; i++)
     {
         log_info("-----------loop %d, input xy = %.6lf %.6lf\n", i, input_x, input_y);
-        log_array("cameraNeutral:\n", "%.6lf, ", cameraNeutral.ptr<double>(), (uint32_t)cameraNeutral.cols*cameraNeutral.rows, (uint32_t)cameraNeutral.cols);
-        //std::cout << "cameraNeutral:" << cameraNeutral << std::endl;
+        log_array("cameraNeutral:\n", "%.6lf, ", cameraNeutral.data, 3, 3);
+        
 
         dist_1_x = abs(input_x - white_point1_xy[0]);
         dist_1_y = abs(input_y - white_point1_xy[1]);
@@ -408,19 +409,17 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, cv::Mat ca
 
         log_info("weight1 = %.6lf, weight2 = %.6lf\n", weight_1, weight_2);
 
-        cv::Mat tmp_CM = CM_2 * weight_2 + CM_1 * weight_1;
+        Mat3_3lf tmp_CM = CM_2 * weight_2 + CM_1 * weight_1;
         tmp_CM = tmp_CM.inv();
 
-        //std::cout << "tmp_CM:" << tmp_CM << std::endl;
-        log_array("tmp_CM:\n", "%.6lf, ", tmp_CM.ptr<double>(), (uint32_t)tmp_CM.cols*tmp_CM.rows, (uint32_t)tmp_CM.cols);
+        log_array("tmp_CM:\n", "%.6lf, ", tmp_CM.get(), 9, 3);
 
-        cv::Mat tmp_XYZ = tmp_CM * cameraNeutral;
-        //std::cout << "tmp_XYZ:" << tmp_XYZ << std::endl;
-        log_array("tmp_XYZ:\n", "%.6lf, ", tmp_XYZ.ptr<double>(), (uint32_t)tmp_XYZ.cols*tmp_XYZ.rows, (uint32_t)tmp_XYZ.cols);
+        Vector3lf tmp_XYZ = tmp_CM.multiply(cameraNeutral);
+        log_array("tmp_XYZ:\n", "%.6lf, ", tmp_XYZ.data, 3, 3);
 
-        double X = tmp_XYZ.at<double>(0);
-        double Y = tmp_XYZ.at<double>(1);
-        double Z = tmp_XYZ.at<double>(2);
+        double X = tmp_XYZ.data[0];
+        double Y = tmp_XYZ.data[1];
+        double Z = tmp_XYZ.data[2];
 
         out_x = X / (X + Y + Z);
         out_y = Y / (X + Y + Z);
@@ -450,7 +449,7 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg, global_ref_out_t
     };
     if (cc_calib.cc_mode == 1)
     {
-        cv::Mat cameraNeutral = (cv::Mat_<double>(3, 1) << all_dng_md.awb_md.r_Neutral, all_dng_md.awb_md.g_Neutral, all_dng_md.awb_md.b_Neutral);
+        Vector3lf cameraNeutral = { {all_dng_md.awb_md.r_Neutral, all_dng_md.awb_md.g_Neutral, all_dng_md.awb_md.b_Neutral} };
 
         if (all_dng_md.cc_md.Analogbalance[0] != 1.0 || all_dng_md.cc_md.Analogbalance[1] != 1.0 || all_dng_md.cc_md.Analogbalance[2] != 1.0)
         {
@@ -467,20 +466,20 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg, global_ref_out_t
             log_error("CC2 is not I matrix\n");
         }
 
-        cv::Mat CM_1(3, 3, CV_64FC1);
-        cv::Mat CM_2(3, 3, CV_64FC1);
-        cv::Mat FM_1(3, 3, CV_64FC1);
-        cv::Mat FM_2(3, 3, CV_64FC1);
+        Mat3_3lf CM_1;
+        Mat3_3lf CM_2;
+        Mat3_3lf FM_1;
+        Mat3_3lf FM_2;
 
         for (int32_t row = 0; row < 3; row++)
         {
             for (int32_t col = 0; col < 3; col++)
             {
-                CM_1.at<double>(row, col) = all_dng_md.cc_md.ColorMatrix1[row][col];
-                CM_2.at<double>(row, col) = all_dng_md.cc_md.ColorMatrix2[row][col];
+                CM_1.get()[row * 3 + col] = all_dng_md.cc_md.ColorMatrix1[row][col];
+                CM_2.get()[row * 3 + col] = all_dng_md.cc_md.ColorMatrix2[row][col];
 
-                FM_1.at<double>(row, col) = all_dng_md.cc_md.ForwardMatrix1[row][col];
-                FM_2.at<double>(row, col) = all_dng_md.cc_md.ForwardMatrix1[row][col];
+                FM_1.get()[row * 3 + col] = all_dng_md.cc_md.ForwardMatrix1[row][col];
+                FM_2.get()[row * 3 + col] = all_dng_md.cc_md.ForwardMatrix1[row][col];
             }
         }
 
@@ -501,34 +500,33 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg, global_ref_out_t
         global_ref_out.wp_x = x;
         global_ref_out.wp_y = y;
 
-        cv::Mat FM = FM_1 * weight1 + FM_2 * weight2;
-        log_array("camera2XYZ_mat\n", "%lf, ", FM.ptr<double>(), (uint32_t)FM.cols*FM.rows, (uint32_t)FM.cols);
+        Mat3_3lf FM = FM_1 * weight1 + FM_2 * weight2;
+        log_array("camera2XYZ_mat\n", "%lf, ", FM.get(), 9, 3);
 
         for (int32_t i = 0; i < 9; i++)
         {
-            global_ref_out.FM[i] = FM.at<double>(i/3, i%3);
+            global_ref_out.FM[i] = FM.get()[i];
         }
 
         // ref: http://www.brucelindbloom.com/index.html?ColorCalculator.html
         
-        cv::Mat XYZ2photoRGB = (cv::Mat_<double>(3, 3) <<
-            1.3459433, -0.2556075, -0.0511118,
+        Mat3_3lf XYZ2photoRGB (1.3459433, -0.2556075, -0.0511118,
             -0.5445989, 1.5081673, 0.0205351,
             0.0000000, 0.0000000, 1.2118128);
-        cv::Mat ccm = XYZ2photoRGB * FM;
-        //cv::Mat XYZ2RGB2020 = (cv::Mat_<double>(3, 3) <<
+        Mat3_3lf ccm = XYZ2photoRGB.multiply(FM);
+        //Mat3_3lf XYZ2RGB2020 = (
         //    1.7166512, -0.3556708, -0.2533663, 
         //    -0.66668445,  1.6164814,   0.01576855,
         //    0.01763986, -0.04277062,  0.9421031);
-        //cv::Mat D50_to_D65 = (cv::Mat_<double>(3, 3) <<
+        //Mat3_3lf D50_to_D65 = (
         //    0.9857398,  0.0000000,  0.0000000,
         //    0.0000000,  1.0000000,  0.0000000,
         //    0.0000000,  0.0000000,  1.3194581
         //    );
-        //cv::Mat ccm = XYZ2RGB2020 * D50_to_D65 * FM;
-        log_array("sensor RGB to ProPhoto RGB ccm:\n", "%lf, ", ccm.ptr<double>(), (uint32_t)ccm.cols*FM.rows, (uint32_t)ccm.cols);
+        //Mat3_3lf ccm = XYZ2RGB2020.multiply((D50_to_D65.multiply(FM));
+        log_array("sensor RGB to ProPhoto RGB ccm:\n", "%lf, ", ccm.get(), 9, 3);
 
-        double* ccm_ptr = ccm.ptr<double>();
+        double* ccm_ptr = ccm.get();
         double row0_sum = ccm_ptr[0] + ccm_ptr[1] + ccm_ptr[2];
         ccm_ptr[0] = ccm_ptr[0] / row0_sum;
         ccm_ptr[1] = ccm_ptr[1] / row0_sum;
@@ -545,8 +543,8 @@ static void cc_reg_calc(dng_md_t& all_dng_md, cc_reg_t& cc_reg, global_ref_out_t
         cc_reg.bypass = 0;
         for (int32_t i = 0; i < 9; i++)
         {
-            cc_reg.ccm[i] = (int32_t)(ccm.at<double>(i / 3, i % 3) * 1024);
-            global_ref_out.ccm[i] = ccm.at<double>(i / 3, i % 3);
+            cc_reg.ccm[i] = (int32_t)(ccm.get()[i] * 1024);
+            global_ref_out.ccm[i] = ccm.get()[i];
         }
 
         cc_reg.ccm[0] = 1024 - cc_reg.ccm[1] - cc_reg.ccm[2];
@@ -602,21 +600,21 @@ static void hsv_lut_reg_calc(dng_md_t& g_dng_all_md, hsv_lut_reg_t& hsv_lut_reg,
 
 static void prophoto2srgb_reg_calc(prophoto2srgb_reg_t& prophoto2srgb_reg, global_ref_out_t& global_ref_out)
 {
-    cv::Mat XYZ2sRGB = (cv::Mat_<double>(3, 3) <<
+    Mat3_3lf XYZ2sRGB(
         3.2404542, -1.5371385, -0.4985314,
         -0.9692660, 1.8760108, 0.0415560,
         0.0556434, -0.2040259, 1.0572252);
-    cv::Mat D50_to_D65 = (cv::Mat_<double>(3, 3) <<
+    Mat3_3lf D50_to_D65(
         0.9857398,  0.0000000,  0.0000000,
         0.0000000,  1.0000000,  0.0000000,
         0.0000000,  0.0000000,  1.3194581
         );
-    cv::Mat FM(3, 3, CV_64FC1, global_ref_out.FM);
-    cv::Mat old_ccm(3, 3, CV_64FC1, global_ref_out.ccm);
-    cv::Mat iccm = old_ccm.inv();
-    cv::Mat ccm = XYZ2sRGB * D50_to_D65 * FM * iccm;
+    Mat3_3lf FM(global_ref_out.FM);
+    Mat3_3lf old_ccm(global_ref_out.ccm);
+    Mat3_3lf iccm = old_ccm.inv();
+    Mat3_3lf ccm = XYZ2sRGB.multiply(D50_to_D65.multiply(FM.multiply(iccm)));
 
-    double* ccm_ptr = ccm.ptr<double>();
+    double* ccm_ptr = ccm.get();
     double row0_sum = ccm_ptr[0] + ccm_ptr[1] + ccm_ptr[2];
     ccm_ptr[0] = ccm_ptr[0] / row0_sum;
     ccm_ptr[1] = ccm_ptr[1] / row0_sum;
@@ -633,7 +631,7 @@ static void prophoto2srgb_reg_calc(prophoto2srgb_reg_t& prophoto2srgb_reg, globa
     prophoto2srgb_reg.bypass = 0;
     for (int32_t i = 0; i < 9; i++)
     {
-        prophoto2srgb_reg.ccm[i] = (int32_t)(ccm.at<double>(i / 3, i % 3) * 1024);
+        prophoto2srgb_reg.ccm[i] = (int32_t)(ccm.get()[i] * 1024);
     }
 
     prophoto2srgb_reg.ccm[0] = 1024 - prophoto2srgb_reg.ccm[1] - prophoto2srgb_reg.ccm[2];

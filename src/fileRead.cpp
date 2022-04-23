@@ -273,6 +273,7 @@ static void get_sensor_crop_info_from_dng(dng_info* info, dng_md_t& all_md)
     all_md.sensor_crop_size_info.width = (uint32_t)(info->fIFD[info->fMainIndex]->fDefaultCropSizeH.As_real64());
     all_md.sensor_crop_size_info.height = (uint32_t)(info->fIFD[info->fMainIndex]->fDefaultCropSizeV.As_real64());
 }
+
 static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* bit_depth)
 {
     dng_file_stream stream(file_name);
@@ -495,6 +496,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
                 }
                 fclose(input_f);
                 g_dng_all_md.input_file_name = std::string(file_name);
+                stat_out->input_file_name = std::string(file_name);
             }
         }
         else if (strcmp(file_type_string, "DNG") == 0)
@@ -503,6 +505,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             uint32_t bit_dep = 0;
             readDNG_by_adobe_sdk(file_name, &out0, &bit_dep);
             g_dng_all_md.input_file_name = std::string(file_name);
+            stat_out->input_file_name = std::string(file_name);
             out[0] = out0;
             img_width = out0->width;
             img_height = out0->height;

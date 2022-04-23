@@ -24,6 +24,8 @@ public:
     char write_pic_format[16];
     char write_pic_path[256];
     uint32_t write_pic_bits;
+
+    std::string* input_file_name;
     
     void reset_hw_cnt_of_outport();
     void release_output_memory();
