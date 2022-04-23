@@ -68,17 +68,15 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     uint16_t* in_g = input1->data_ptr;
     uint16_t* in_b = input2->data_ptr;
 
-    std::unique_ptr<uint16_t[]> in_r_ptr = std::make_unique<uint16_t[]>(input0->width * input0->height);
-    std::unique_ptr<uint16_t[]> in_g_ptr = std::make_unique<uint16_t[]>(input1->width * input1->height);
-    std::unique_ptr<uint16_t[]> in_b_ptr = std::make_unique<uint16_t[]>(input2->width * input2->height);
-    if (!in_r_ptr | !in_g_ptr | !in_b_ptr)
+    uint16_t* in_r_data = new uint16_t[input0->width * input0->height];
+    uint16_t* in_g_data = new uint16_t[input1->width * input1->height];
+    uint16_t* in_b_data = new uint16_t[input2->width * input2->height];
+    if (!in_r_data | !in_g_data | !in_b_data)
     {
         log_error("alloc memory fail\n");
         exit(EXIT_FAILURE);
     }
-    uint16_t* in_r_data = in_r_ptr.get();
-    uint16_t* in_g_data = in_g_ptr.get();
-    uint16_t* in_b_data = in_b_ptr.get();
+
     for (uint32_t i = 0; i < input0->width * input0->height; i++)
     {
         in_r_data[i] = in_r[i] >> (16 - 12);
@@ -105,6 +103,10 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     }
 
     memcpy(&stat_out->gtm_stat, stat_gtm, sizeof(gtm_stat_info_t));
+
+    delete[] in_r_data;
+    delete[] in_g_data;
+    delete[] in_b_data;
 
     log_array("luma hist[256]:\n", "%7d, ", stat_gtm->luma_hist, 256, 16);
 
