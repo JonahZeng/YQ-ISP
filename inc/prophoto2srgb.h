@@ -5,6 +5,7 @@
 typedef struct prophoto2srgb_reg_s
 {
     uint32_t bypass;
+    uint32_t hlr_en;
     int32_t ccm[9];
 }prophoto2srgb_reg_t;
 
@@ -21,5 +22,6 @@ private:
     void checkparameters(prophoto2srgb_reg_t* reg);
     prophoto2srgb_reg_t* prophoto2srgb_reg;
     uint32_t bypass;
+    uint32_t hlr_en;
     vector<int32_t> ccm;
 };

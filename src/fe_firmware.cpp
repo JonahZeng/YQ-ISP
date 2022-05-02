@@ -316,9 +316,9 @@ static void awbgain_reg_calc(dng_md_t& all_dng_md, awbgain_reg_t& awbgain_reg)
 
     double BaselineExposure = all_dng_md.ae_comp_md.BaselineExposure;
     double compensat_gain = pow(2, BaselineExposure);
-    log_info("compensat_gain %lf\n", compensat_gain);
+    log_info("compensat_gain %lf, disable baseline exposure compensation\n", compensat_gain);
 
-    awbgain_reg.ae_compensat_gain = (uint32_t)(compensat_gain * 1024);
+    awbgain_reg.ae_compensat_gain = 1024;// (uint32_t)(compensat_gain * 1024);
 }
 
 static void get_xy_wp(uint32_t CalibrationIlluminant1, uint32_t CalibrationIlluminant2, dng_xy_coord& xy1, dng_xy_coord& xy2)
@@ -629,6 +629,7 @@ static void prophoto2srgb_reg_calc(prophoto2srgb_reg_t& prophoto2srgb_reg, globa
     ccm_ptr[8] = ccm_ptr[8] / row2_sum;
 
     prophoto2srgb_reg.bypass = 0;
+    prophoto2srgb_reg.hlr_en = 1;
     for (int32_t i = 0; i < 9; i++)
     {
         prophoto2srgb_reg.ccm[i] = (int32_t)(ccm.get()[i] * 1024);

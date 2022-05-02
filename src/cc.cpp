@@ -1,6 +1,11 @@
 ﻿#include "fe_firmware.h"
 #include <assert.h>
 
+#define MAX2(a, b) ((a>b)?a:b)
+#define MAX3(a, b, c) MAX2(a, MAX2(b, c))
+#define MIN2(a, b) ((a<b)?a:b)
+#define MIN3(a, b, c) MIN2(a, MIN2(b, c))
+
 cc::cc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name),
     bypass(0), cc_reg(new cc_reg_t), ccm(9, 0)
 {
@@ -10,11 +15,98 @@ cc::cc(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins,
 }
 
 
+static void rgb2hsv(int32_t r_in, int32_t g_in, int32_t b_in, int32_t& h, int32_t& s, int32_t& v)
+{
+    int32_t max_ = MAX3(r_in, g_in, b_in);
+    int32_t min_ = MIN3(r_in, g_in, b_in);
+    int32_t s_ = 0;
+    if (max_ > 0)
+    {
+        s_ = (max_ - min_) * 16384 / max_;
+    }
+    int32_t h_ = 0;
+    if (max_ == min_)
+    {
+        h_ = 0;
+    }
+    else if (max_ == r_in)
+    {
+        h_ = (g_in - b_in) * 2730 / (max_ - min_);
+    }
+    else if (max_ == g_in)
+    {
+        h_ = (b_in - r_in) * 2730 / (max_ - min_) + 5461;
+    }
+    else {
+        h_ = (r_in - g_in) * 2730 / (max_ - min_) + 10923;
+    }
+
+    if (h_ < 0)
+    {
+        h_ = h_ + 16384;
+    }
+
+    h = h_;
+    s = s_;
+    v = max_;
+}
+
+static void hsv2rgb(int32_t h, int32_t s, int32_t v, int32_t& r, int32_t& g, int32_t& b)
+{
+    if (h >= 0 && h < 2730)
+    {
+        r = v;
+        b = (16384 - s) * r / 16384;
+        g = (r - b) * h / 2730 + b;
+    }
+    else if (h >= 2730 && h < 5461)
+    {
+        g = v;
+        b = (16384 - s) * g / 16384;
+        r = b - (g - b) * (h - 5461) / 2730;
+    }
+    if (h >= 5461 && h < 8192)
+    {
+        g = v;
+        r = (16384 - s) * g / 16384;
+        b = (g - r) * (h - 5461) / 2730 + r;
+    }
+    if (h >= 8192 && h < 10922)
+    {
+        b = v;
+        r = (16384 - s) * b / 16384;
+        g = r - (b - r) * (h - 10922) / 2730;
+    }
+    if (h >= 10922 && h < 13653)
+    {
+        b = v;
+        g = (16384 - s) * b / 16384;
+        r = (b - g) * (h - 10922) / 2730 + g;
+    }
+    if (h >= 13653 && h < 16384)
+    {
+        r = v;
+        g = (16384 - s) * r / 16384;
+        b = g - (h - 16384) * (r - g) / 2730;
+    }
+    r = (r > 16383) ? 16383 : (r < 0 ? 0 : r);
+    g = (g > 16383) ? 16383 : (g < 0 ? 0 : g);
+    b = (b > 16383) ? 16383 : (b < 0 ? 0 : b);
+}
+
+
 static void cc_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, uint16_t* out_g, uint16_t* out_b,
     uint32_t xsize, uint32_t ysize, const cc_reg_t* cc_reg)
 {
     int32_t r_in, g_in, b_in;
     int32_t r_out, g_out, b_out;
+    int32_t r_clip, g_clip, b_clip;
+
+    int32_t h_out, s_out, v_out;
+    int32_t h_clip, s_clip, v_clip;
+
+    int32_t h_final, s_final, v_final;
+
     for (uint32_t row = 0; row < ysize; row++)
     {
         for (uint32_t col = 0; col < xsize; col++)
@@ -27,13 +119,33 @@ static void cc_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r, u
             g_out = (r_in*cc_reg->ccm[3] + g_in * cc_reg->ccm[4] + b_in * cc_reg->ccm[5] + 512) >> 10;
             b_out = (r_in*cc_reg->ccm[6] + g_in * cc_reg->ccm[7] + b_in * cc_reg->ccm[8] + 512) >> 10;
 
-            r_out = (r_out > 16383) ? 16383 : (r_out < 0 ? 0 : r_out);
-            g_out = (g_out > 16383) ? 16383 : (g_out < 0 ? 0 : g_out);
-            b_out = (b_out > 16383) ? 16383 : (b_out < 0 ? 0 : b_out);
+            r_clip = (r_out > 16383) ? 16383 : (r_out < 0 ? 0 : r_out);
+            g_clip = (g_out > 16383) ? 16383 : (g_out < 0 ? 0 : g_out);
+            b_clip = (b_out > 16383) ? 16383 : (b_out < 0 ? 0 : b_out);
 
-            out_r[row*xsize + col] = (uint16_t)r_out;
-            out_g[row*xsize + col] = (uint16_t)g_out;
-            out_b[row*xsize + col] = (uint16_t)b_out;
+            rgb2hsv(r_out, g_out, b_out, h_out, s_out, v_out);
+            rgb2hsv(r_clip, g_clip, b_clip, h_clip, s_clip, v_clip);
+
+            int32_t total_clip = abs(r_out - r_clip) + abs(g_out - g_clip) + abs(b_out - b_clip);
+            if (total_clip == 0)
+            {
+                out_r[row * xsize + col] = (uint16_t)r_clip;
+                out_g[row * xsize + col] = (uint16_t)g_clip;
+                out_b[row * xsize + col] = (uint16_t)b_clip;
+            }
+            else {
+                h_final = h_out;
+                v_final = v_clip;
+                s_final = s_out + ((s_clip - s_out) * total_clip) / 2048;
+
+                int32_t r_final, g_final, b_final;
+
+                hsv2rgb(h_final, s_final, v_final, r_final, g_final, b_final);
+
+                out_r[row * xsize + col] = (uint16_t)r_final;
+                out_g[row * xsize + col] = (uint16_t)g_final;
+                out_b[row * xsize + col] = (uint16_t)b_final;
+            } 
         }
     }
 }
