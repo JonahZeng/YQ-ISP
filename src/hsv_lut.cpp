@@ -6,6 +6,8 @@
 #define HSVLUT_MIN2(a, b) ((a<b)?a:b)
 #define HSVLUT_MIN3(a, b, c) HSVLUT_MIN2(a, HSVLUT_MIN2(b, c))
 
+#define HSVLUT_CLIP3(in, a, b) (in<a)?a:((in>b)?b:in)
+
 hsv_lut::hsv_lut(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name),
     bypass(0), hsv_lut_reg(new hsv_lut_reg_t)
 {
@@ -140,6 +142,10 @@ static void hsv_lut_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out
                 float h_oft1 = h_oft10 + (h_oft11 - h_oft10) * s_delta / s_step;
                 float h_oft = h_oft0 + (h_oft1 - h_oft0) * h_delta / h_step;
                 h_ += h_oft;
+                if (h_ > 360.0f)
+                {
+                    h_ = h_ - 360.0f;
+                }
                 h_ = h_ * 16384.0f / 360.0f;
 
                 float s_oft0 = s_oft00 + (s_oft01 - s_oft00) * s_delta / s_step;
@@ -154,6 +160,10 @@ static void hsv_lut_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out
                 s_final = s_final > 16384 ? 16384 : s_final;
 
                 hsv2rgb(h_final, s_final, v_in, r_out, g_out, b_out);
+
+                r_out = HSVLUT_CLIP3(r_out, 0, 16383);
+                g_out = HSVLUT_CLIP3(g_out, 0, 16383);
+                b_out = HSVLUT_CLIP3(b_out, 0, 16383);
 
                 out_r[row * xsize + col] = r_out;
                 out_g[row * xsize + col] = g_out;
