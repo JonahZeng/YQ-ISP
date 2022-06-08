@@ -1,21 +1,21 @@
 ﻿#pragma once
 
-#include "blc.h"
-#include "lsc.h"
-#include "ae_stat.h"
-#include "awb_gain.h"
-#include "demosaic.h"
-#include "cc.h"
-#include "gtm.h"
-#include "gamma.h"
-#include "gtm_stat.h"
-#include "rgb2yuv.h"
-#include "sensor_crop.h"
-#include "yuv422_conv.h"
-#include "cac_rgb.h"
-#include "yuv2rgb_8bit.h"
-#include "hsv_lut.h"
-#include "prophoto2srgb.h"
+#include "blc_hw.h"
+#include "lsc_hw.h"
+#include "ae_stat_hw.h"
+#include "awb_gain_hw.h"
+#include "demosaic_hw.h"
+#include "cc_hw.h"
+#include "gtm_hw.h"
+#include "gamma_hw.h"
+#include "gtm_stat_hw.h"
+#include "rgb2yuv_hw.h"
+#include "raw_crop_hw.h"
+#include "yuv422_conv_hw.h"
+#include "cac_rgb_hw.h"
+#include "yuv2rgb_8bit_hw.h"
+#include "hsv_lut_hw.h"
+#include "prophoto2srgb_hw.h"
 
 typedef struct fe_module_reg_s {
     blc_reg_t blc_reg;
@@ -28,7 +28,7 @@ typedef struct fe_module_reg_s {
     gamma_reg_t gamma_reg;
     gtm_stat_reg_t gtm_stat_reg;
     rgb2yuv_reg_t rgb2yuv_reg;
-    sensor_crop_reg_t sensor_crop_reg;
+    raw_crop_reg_t raw_crop_reg;
     yuv422_conv_reg_t yuv422_conv_reg;
     cac_rgb_reg_t cac_rgb_reg;
     yuv2rgb_8b_reg_t yuv2rgb_8b_reg;

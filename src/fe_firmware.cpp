@@ -978,13 +978,13 @@ static void rgb2yuv_reg_calc(rgb2yuv_reg_t& rgb2yuv_reg)
     rgb2yuv_reg.rgb2yuv_coeff[8] = -83;
 }
 
-static void sensor_crop_reg_calc(dng_md_t& all_dng_md, sensor_crop_reg_t& sensorcrop_reg)
+static void raw_crop_reg_calc(dng_md_t& all_dng_md, raw_crop_reg_t& raw_crop_reg)
 {
-    sensorcrop_reg.bypass = 0;
-    sensorcrop_reg.origin_x = all_dng_md.sensor_crop_size_info.origin_x;
-    sensorcrop_reg.origin_y = all_dng_md.sensor_crop_size_info.origin_y;
-    sensorcrop_reg.width = all_dng_md.sensor_crop_size_info.width;
-    sensorcrop_reg.height = all_dng_md.sensor_crop_size_info.height;
+    raw_crop_reg.bypass = 0;
+    raw_crop_reg.origin_x = all_dng_md.sensor_crop_size_info.origin_x;
+    raw_crop_reg.origin_y = all_dng_md.sensor_crop_size_info.origin_y;
+    raw_crop_reg.width = all_dng_md.sensor_crop_size_info.width;
+    raw_crop_reg.height = all_dng_md.sensor_crop_size_info.height;
 }
 
 static void yuv422_conv_reg_calc(yuv422_conv_reg_t& yuv422_conv_reg)
@@ -1020,7 +1020,7 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     global_ref_out.wp_x = 0.0;
     global_ref_out.wp_y = 0.0; //for hs map interpolate
 
-    sensor_crop_reg_calc(g_dng_all_md, reg_ptr->sensor_crop_reg);
+    raw_crop_reg_calc(g_dng_all_md, reg_ptr->raw_crop_reg);
     blc_reg_calc(g_dng_all_md, reg_ptr->blc_reg);
     lsc_reg_calc(g_dng_all_md, reg_ptr->lsc_reg);
     ae_stat_reg_cal(g_dng_all_md, reg_ptr->ae_stat_reg);
