@@ -6,7 +6,7 @@
 #define MIN2(a, b) ((a<b)?a:b)
 #define MIN3(a, b, c) MIN2(a, MIN2(b, c))
 
-prophoto2srgb::prophoto2srgb(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name),
+prophoto2srgb_hw::prophoto2srgb_hw(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name),
     bypass(0), prophoto2srgb_reg(new prophoto2srgb_reg_t), ccm(9, 0), hlr_en(1)
 {
     ccm[0] = 1024;
@@ -155,7 +155,7 @@ static void prophoto2srgb_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_
     }
 }
 
-void prophoto2srgb::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
+void prophoto2srgb_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
     log_info("%s run start\n", __FUNCTION__);
     data_buffer* input0 = in[0];
@@ -232,7 +232,7 @@ void prophoto2srgb::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_info("%s run end\n", __FUNCTION__);
 }
 
-void prophoto2srgb::hw_init()
+void prophoto2srgb_hw::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -250,7 +250,7 @@ void prophoto2srgb::hw_init()
     log_info("%s init run end\n", name);
 }
 
-prophoto2srgb::~prophoto2srgb()
+prophoto2srgb_hw::~prophoto2srgb_hw()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
     if (prophoto2srgb_reg != nullptr)
@@ -260,7 +260,7 @@ prophoto2srgb::~prophoto2srgb()
     log_info("%s module deinit end\n", __FUNCTION__);
 }
 
-void prophoto2srgb::checkparameters(prophoto2srgb_reg_t* reg)
+void prophoto2srgb_hw::checkparameters(prophoto2srgb_reg_t* reg)
 {
     reg->bypass = common_check_bits(reg->bypass, 1, "bypass");
     for (uint32_t i = 0; i < 9; i++)

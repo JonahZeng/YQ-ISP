@@ -9,14 +9,14 @@ typedef struct prophoto2srgb_reg_s
     int32_t ccm[9];
 }prophoto2srgb_reg_t;
 
-class prophoto2srgb :public hw_base {
+class prophoto2srgb_hw :public hw_base {
 public:
-    prophoto2srgb() = delete;
-    prophoto2srgb(const prophoto2srgb& cp) = delete;
-    prophoto2srgb(uint32_t inpins, uint32_t outpins, const char* inst_name);
+    prophoto2srgb_hw() = delete;
+    prophoto2srgb_hw(const prophoto2srgb_hw& cp) = delete;
+    prophoto2srgb_hw(uint32_t inpins, uint32_t outpins, const char* inst_name);
     void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) override;
     void hw_init() override;
-    ~prophoto2srgb();
+    ~prophoto2srgb_hw();
 
 private:
     void checkparameters(prophoto2srgb_reg_t* reg);

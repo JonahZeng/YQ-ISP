@@ -18,7 +18,7 @@ void test_V1_pipeline(pipeline_manager* manager)
     demosaic_hw* demosaic_hw_inst = new demosaic_hw(2, 3, "demosaic_hw");
     cc_hw* cc_hw_inst = new cc_hw(4, 3, "cc_hw");
     hsv_lut_hw* hsv_lut_hw_inst = new hsv_lut_hw(4, 3, "hsv_lut_hw");
-    prophoto2srgb* prophoto2srgb_hw = new prophoto2srgb(4, 3, "prophoto2srgb_hw");
+    prophoto2srgb_hw* prophoto2srgb_hw_inst = new prophoto2srgb_hw(4, 3, "prophoto2srgb_hw");
     gtm_stat_hw* gtm_stat_hw_inst = new gtm_stat_hw(4, 1, "gtm_stat_hw");
     gtm_hw* gtm_hw_inst = new gtm_hw(4, 3, "gtm_hw");
     Gamma_hw* gamma_hw_inst = new Gamma_hw(4, 3, "gamma_hw");
@@ -36,7 +36,7 @@ void test_V1_pipeline(pipeline_manager* manager)
     manager->register_hw_module(demosaic_hw_inst);
     manager->register_hw_module(cc_hw_inst);
     manager->register_hw_module(hsv_lut_hw_inst);
-    manager->register_hw_module(prophoto2srgb_hw);
+    manager->register_hw_module(prophoto2srgb_hw_inst);
     manager->register_hw_module(gtm_stat_hw_inst);
     manager->register_hw_module(gtm_hw_inst);
     manager->register_hw_module(gamma_hw_inst);
@@ -78,14 +78,14 @@ void test_V1_pipeline(pipeline_manager* manager)
     manager->connect_port(cc_hw_inst, 2, hsv_lut_hw_inst, 2); //b
     manager->connect_port(fe_fw, 1, hsv_lut_hw_inst, 3); //regs
 
-    manager->connect_port(hsv_lut_hw_inst, 0, prophoto2srgb_hw, 0); //r
-    manager->connect_port(hsv_lut_hw_inst, 1, prophoto2srgb_hw, 1); //g
-    manager->connect_port(hsv_lut_hw_inst, 2, prophoto2srgb_hw, 2); //b
-    manager->connect_port(fe_fw, 1, prophoto2srgb_hw, 3); //regs
+    manager->connect_port(hsv_lut_hw_inst, 0, prophoto2srgb_hw_inst, 0); //r
+    manager->connect_port(hsv_lut_hw_inst, 1, prophoto2srgb_hw_inst, 1); //g
+    manager->connect_port(hsv_lut_hw_inst, 2, prophoto2srgb_hw_inst, 2); //b
+    manager->connect_port(fe_fw, 1, prophoto2srgb_hw_inst, 3); //regs
 
-    manager->connect_port(prophoto2srgb_hw, 0, gtm_hw_inst, 0); //r
-    manager->connect_port(prophoto2srgb_hw, 1, gtm_hw_inst, 1); //g
-    manager->connect_port(prophoto2srgb_hw, 2, gtm_hw_inst, 2); //b
+    manager->connect_port(prophoto2srgb_hw_inst, 0, gtm_hw_inst, 0); //r
+    manager->connect_port(prophoto2srgb_hw_inst, 1, gtm_hw_inst, 1); //g
+    manager->connect_port(prophoto2srgb_hw_inst, 2, gtm_hw_inst, 2); //b
     manager->connect_port(fe_fw, 1, gtm_hw_inst, 3); //regs
 
     manager->connect_port(gtm_hw_inst, 0, gamma_hw_inst, 0); //r
