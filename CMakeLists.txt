@@ -19,28 +19,21 @@ source_group("src" FILES ${SRC_FILES})
 source_group("pipeline" FILES ${PIPELINE_FILES})
 source_group("cfg" FILES ${CFG_FILES})
 
-#find_package(OpenCV REQUIRED)
-
-SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 add_executable(isp_emulation ${SRC_FILES} ${INC_FILES} ${PIPELINE_FILES} ${CFG_FILES} ${CALIB_FILES})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
-    set(DNG_SDK_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Release.lib")
-    set(DNG_SDK_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Debug.lib")
-    set(XMP_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPCoreStaticRelease.lib" "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPFilesStaticRelease.lib")
-    set(XMP_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPCoreStaticDebug.lib" "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPFilesStaticDebug.lib")
+    set(DNG_SDK_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Release.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Debug.lib")
+    set(XMP_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPCoreStaticRelease.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPCoreStaticDebug.lib"
+    optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPFilesStaticRelease.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPFilesStaticDebug.lib")
     set(JPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/include")
-    set(JPEG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib/libjpeg.lib")
-    set(JPEG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib/libjpeg_d.lib")
+    set(JPEG_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib/libjpeg.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib/libjpeg_d.lib")
     set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2")
     set(XML_BIN_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/bin")
-    set(XML_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2.lib" 
-    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a.lib" 
-    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dll.lib")
-    set(XML_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2d.lib" 
-    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib" 
-    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dlld.lib")
+    set(XML_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2d.lib" 
+    optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib" 
+    optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dll.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dlld.lib")
     target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;"
         "qDNGValidateTarget=1;"
         "$<$<CONFIG:Debug>:"
@@ -75,18 +68,14 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         "_CRT_SECURE_NO_WARNINGS")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
-    set(DNG_SDK_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_release.a")
-    set(DNG_SDK_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_debug.a")
-    set(XMP_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreRelease.ar" "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesRelease.ar")
-    set(XMP_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreDebug.ar" "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesDebug.ar")
+    set(DNG_SDK_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_release.a" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_debug.a")
+    set(XMP_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreRelease.ar" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreDebug.ar"
+    optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesRelease.ar" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesDebug.ar")
     set(JPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/include_linux")
-    set(JPEG_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib_linux/libjpeg.a")
-    set(JPEG_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib_linux/libjpeg_d.a")
+    set(JPEG_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib_linux/libjpeg.a" debug "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib_linux/libjpeg_d.a")
     set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2_linux")
-    set(XML_LIBRARIES_RELEASE "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_release.a" 
-    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_release.a")
-    set(XML_LIBRARIES_DEBUG "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_debug.a" 
-    "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_debug.a")
+    set(XML_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_release.a" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_debug.a"
+    optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_release.a" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_debug.a")
     target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;"
         "qDNGValidateTarget=1;"
         "$<$<CONFIG:Debug>:"
@@ -118,20 +107,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         "qDNGPreferGPSMetadataFromXMP=1")
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR}/inc ${CMAKE_SOURCE_DIR}/calib ${DNG_SDK_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${XML_INCLUDE_DIR})# ${OpenCV_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/inc ${CMAKE_SOURCE_DIR}/calib ${DNG_SDK_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${XML_INCLUDE_DIR})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_link_libraries(isp_emulation 
-        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE})
-    target_link_libraries(isp_emulation 
-        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG})
-
+    target_link_libraries(isp_emulation ${DNG_SDK_LIBRARIES} ${XMP_LIBRARIES} ${JPEG_LIBRARIES} ${XML_LIBRARIES})
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(isp_emulation 
-        optimized ${DNG_SDK_LIBRARIES_RELEASE} ${XMP_LIBRARIES_RELEASE} ${JPEG_LIBRARIES_RELEASE} ${XML_LIBRARIES_RELEASE} z lzma dl)
-    target_link_libraries(isp_emulation 
-        debug ${DNG_SDK_LIBRARIES_DEBUG} ${XMP_LIBRARIES_DEBUG} ${JPEG_LIBRARIES_DEBUG} ${XML_LIBRARIES_DEBUG} z lzma dl)
+    target_link_libraries(isp_emulation ${DNG_SDK_LIBRARIES} ${XMP_LIBRARIES} ${JPEG_LIBRARIES} ${XML_LIBRARIES} z lzma dl)
 endif()
-#target_link_libraries(isp_emulation ${OpenCV_LIBS})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E 

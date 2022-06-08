@@ -21,7 +21,7 @@ static int32_t g_log_level;
      GetConsoleScreenBufferInfo(cout_handle, &csbiInfo); WORD wOldColorAttrs = csbiInfo.wAttributes;\
      SetConsoleTextAttribute(cout_handle, FOREGROUND_GREEN);\
      DWORD bytesWritten = 0;\
-     WriteFile(cout_handle, level, (DWORD)strlen(level), &bytesWritten, NULL);\
+     WriteFile(cout_handle, level, (DWORD)strlen(level), &bytesWritten, nullptr);\
      SetConsoleTextAttribute(cout_handle, wOldColorAttrs);\
     }\
     else if(strcmp(level, "[warn] ")==0 || strcmp(level, "[error] ")==0 || strcmp(level, "[critical] ")==0)\
@@ -29,7 +29,7 @@ static int32_t g_log_level;
      GetConsoleScreenBufferInfo(cout_handle, &csbiInfo); WORD wOldColorAttrs = csbiInfo.wAttributes;\
      SetConsoleTextAttribute(cout_handle, FOREGROUND_RED);\
      DWORD bytesWritten = 0;\
-     WriteFile(cout_handle, level, (DWORD)strlen(level), &bytesWritten, NULL);\
+     WriteFile(cout_handle, level, (DWORD)strlen(level), &bytesWritten, nullptr);\
      SetConsoleTextAttribute(cout_handle, wOldColorAttrs);\
     }\
 }
@@ -37,7 +37,7 @@ static int32_t g_log_level;
 #define LOG_TIME() {time_t now = time(nullptr);\
     tm *ltm = gmtime(&now);\
     timeval start_time;\
-    gettimeofday(&start_time, NULL);\
+    gettimeofday(&start_time, nullptr);\
     printf("[%d-%02d-%02d %02d:%02d:%02d:%03ld] ", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour,\
         ltm->tm_min, ltm->tm_sec, start_time.tv_usec / 1000);}
 #define LOG_COLOR_LEVEL(level) { if(strcmp(level, "[info] ")==0 || strcmp(level, "[trace] ")==0 || strcmp(level, "[debug] ")==0){printf("\033[32m%s\033[0m", level);}\

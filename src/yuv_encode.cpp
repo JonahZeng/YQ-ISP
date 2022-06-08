@@ -20,11 +20,11 @@ static int32_t yuv_encode_core(const char* out_name, uint32_t y_width, uint32_t 
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_compress(&cinfo);
 
-    FILE* outfile = NULL;
+    FILE* outfile = nullptr;
 
     outfile = fopen(out_name, "wb");
 
-    if (outfile == NULL)
+    if (outfile == nullptr)
     {
         jpeg_destroy_compress(&cinfo);
         log_error("open %s fail\n", out_name);
@@ -197,7 +197,7 @@ void yuv_encode::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_info("%s run end\n", __FUNCTION__);
 }
 
-void yuv_encode::init()
+void yuv_encode::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -207,10 +207,10 @@ void yuv_encode::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
 

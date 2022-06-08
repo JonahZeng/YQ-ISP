@@ -14,8 +14,8 @@ public:
     prophoto2srgb() = delete;
     prophoto2srgb(const prophoto2srgb& cp) = delete;
     prophoto2srgb(uint32_t inpins, uint32_t outpins, const char* inst_name);
-    void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt);
-    void init();
+    void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) override;
+    void hw_init() override;
     ~prophoto2srgb();
 
 private:
@@ -23,5 +23,5 @@ private:
     prophoto2srgb_reg_t* prophoto2srgb_reg;
     uint32_t bypass;
     uint32_t hlr_en;
-    vector<int32_t> ccm;
+    std::vector<int32_t> ccm;
 };

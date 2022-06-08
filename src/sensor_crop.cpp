@@ -68,7 +68,7 @@ void sensor_crop::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_info("%s run end\n", __FUNCTION__);
 }
 
-void sensor_crop::init()
+void sensor_crop::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -80,17 +80,17 @@ void sensor_crop::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
 
 sensor_crop::~sensor_crop()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
-    if (sensor_crop_reg != NULL)
+    if (sensor_crop_reg != nullptr)
     {
         delete sensor_crop_reg;
     }

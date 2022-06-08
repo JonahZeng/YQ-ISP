@@ -68,9 +68,13 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     uint16_t* in_g = input1->data_ptr;
     uint16_t* in_b = input2->data_ptr;
 
-    uint16_t* in_r_data = new uint16_t[input0->width * input0->height];
-    uint16_t* in_g_data = new uint16_t[input1->width * input1->height];
-    uint16_t* in_b_data = new uint16_t[input2->width * input2->height];
+    std::unique_ptr<uint16_t[]> in_r_data_ptr(new uint16_t[input0->width * input0->height]);
+    std::unique_ptr<uint16_t[]> in_g_data_ptr(new uint16_t[input1->width * input1->height]);
+    std::unique_ptr<uint16_t[]> in_b_data_ptr(new uint16_t[input2->width * input2->height]);
+
+    uint16_t* in_r_data = in_r_data_ptr.get();
+    uint16_t* in_g_data = in_g_data_ptr.get();
+    uint16_t* in_b_data = in_b_data_ptr.get();
     if (!in_r_data | !in_g_data | !in_b_data)
     {
         log_error("alloc memory fail\n");
@@ -104,10 +108,6 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     memcpy(&stat_out->gtm_stat, stat_gtm, sizeof(gtm_stat_info_t));
 
-    delete[] in_r_data;
-    delete[] in_g_data;
-    delete[] in_b_data;
-
     log_array("luma hist[256]:\n", "%7d, ", stat_gtm->luma_hist, 256, 16);
 
     hw_base::hw_run(stat_out, frame_cnt);
@@ -115,7 +115,7 @@ void gtm_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 }
 
 
-void gtm_stat::init()
+void gtm_stat::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -123,17 +123,17 @@ void gtm_stat::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
 
 gtm_stat::~gtm_stat()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
-    if (gtm_stat_reg != NULL)
+    if (gtm_stat_reg != nullptr)
     {
         delete gtm_stat_reg;
     }

@@ -102,7 +102,8 @@ void blc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) //input 2pins, 
     uint16_t* out0_ptr = output0->data_ptr;
     out[0] = output0;
 
-    uint16_t* tmp = new uint16_t[xsize*ysize];
+    std::unique_ptr<uint16_t[]> tmp_ptr(new uint16_t[xsize*ysize]);
+    uint16_t* tmp = tmp_ptr.get();
 
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
@@ -120,12 +121,11 @@ void blc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) //input 2pins, 
         out0_ptr[sz] = out0_ptr[sz] << (16 - 14); //nikon d610 14bit capture raw, back to high bits
     }
 
-    delete[] tmp;
-
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);
 }
-void blc::init()
+
+void blc::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -139,21 +139,23 @@ void blc::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
+
 blc::~blc()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
-    if (blc_reg != NULL)
+    if (blc_reg != nullptr)
     {
         delete blc_reg;
     }
     log_info("%s module deinit end\n", __FUNCTION__);
 }
+
 void blc::checkparameters(blc_reg_t* reg)
 {
     reg->bypass = common_check_bits(reg->bypass, 1, "bypass");

@@ -87,13 +87,13 @@ void my_error_exit(j_common_ptr cinfo)
 
 static uint32_t get_orientation(jpeg_saved_marker_ptr marker_ptr)
 {
-    if (marker_ptr == NULL)
+    if (marker_ptr == nullptr)
         return 1;
-    while (marker_ptr != NULL && marker_ptr->marker != JPEG_APP0 + 1)
+    while (marker_ptr != nullptr && marker_ptr->marker != JPEG_APP0 + 1)
     {
         marker_ptr = marker_ptr->next;
     }
-    if (marker_ptr == NULL)
+    if (marker_ptr == nullptr)
         return 1;
 
     log_info("marker:%d, %d, %d\n", marker_ptr->marker, marker_ptr->original_length, marker_ptr->data_length);
@@ -203,7 +203,7 @@ static int32_t read_raw_data_from_JPEG_file(const char* filename, uint32_t do_fa
 
     struct my_error_mgr jerr;
 
-    FILE * infile = NULL;      /* source file */
+    FILE * infile = nullptr;      /* source file */
 
     JSAMPARRAY yuvbuffer[3];
     JSAMPARRAY y_ptr;
@@ -217,7 +217,7 @@ static int32_t read_raw_data_from_JPEG_file(const char* filename, uint32_t do_fa
 
     infile = fopen(filename, "rb");
 
-    if (infile == NULL)
+    if (infile == nullptr)
     {
         log_error("can't open %s\n", filename);
         return -1;
@@ -267,7 +267,7 @@ static int32_t read_raw_data_from_JPEG_file(const char* filename, uint32_t do_fa
     int orientation = get_orientation(cinfo.marker_list);
     (void)jpeg_start_decompress(&cinfo);
     //调用jpeg_start_decompress后, cinfo会获取到头yuv比例，比如yuv420的话，cinfo.comp_info[0].h_samp_factor/v_samp_factor = 2， uv的 h_samp_factor/v_samp_factor = 1
-    if (cinfo.comp_info != NULL) {
+    if (cinfo.comp_info != nullptr) {
         log_info("compenent[0] width_in_block=%d, y horizontal factor=%d\n", cinfo.comp_info[0].width_in_blocks, cinfo.comp_info[0].h_samp_factor);
         log_info("compenent[0] height_in_blocks=%d, y vertical factor=%d\n", cinfo.comp_info[0].height_in_blocks, cinfo.comp_info[0].v_samp_factor);
         log_info("compenent[1] width_in_block=%d, u horizontal factor=%d\n", cinfo.comp_info[1].width_in_blocks, cinfo.comp_info[1].h_samp_factor);
@@ -322,7 +322,7 @@ static int32_t read_raw_data_from_JPEG_file(const char* filename, uint32_t do_fa
 
     log_info("buffer address = %p %p % p\n", buffer_y, buffer_u, buffer_v);
     //分配所有的yuv缓存空间
-    if (buffer_y == NULL || buffer_u == NULL || buffer_v == NULL)
+    if (buffer_y == nullptr || buffer_u == nullptr || buffer_v == nullptr)
     {
         log_info("buffer==null\n");
         jpeg_destroy_decompress(&cinfo);
@@ -331,13 +331,13 @@ static int32_t read_raw_data_from_JPEG_file(const char* filename, uint32_t do_fa
     }
     //把y的指针指向头部
     y_ptr = (JSAMPROW*)malloc(sizeof(JSAMPROW*)*y_col_stride);
-    if (y_ptr == NULL)
+    if (y_ptr == nullptr)
     {
         log_info("y_ptr==null\n");
         jpeg_destroy_decompress(&cinfo);
         fclose(infile);
         free(buffer_y); free(buffer_u); free(buffer_v);
-        buffer_y = NULL; buffer_u = NULL; buffer_v = NULL;
+        buffer_y = nullptr; buffer_u = nullptr; buffer_v = nullptr;
         return -1;
     }
     for (int j = 0; j < y_col_stride; j++)
@@ -348,13 +348,13 @@ static int32_t read_raw_data_from_JPEG_file(const char* filename, uint32_t do_fa
 
     u_ptr = (JSAMPROW*)malloc(sizeof(JSAMPROW*)*u_col_stride);
     
-    if (u_ptr == NULL)
+    if (u_ptr == nullptr)
     {
         log_info("u_ptr==null\n");
         jpeg_destroy_decompress(&cinfo);
         fclose(infile);
         free(buffer_y); free(buffer_u); free(buffer_v);
-        buffer_y = NULL; buffer_u = NULL; buffer_v = NULL;
+        buffer_y = nullptr; buffer_u = nullptr; buffer_v = nullptr;
         free(y_ptr);
         return -1;
     }
@@ -366,13 +366,13 @@ static int32_t read_raw_data_from_JPEG_file(const char* filename, uint32_t do_fa
 
     v_ptr = (JSAMPROW*)malloc(sizeof(JSAMPROW*)*v_col_stride);
     
-    if (v_ptr == NULL)
+    if (v_ptr == nullptr)
     {
         log_info("v_ptr==null\n");
         jpeg_destroy_decompress(&cinfo);
         fclose(infile);
         free(buffer_y); free(buffer_u); free(buffer_v);
-        buffer_y = NULL; buffer_u = NULL; buffer_v = NULL;
+        buffer_y = nullptr; buffer_u = nullptr; buffer_v = nullptr;
         free(y_ptr);
         free(u_ptr);
         return -1;
@@ -482,14 +482,14 @@ void yuv_decode::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         }
 
         free(out_yuv.buffer_y_ptr); free(out_yuv.buffer_u_ptr); free(out_yuv.buffer_v_ptr);
-        out_yuv.buffer_y_ptr = NULL; out_yuv.buffer_u_ptr = NULL; out_yuv.buffer_v_ptr = NULL;
+        out_yuv.buffer_y_ptr = nullptr; out_yuv.buffer_u_ptr = nullptr; out_yuv.buffer_v_ptr = nullptr;
     }
 
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);
 }
 
-void yuv_decode::init()
+void yuv_decode::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -499,10 +499,10 @@ void yuv_decode::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
 

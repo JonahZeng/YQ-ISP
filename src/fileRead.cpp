@@ -528,7 +528,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_info("%s run end frame %d\n", __FUNCTION__, frame_cnt);
 }
 
-void fileRead::init()
+void fileRead::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -541,10 +541,10 @@ void fileRead::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
 

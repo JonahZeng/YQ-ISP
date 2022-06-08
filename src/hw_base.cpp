@@ -1,5 +1,4 @@
 ﻿#include "hw_base.h"
-#include <stdexcept>
 #include <typeinfo>
 #include "fileRead.h"
 
@@ -49,24 +48,8 @@ hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name) :
     memset(write_pic_path, 0, 256);
 }
 
-void hw_base::connect_port(uint32_t out_port, hw_base* next_hw, uint32_t in_port)
+void hw_base::hw_init()
 {
-    if (out_port >= this->outpins || in_port >= next_hw->inpins)
-    {
-        throw std::out_of_range("port out of range");
-    }
-    else {
-        this->next_hw_of_outport[out_port].push_back(next_hw);
-        this->next_hw_cnt_of_outport[out_port]++;
-        next_hw->previous_hw[in_port] = this;
-        next_hw->outport_of_previous_hw[in_port] = out_port;
-    }
-}
-
-void hw_base::init()
-{
-    //log_info("%s init run start\n", name);
-
     cfgEntry_t config[] = {
         {"xmlConfigValid",     BOOL_T,           &this->xmlConfigValid             },
         {"write_pic",          BOOL_T,           &this->write_pic                  },
@@ -77,10 +60,8 @@ void hw_base::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
-
-    //log_info("%s init run end\n", name);
 }
 
 void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -168,23 +149,23 @@ void hw_base::write_raw_for_output(FILE* fp)
     {
         if (write_pic_bits > 8 && write_pic_bits <= 16)
         {
-            uint16_t* buffer = new uint16_t[src_data->width * src_data->height];
+            std::unique_ptr<uint16_t[]> buffer_ptr(new uint16_t[src_data->width * src_data->height]);
+            uint16_t* buffer = buffer_ptr.get();
             for (uint32_t sz = 0; sz < src_data->width * src_data->height; sz++)
             {
                 buffer[sz] = (src_data->data_ptr)[sz] >> (16 - write_pic_bits);
             }
             fwrite(buffer, sizeof(uint16_t), src_data->width * src_data->height, fp);
-            delete[] buffer;
         }
         else if (write_pic_bits <= 8)
         {
-            uint8_t* buffer = new uint8_t[src_data->width * src_data->height];
+            std::unique_ptr<uint8_t[]> buffer_ptr(new uint8_t[src_data->width * src_data->height]);
+            uint8_t* buffer = buffer_ptr.get();
             for (uint32_t sz = 0; sz < src_data->width * src_data->height; sz++)
             {
                 buffer[sz] = (src_data->data_ptr)[sz] >> (16 - write_pic_bits);
             }
             fwrite(buffer, sizeof(uint8_t), src_data->width * src_data->height, fp);
-            delete[] buffer;
         }
     }
 }
@@ -220,7 +201,8 @@ void hw_base::write_pnm_for_output(FILE* fp)
 
         if (write_pic_bits > 8 && write_pic_bits <= 16)
         {
-            uint16_t* buffer = new uint16_t[src_data0->width * src_data0->height * 3];
+            std::unique_ptr<uint16_t[]> buffer_ptr(new uint16_t[src_data0->width * src_data0->height * 3]);
+            uint16_t* buffer = buffer_ptr.get();
             uint16_t tmp;
             for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
             {
@@ -237,11 +219,11 @@ void hw_base::write_pnm_for_output(FILE* fp)
                 buffer[sz * 3 + 2] = tmp;
             }
             fwrite(buffer, sizeof(uint16_t), src_data0->width * src_data0->height * 3, fp);
-            delete[] buffer;
         }
         else if (write_pic_bits <= 8)
         {
-            uint8_t* buffer = new uint8_t[src_data0->width * src_data0->height * 3];
+            std::unique_ptr<uint8_t[]> buffer_ptr(new uint8_t[src_data0->width * src_data0->height * 3]);
+            uint8_t* buffer = buffer_ptr.get();
             for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
             {
                 buffer[sz * 3 + 0] = ((src_data0->data_ptr)[sz]) >> (16 - write_pic_bits);
@@ -249,8 +231,6 @@ void hw_base::write_pnm_for_output(FILE* fp)
                 buffer[sz * 3 + 2] = ((src_data2->data_ptr)[sz]) >> (16 - write_pic_bits);
             }
             fwrite(buffer, sizeof(uint8_t), src_data0->width * src_data0->height * 3, fp);
-
-            delete[] buffer;
         }
     }
 }
@@ -275,7 +255,8 @@ void hw_base::write_yuv422_for_output(FILE* fp)//UYVY
     {
         if (write_pic_bits > 8 && write_pic_bits <= 16)
         {
-            uint16_t* buffer = new uint16_t[src_data0->width * 2 * src_data0->height];
+            std::unique_ptr<uint16_t[]> buffer_ptr(new uint16_t[src_data0->width * 2 * src_data0->height]);
+            uint16_t* buffer = buffer_ptr.get();
             for (uint32_t sz = 0; sz < src_data0->width * src_data0->height * 2; sz++)
             {
                 if (sz % 2 == 1)
@@ -292,11 +273,11 @@ void hw_base::write_yuv422_for_output(FILE* fp)//UYVY
                 }
             }
             fwrite(buffer, sizeof(uint16_t), src_data0->width * 2 * src_data0->height, fp);
-            delete[] buffer;
         }
         else if (write_pic_bits <= 8)
         {
-            uint8_t* buffer = new uint8_t[src_data0->width * 2 * src_data0->height];
+            std::unique_ptr<uint8_t[]> buffer_ptr(new uint8_t[src_data0->width * 2 * src_data0->height]);
+            uint8_t* buffer = buffer_ptr.get();
             for (uint32_t sz = 0; sz < src_data0->width * src_data0->height * 2; sz++)
             {
                 if (sz % 2 == 1)
@@ -313,7 +294,6 @@ void hw_base::write_yuv422_for_output(FILE* fp)//UYVY
                 }
             }
             fwrite(buffer, sizeof(uint8_t), src_data0->width * 2 * src_data0->height, fp);
-            delete[] buffer;
         }
     }
 }
@@ -338,7 +318,8 @@ void hw_base::write_yuv444_for_output(FILE* fp)//YUV
     {
         if (write_pic_bits > 8 && write_pic_bits <= 16)
         {
-            uint16_t* buffer = new uint16_t[src_data0->width *src_data0->height * 3];
+            std::unique_ptr<uint16_t[]> buffer_ptr(new uint16_t[src_data0->width *src_data0->height * 3]);
+            uint16_t* buffer = buffer_ptr.get();
             for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
             {
                 buffer[sz * 3 + 0] = (src_data0->data_ptr)[sz] >> (16 - write_pic_bits);
@@ -346,11 +327,11 @@ void hw_base::write_yuv444_for_output(FILE* fp)//YUV
                 buffer[sz * 3 + 2] = (src_data2->data_ptr)[sz] >> (16 - write_pic_bits);
             }
             fwrite(buffer, sizeof(uint16_t), src_data0->width *src_data0->height * 3, fp);
-            delete[] buffer;
         }
         else if (write_pic_bits <= 8)
         {
-            uint8_t* buffer = new uint8_t[src_data0->width *src_data0->height * 3];
+            std::unique_ptr<uint8_t[]> buffer_ptr(new uint8_t[src_data0->width *src_data0->height * 3]);
+            uint8_t* buffer = buffer_ptr.get();
             for (uint32_t sz = 0; sz < src_data0->width * src_data0->height; sz++)
             {
                 buffer[sz * 3 + 0] = (src_data0->data_ptr)[sz] >> (16 - write_pic_bits);
@@ -358,7 +339,6 @@ void hw_base::write_yuv444_for_output(FILE* fp)//YUV
                 buffer[sz * 3 + 2] = (src_data2->data_ptr)[sz] >> (16 - write_pic_bits);
             }
             fwrite(buffer, sizeof(uint8_t), src_data0->width *src_data0->height * 3, fp);
-            delete[] buffer;
         }
     }
 }

@@ -13,36 +13,40 @@ static void gamma_hw_core(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* out_r
 {
     const uint32_t* gamma_lut = gamma_reg->gamma_lut;
 
-    uint16_t max_value = (1U << 14) - 1;
-    uint16_t* lut = new uint16_t[max_value + 1];
-    for (uint16_t i = 0; i < max_value + 1; i++)
-    {
-        uint16_t idx0 = i / 64;
-        uint16_t idx1 = idx0 + 1;
-        idx1 = (idx1 > 256) ? 256: idx1;
-        uint32_t delta = i - (idx0 * 64);
-        if(idx0 == 255)
-        {
-            lut[i] = gamma_lut[idx0] + (uint32_t)(gamma_lut[idx1] - gamma_lut[idx0]) * delta / 63;
-        }
-        else
-        {
-            lut[i] = gamma_lut[idx0] + (uint32_t)(gamma_lut[idx1] - gamma_lut[idx0]) * delta / 64;
-        }
-    }
-
     for (uint32_t row = 0; row < ysize; row++)
     {
         for (uint32_t col = 0; col < xsize; col++)
         {
-            
-            out_r[row*xsize + col] = lut[r[row*xsize + col]] >> 4;
-            out_g[row*xsize + col] = lut[g[row*xsize + col]] >> 4;
-            out_b[row*xsize + col] = lut[b[row*xsize + col]] >> 4;
+            uint16_t in_r = r[row * xsize + col];
+            uint16_t in_g = g[row * xsize + col];
+            uint16_t in_b = b[row * xsize + col];
+
+            uint16_t idx0 = in_r >> 6;
+            uint16_t idx1 = idx0 + 1;
+            idx1 = (idx1 > 256) ? 256 : idx1;
+            uint32_t delta = in_r - (idx0 << 6);
+            uint16_t o_r = gamma_lut[idx0] + (((uint32_t)(gamma_lut[idx1] - gamma_lut[idx0]) * delta + 32) >> 6);
+            o_r = (o_r < 0) ? 0 : ((o_r > 16383) ? 16383 : o_r);
+
+            idx0 = in_g >> 6;
+            idx1 = idx0 + 1;
+            idx1 = (idx1 > 256) ? 256 : idx1;
+            delta = in_g - (idx0 << 6);
+            uint16_t o_g = gamma_lut[idx0] + (((uint32_t)(gamma_lut[idx1] - gamma_lut[idx0]) * delta + 32) >> 6);
+            o_g = (o_g < 0) ? 0 : ((o_g > 16383) ? 16383 : o_g);
+
+            idx0 = in_b >> 6;
+            idx1 = idx0 + 1;
+            idx1 = (idx1 > 256) ? 256 : idx1;
+            delta = in_b - (idx0 << 6);
+            uint16_t o_b = gamma_lut[idx0] + (((uint32_t)(gamma_lut[idx1] - gamma_lut[idx0]) * delta + 32) >> 6);
+            o_b = (o_b < 0) ? 0 : ((o_b > 16383) ? 16383 : o_b);
+
+            out_r[row * xsize + col] = o_r >> 4;
+            out_g[row * xsize + col] = o_g >> 4;
+            out_b[row * xsize + col] = o_b >> 4;
         }
     }
-
-    delete[] lut;
 }
 
 void Gamma::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
@@ -86,9 +90,12 @@ void Gamma::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     uint16_t* out1_ptr = output1->data_ptr;
     uint16_t* out2_ptr = output2->data_ptr;
 
-    uint16_t* tmp0 = new uint16_t[xsize*ysize];
-    uint16_t* tmp1 = new uint16_t[xsize*ysize];
-    uint16_t* tmp2 = new uint16_t[xsize*ysize];
+    std::unique_ptr<uint16_t[]> tmp0_ptr(new uint16_t[xsize*ysize]);
+    std::unique_ptr<uint16_t[]> tmp1_ptr(new uint16_t[xsize*ysize]);
+    std::unique_ptr<uint16_t[]> tmp2_ptr(new uint16_t[xsize*ysize]);
+    uint16_t* tmp0 = tmp0_ptr.get();
+    uint16_t* tmp1 = tmp1_ptr.get();
+    uint16_t* tmp2 = tmp2_ptr.get();
 
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
@@ -124,15 +131,11 @@ void Gamma::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         out2_ptr[sz] = out2_ptr[sz] << (16 - 10);
     }
 
-    delete[] tmp0;
-    delete[] tmp1;
-    delete[] tmp2;
-
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);
 }
 
-void Gamma::init()
+void Gamma::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -141,17 +144,17 @@ void Gamma::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
 
 Gamma::~Gamma()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
-    if (gamma_reg != NULL)
+    if (gamma_reg != nullptr)
     {
         delete gamma_reg;
     }

@@ -8,6 +8,7 @@
 #include "fileRead.h"
 
 using std::list;
+using std::vector;
 
 dng_md_t g_dng_all_md;
 
@@ -22,7 +23,7 @@ pipeline_manager::pipeline_manager()
 
 pipeline_manager::~pipeline_manager()
 {
-    for (vector<hw_base*>::iterator it = modules_list.begin(); it != modules_list.end(); it++)
+    for (vector<hw_base*>::iterator it = hw_list.begin(); it != hw_list.end(); it++)
     {
         delete (*it);
     }
@@ -32,16 +33,18 @@ pipeline_manager::~pipeline_manager()
         delete stat_addr;
     }
 }
-void pipeline_manager::register_module(hw_base* hw_module)
+
+void pipeline_manager::register_hw_module(hw_base* hw_module)
 {
-    modules_list.push_back(hw_module);
+    hw_list.push_back(hw_module);
 }
+
 void pipeline_manager::init()
 {
-    size_t module_cnt = modules_list.size();
-    for (size_t i = 0; i < module_cnt; i++)
+    size_t hw_cnt = hw_list.size();
+    for (size_t i = 0; i < hw_cnt; i++)
     {
-        modules_list.at(i)->init();
+        hw_list.at(i)->hw_init();
     }
 }
 
@@ -50,7 +53,7 @@ static bool xmlHasChildElementByName(xmlNodePtr parent, const xmlChar* tagName, 
 {
     xmlNodePtr child = parent->children;
     xmlChar tarName[10] = "inst_name";
-    while (child != NULL)
+    while (child != nullptr)
     {
         if (xmlStrcmp(child->name, tarName) == 0)
         {
@@ -90,13 +93,13 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
     xmlDocPtr doc;
 
     ctxt = xmlNewParserCtxt();
-    if (ctxt == NULL) {
+    if (ctxt == nullptr) {
         log_error("Failed to allocate parser context\n");
         return;
     }
-    doc = xmlCtxtReadFile(ctxt, filename, NULL, XML_PARSE_NOBLANKS);
+    doc = xmlCtxtReadFile(ctxt, filename, nullptr, XML_PARSE_NOBLANKS);
 
-    if (doc == NULL) {
+    if (doc == nullptr) {
         log_error("Failed to parse %s\n", filename);
         xmlFreeParserCtxt(ctxt);
         return;
@@ -109,7 +112,7 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
         return;
     }
     xmlNodePtr rootNode = xmlDocGetRootElement(doc);
-    if (rootNode == NULL)
+    if (rootNode == nullptr)
     {
         log_error("empty document\n");
         xmlFreeDoc(doc);
@@ -119,7 +122,7 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
 
     log_info("root node name: %s, type:%d\n", rootNode->name, rootNode->type); //pipeline_config
     xmlNodePtr component = rootNode->children;
-    while (component != NULL)
+    while (component != nullptr)
     {
         log_info("component name %s, type:%d\n", component->name, component->type); //component
 
@@ -149,17 +152,17 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
         }
 
         xmlNodePtr detail_node = component->children;
-        while (detail_node != NULL) 
+        while (detail_node != nullptr) 
         {
             if (xmlChildElementCount(detail_node) == 0) { //leaf node
                 xmlChar* text = xmlNodeGetContent(detail_node);
                 delete_space_in_string(text);
                 log_info("tag name:%s text:%s\n", detail_node->name, text);
-                size_t cfg_len = module_array->at(i)->cfgList.size();
+                size_t cfg_len = module_array->at(i)->hwCfgList.size();
                 size_t j = 0;
                 for (; j < cfg_len; j++)
                 {
-                    if (xmlStrcmp(detail_node->name, (const xmlChar*)module_array->at(i)->cfgList[j].tagName) == 0)
+                    if (xmlStrcmp(detail_node->name, (const xmlChar*)module_array->at(i)->hwCfgList[j].tagName) == 0)
                     {
                         int res_bool;
                         int str_len;
@@ -169,46 +172,46 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                         int m;
                         const char s[2] = ",";
                         char *token;
-                        char *next_token = NULL;
-                        switch (module_array->at(i)->cfgList[j].type)
+                        char *next_token = nullptr;
+                        switch (module_array->at(i)->hwCfgList[j].type)
                         {
                         case BOOL_T:
                             res_bool = std::stoi((char*)text);
                             if (res_bool == 0) {
-                                *(bool*)module_array->at(i)->cfgList[j].targetAddr = false;
+                                *(bool*)module_array->at(i)->hwCfgList[j].targetAddr = false;
                             }
                             else {
-                                *(bool*)module_array->at(i)->cfgList[j].targetAddr = true;
+                                *(bool*)module_array->at(i)->hwCfgList[j].targetAddr = true;
                             }
                             break;
                         case STRING:
                             str_len = xmlStrlen(text);
-                            dst_len = (int)module_array->at(i)->cfgList[j].max_len-1;
+                            dst_len = (int)module_array->at(i)->hwCfgList[j].max_len-1;
                             if (str_len > dst_len)
                             {
 #ifdef _MSC_VER
-                                memcpy_s(module_array->at(i)->cfgList[j].targetAddr, dst_len, text, dst_len);
+                                memcpy_s(module_array->at(i)->hwCfgList[j].targetAddr, dst_len, text, dst_len);
 #else
-                                memcpy(module_array->at(i)->cfgList[j].targetAddr, text, dst_len);
+                                memcpy(module_array->at(i)->hwCfgList[j].targetAddr, text, dst_len);
 #endif
-                                ((char*)(module_array->at(i)->cfgList[j].targetAddr))[dst_len] = '\0';
+                                ((char*)(module_array->at(i)->hwCfgList[j].targetAddr))[dst_len] = '\0';
                             }
                             else {
 #ifdef _MSC_VER
-                                memcpy_s(module_array->at(i)->cfgList[j].targetAddr, str_len, text, str_len);
+                                memcpy_s(module_array->at(i)->hwCfgList[j].targetAddr, str_len, text, str_len);
 #else
-                                memcpy(module_array->at(i)->cfgList[j].targetAddr, text, str_len);
+                                memcpy(module_array->at(i)->hwCfgList[j].targetAddr, text, str_len);
 #endif
-                                ((char*)(module_array->at(i)->cfgList[j].targetAddr))[str_len] = '\0';
+                                ((char*)(module_array->at(i)->hwCfgList[j].targetAddr))[str_len] = '\0';
                             }
                             break;
                         case INT_32:
                             res_int = std::stoi((char*)text);
-                            *(int*)module_array->at(i)->cfgList[j].targetAddr = res_int;
+                            *(int*)module_array->at(i)->hwCfgList[j].targetAddr = res_int;
                             break;
                         case UINT_32:
                             res_li = std::stol((char*)text);
-                            *(uint32_t*)module_array->at(i)->cfgList[j].targetAddr = (uint32_t)res_li;
+                            *(uint32_t*)module_array->at(i)->hwCfgList[j].targetAddr = (uint32_t)res_li;
                             break;
                         case VECT_INT32:
 #ifdef _MSC_VER
@@ -217,17 +220,17 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                             token = strtok((char*)text, s);
 #endif
                             m = 0;
-                            while (token != NULL && m< (module_array->at(i)->cfgList[j].max_len)) {
+                            while (token != nullptr && m< (module_array->at(i)->hwCfgList[j].max_len)) {
                                 int vect_int = std::stoi(token);
-                                if (m >= ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->size())
-                                    ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back(vect_int);
+                                if (m >= ((vector<int32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->size())
+                                    ((vector<int32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->push_back(vect_int);
                                 else
-                                    ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->at(m) = vect_int;
+                                    ((vector<int32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->at(m) = vect_int;
                                 m++;
 #ifdef _MSC_VER
-                                token = strtok_s(NULL, s, &next_token);
+                                token = strtok_s(nullptr, s, &next_token);
 #else
-                                token = strtok(NULL, s);
+                                token = strtok(nullptr, s);
 #endif
                             }
                             break;
@@ -238,17 +241,17 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                             token = strtok((char*)text, s);
 #endif
                             m = 0;
-                            while (token != NULL && m < (module_array->at(i)->cfgList[j].max_len)) {
+                            while (token != nullptr && m < (module_array->at(i)->hwCfgList[j].max_len)) {
                                 long int vect_lint = std::stol(token);
-                                if (m >= ((vector<int32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->size())
-                                    ((vector<uint32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->push_back((uint32_t)vect_lint);
+                                if (m >= ((vector<int32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->size())
+                                    ((vector<uint32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->push_back((uint32_t)vect_lint);
                                 else
-                                    ((vector<uint32_t>*)(module_array->at(i)->cfgList[j].targetAddr))->at(m) = (uint32_t)vect_lint;
+                                    ((vector<uint32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->at(m) = (uint32_t)vect_lint;
                                 m++;
 #ifdef _MSC_VER
-                                token = strtok_s(NULL, s, &next_token);
+                                token = strtok_s(nullptr, s, &next_token);
 #else
-                                token = strtok(NULL, s);
+                                token = strtok(nullptr, s);
 #endif
                             }
                             break;
@@ -296,7 +299,7 @@ void pipeline_manager::read_xml_cfg(char* xmlFileName)
 {
     LIBXML_TEST_VERSION
 
-    exampleFunc(xmlFileName, &this->modules_list);
+    exampleFunc(xmlFileName, &this->hw_list);
 
     /*
      * Cleanup function for the XML library.
@@ -310,12 +313,12 @@ void pipeline_manager::read_xml_cfg(char* xmlFileName)
 
 void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
-    size_t md_size = modules_list.size();
-    list<hw_base*> not_run_list(modules_list.begin(), modules_list.end());
+    size_t hw_size = hw_list.size();
+    list<hw_base*> not_run_list(hw_list.begin(), hw_list.end());
     
-    for (size_t i = 0; i < md_size; i++)
+    for (size_t i = 0; i < hw_size; i++)
     {
-        modules_list.at(i)->reset_hw_cnt_of_outport();
+        hw_list.at(i)->reset_hw_cnt_of_outport();
     }
 
     size_t cycle_time = 0;
@@ -333,16 +336,16 @@ void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
         }
 
         cycle_time++;
-        if (cycle_time > 2 * md_size)
+        if (cycle_time > 2 * hw_size)
         {
             log_error("can't find module to run\n");
             exit(1);
         }
     }
 
-    for (size_t i = 0; i < md_size; i++)
+    for (size_t i = 0; i < hw_size; i++)
     {
-        hw_base* m = modules_list.at(i);
+        hw_base* m = hw_list.at(i);
         if (typeid(*m) == typeid(fileRead))
         {
             if (frame_cnt == frames - 1)
@@ -354,5 +357,19 @@ void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
         {
             m->release_output_memory();
         }
+    }
+}
+
+void pipeline_manager::connect_port(hw_base* pre_hw, uint32_t out_port, hw_base* next_hw, uint32_t in_port)
+{
+    if (out_port >= pre_hw->outpins || in_port >= next_hw->inpins)
+    {
+        throw std::out_of_range("port out of range");
+    }
+    else {
+        pre_hw->next_hw_of_outport[out_port].push_back(next_hw);
+        pre_hw->next_hw_cnt_of_outport[out_port]++;
+        next_hw->previous_hw[in_port] = pre_hw;
+        next_hw->outport_of_previous_hw[in_port] = out_port;
     }
 }

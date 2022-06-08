@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     log_info("%s\n", cmd_str.c_str());
 
     int32_t pipe_id = -1;
-    char* cfg_file_name = NULL;
+    char* cfg_file_name = nullptr;
     int32_t frame_end = -1;
 
     for (int32_t i = 1; i < argc; i++)
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
             frame_end = atoi(argv[i + 1]);
         }
     }
-    if (pipe_id < 0 || frame_end < 0 || cfg_file_name == NULL)
+    if (pipe_id < 0 || frame_end < 0 || cfg_file_name == nullptr)
     {
         log_info("param error\n");
         return 0;

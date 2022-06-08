@@ -26,8 +26,8 @@ public:
     lsc() = delete;
     lsc(const lsc& cp) = delete;
     lsc(uint32_t inpins, uint32_t outpins, const char* inst_name);
-    void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt);
-    void init();
+    void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) override;
+    void hw_init() override;
     ~lsc();
 
 private:
@@ -43,5 +43,5 @@ private:
     uint32_t block_start_y_idx;
     uint32_t block_start_y_oft;
 
-    vector<uint32_t> luma_gain;
+    std::vector<uint32_t> luma_gain;
 };

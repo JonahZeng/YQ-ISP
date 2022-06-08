@@ -14,13 +14,13 @@ public:
     rgb2yuv() = delete;
     rgb2yuv(const rgb2yuv& cp) = delete;
     rgb2yuv(uint32_t inpins, uint32_t outpins, const char* inst_name);
-    void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt);
-    void init();
+    void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) override;
+    void hw_init() override;
     ~rgb2yuv();
 
 private:
     void checkparameters(rgb2yuv_reg_t* reg);
     rgb2yuv_reg_t* rgb2yuv_reg;
     uint32_t bypass;
-    vector<int32_t> rgb2yuv_coeff;
+    std::vector<int32_t> rgb2yuv_coeff;
 };

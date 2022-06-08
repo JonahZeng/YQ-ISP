@@ -1,5 +1,6 @@
 ﻿#include "demosaic.h"
 #include "fe_firmware.h"
+#include <memory>
 
 demosaic::demosaic(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
 {
@@ -31,7 +32,7 @@ static pixel_bayer_type get_pixel_bayer_type(uint32_t y, uint32_t x, bayer_type_
     return type[pos];
 }
 
-static void demosaic_hw_core(uint16_t* indata, uint16_t* r_out, uint16_t* g_out, uint16_t* b_out,
+static void demosaic_hw_core_bilinear(uint16_t* indata, uint16_t* r_out, uint16_t* g_out, uint16_t* b_out,
     uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y, bayer_type_t by, const demosaic_reg_t* demosiac_reg)
 {
     pixel_bayer_type pix_type;
@@ -102,6 +103,113 @@ static void demosaic_hw_core(uint16_t* indata, uint16_t* r_out, uint16_t* g_out,
     }
 }
 
+
+static void demosaic_hw_core(uint16_t* indata, uint16_t* r_out, uint16_t* g_out, uint16_t* b_out,
+    uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y, bayer_type_t by, const demosaic_reg_t* demosiac_reg)
+{
+    pixel_bayer_type pix_type;
+    uint32_t x_, y_;
+    uint32_t r_0, r_1, r_2, r_3, r_c;
+    uint32_t g_0, g_1, g_2, g_3, g_4, g_5, g_6, g_7, g_c;
+    uint32_t b_0, b_1, b_2, b_3, b_c;
+    for (uint32_t row = 0; row < ysize; row++)
+    {
+        for (uint32_t col = 0; col < xsize; col++)
+        {
+            pix_type = get_pixel_bayer_type(row, col, by);
+            y_ = row + EXT_Y / 2;
+            x_ = col + EXT_X / 2;
+            if (pix_type == PIX_R)
+            {
+                r_out[row*xsize + col] = indata[y_*(xsize+EXT_X) + x_];
+                g_0 = indata[y_*(xsize + EXT_X) + x_ - 1];
+                g_1 = indata[y_*(xsize + EXT_X) + x_ + 1];
+                g_2 = indata[(y_ - 1)*(xsize + EXT_X) + x_];
+                g_3 = indata[(y_ + 1)*(xsize + EXT_X) + x_];
+
+                r_c = indata[y_*(xsize+EXT_X) + x_];
+                r_0 = indata[(y_-2)*(xsize + EXT_X) + x_];
+                r_1 = indata[(y_+2)*(xsize + EXT_X) + x_];
+                r_2 = indata[y_*(xsize + EXT_X) + x_-2];
+                r_3 = indata[y_*(xsize + EXT_X) + x_+2];
+                g_out[row * xsize + col] = (2 * (g_0 + g_1 + g_2 + g_3) + 4 * r_c - r_0 - r_1 - r_2 - r_3 + 4)>>3;
+
+                b_0 = indata[(y_-1)*(xsize + EXT_X) + x_ - 1];
+                b_1 = indata[(y_-1)*(xsize + EXT_X) + x_ + 1];
+                b_2 = indata[(y_ + 1)*(xsize + EXT_X) + x_ - 1];
+                b_3 = indata[(y_ + 1)*(xsize + EXT_X) + x_ + 1];
+                b_out[row*xsize + col] = (4*(b_0 + b_1 + b_2 + b_3) + 12 * r_c - 3*(r_0+r_1+r_2+r_3) + 8)>>4;
+            }
+            else if (pix_type == PIX_GR)
+            {
+                g_out[row*xsize + col] = indata[y_*(xsize + EXT_X) + x_];
+                r_0 = indata[y_*(xsize + EXT_X) + x_ - 1];
+                r_1 = indata[y_*(xsize + EXT_X) + x_ + 1];
+
+                g_c = indata[y_*(xsize + EXT_X) + x_];
+                g_0 = indata[(y_-2)*(xsize + EXT_X) + x_];
+                g_1 = indata[(y_+2)*(xsize + EXT_X) + x_];
+                g_2 = indata[y_*(xsize + EXT_X) + x_-2];
+                g_3 = indata[y_*(xsize + EXT_X) + x_+2];
+                g_4 = indata[(y_-1)*(xsize + EXT_X) + x_-1];
+                g_5 = indata[(y_-1)*(xsize + EXT_X) + x_+1];
+                g_6 = indata[(y_+1)*(xsize + EXT_X) + x_-1];
+                g_7 = indata[(y_+1)*(xsize + EXT_X) + x_+1];
+                r_out[row*xsize + col] = (8*(r_0 + r_1) + 10*g_c + g_0 + g_1 - 2*(g_2+g_3+g_4+g_5+g_6+g_7) + 8)>>4;
+
+                b_0 = indata[(y_ - 1)*(xsize + EXT_X) + x_];
+                b_1 = indata[(y_ + 1)*(xsize + EXT_X) + x_];
+                b_out[row*xsize + col] = (8*(b_0 + b_1) + 10*g_c + g_2 + g_3 - 2*(g_0+g_1+g_4+g_5+g_6+g_7) + 8)>>4;
+            }
+            else if (pix_type == PIX_GB)
+            {
+                g_out[row*xsize + col] = indata[y_*(xsize + EXT_X) + x_];
+                b_0 = indata[y_*(xsize + EXT_X) + x_ - 1];
+                b_1 = indata[y_*(xsize + EXT_X) + x_ + 1];
+
+                g_c = indata[y_*(xsize + EXT_X) + x_];
+                g_0 = indata[(y_-2)*(xsize + EXT_X) + x_];
+                g_1 = indata[(y_+2)*(xsize + EXT_X) + x_];
+                g_2 = indata[y_*(xsize + EXT_X) + x_-2];
+                g_3 = indata[y_*(xsize + EXT_X) + x_+2];
+                g_4 = indata[(y_-1)*(xsize + EXT_X) + x_-1];
+                g_5 = indata[(y_-1)*(xsize + EXT_X) + x_+1];
+                g_6 = indata[(y_+1)*(xsize + EXT_X) + x_-1];
+                g_7 = indata[(y_+1)*(xsize + EXT_X) + x_+1];
+
+                b_out[row * xsize + col] = (8 * (b_0 + b_1 + 1) + 10 * g_c + g_0 + g_1 - 2 * (g_2 + g_3 + g_4 + g_5 + g_6 + g_7) + 8) >> 4;
+
+                r_0 = indata[(y_ - 1)*(xsize + EXT_X) + x_];
+                r_1 = indata[(y_ + 1)*(xsize + EXT_X) + x_];
+                r_out[row * xsize + col] = (8 * (r_0 + r_1) + 10 * g_c + g_2 + g_3 - 2 * (g_0 + g_1 + g_4 + g_5 + g_6 + g_7) + 8) >> 4;
+            }
+            else if (pix_type == PIX_B)
+            {
+                b_out[row*xsize + col] = indata[y_*(xsize + EXT_X) + x_];
+                g_0 = indata[y_*(xsize + EXT_X) + x_ - 1];
+                g_1 = indata[y_*(xsize + EXT_X) + x_ + 1];
+                g_2 = indata[(y_ - 1)*(xsize + EXT_X) + x_];
+                g_3 = indata[(y_ + 1)*(xsize + EXT_X) + x_];
+
+                b_c = indata[y_*(xsize+EXT_X) + x_];
+                b_0 = indata[(y_-2)*(xsize + EXT_X) + x_];
+                b_1 = indata[(y_+2)*(xsize + EXT_X) + x_];
+                b_2 = indata[y_*(xsize + EXT_X) + x_-2];
+                b_3 = indata[y_*(xsize + EXT_X) + x_+2];
+
+                g_out[row*xsize + col] = (2*(g_0 + g_1 + g_2 + g_3) + 4*b_c - (b_0+b_1+b_2+b_3) + 4)>>3;
+
+                r_0 = indata[(y_ - 1)*(xsize + EXT_X) + x_ - 1];
+                r_1 = indata[(y_ - 1)*(xsize + EXT_X) + x_ + 1];
+                r_2 = indata[(y_ + 1)*(xsize + EXT_X) + x_ - 1];
+                r_3 = indata[(y_ + 1)*(xsize + EXT_X) + x_ + 1];
+                r_out[row*xsize + col] = (4*(r_0 + r_1 + r_2 + r_3) + 12*b_c - 3*(b_0+b_1+b_2+b_3) + 8)>>4;
+            }
+        }
+    }
+}
+
+
 void demosaic::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
     log_info("%s run start\n", __FUNCTION__);
@@ -136,10 +244,11 @@ void demosaic::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     uint16_t* b_ptr = output_b->data_ptr;
     out[2] = output_b;
 
-    const uint32_t EXT_W = 2;
-    const uint32_t EXT_H = 2;
-
-    uint16_t* tmp = new uint16_t[(xsize + EXT_W)*(ysize + EXT_H)]; //ext boarder
+    const uint32_t EXT_W = 4;//2;
+    const uint32_t EXT_H = 4;//2;
+    
+    std::unique_ptr<uint16_t[]> tmp_data(new uint16_t[(xsize + EXT_W)*(ysize + EXT_H)]);
+    uint16_t* tmp = tmp_data.get(); //new uint16_t[(xsize + EXT_W)*(ysize + EXT_H)]; //ext boarder
 
     for (uint32_t y = EXT_H/2; y < ysize + EXT_H / 2; y++)
     {
@@ -181,25 +290,26 @@ void demosaic::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         }
     }
 
-    //if (demosaic_reg->bypass == 0)
+    if (demosaic_reg->bypass == 0)
     {
         demosaic_hw_core(tmp, r_ptr, g_ptr, b_ptr, xsize, ysize, EXT_W, EXT_H, bayer_pattern, demosaic_reg);
+    }
+    else{
+         demosaic_hw_core_bilinear(tmp, r_ptr, g_ptr, b_ptr, xsize, ysize, EXT_W, EXT_H, bayer_pattern, demosaic_reg);
     }
 
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
-        r_ptr[sz] = r_ptr[sz] << (16 - 14); //nikon d610 14bit capture raw, back to high bits
+        r_ptr[sz] = r_ptr[sz] << (16 - 14);
         g_ptr[sz] = g_ptr[sz] << (16 - 14);
         b_ptr[sz] = b_ptr[sz] << (16 - 14);
     }
-
-    delete[] tmp;
 
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);
 }
 
-void demosaic::init()
+void demosaic::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -207,17 +317,17 @@ void demosaic::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
 
 demosaic::~demosaic()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
-    if (demosaic_reg != NULL)
+    if (demosaic_reg != nullptr)
     {
         delete demosaic_reg;
     }

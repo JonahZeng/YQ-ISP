@@ -1,23 +1,21 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "Win32",
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/thirdparty/dng_sdk/include",
                 "${workspaceFolder}/thirdparty/libjpeg9c/include",
                 "${workspaceFolder}/thirdparty/libxml2/include",
                 "${workspaceFolder}/calib",
-                "/usr/local/include/opencv4",
                 "${workspaceFolder}/inc"
             ],
-            "compilerPath": "/usr/bin/g++",
-            "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "linux-gcc-x64",
-            "defines": [
-                "qLinux"
-            ]
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "windows-msvc-x64",
+            "defines": [],
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

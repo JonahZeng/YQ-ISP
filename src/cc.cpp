@@ -193,9 +193,12 @@ void cc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     uint16_t* out1_ptr = output1->data_ptr;
     uint16_t* out2_ptr = output2->data_ptr;
 
-    uint16_t* tmp0 = new uint16_t[xsize*ysize];
-    uint16_t* tmp1 = new uint16_t[xsize*ysize];
-    uint16_t* tmp2 = new uint16_t[xsize*ysize];
+    std::unique_ptr<uint16_t[]> tmp0_ptr(new uint16_t[xsize*ysize]);
+    uint16_t* tmp0 = tmp0_ptr.get();
+    std::unique_ptr<uint16_t[]> tmp1_ptr(new uint16_t[xsize*ysize]);
+    uint16_t* tmp1 = tmp1_ptr.get();
+    std::unique_ptr<uint16_t[]> tmp2_ptr(new uint16_t[xsize*ysize]);
+    uint16_t* tmp2 = tmp2_ptr.get();
 
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
@@ -221,14 +224,10 @@ void cc::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         out2_ptr[sz] = out2_ptr[sz] << (16 - 14);
     }
 
-    delete[] tmp0;
-    delete[] tmp1;
-    delete[] tmp2;
-
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);
 }
-void cc::init()
+void cc::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -238,10 +237,10 @@ void cc::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
 

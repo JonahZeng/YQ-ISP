@@ -118,7 +118,8 @@ void ae_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     uint32_t xsize = input_raw->width;
     uint32_t ysize = input_raw->height;
 
-    uint16_t* tmp = new uint16_t[xsize*ysize];
+    std::unique_ptr<uint16_t[]> tmp_ptr(new uint16_t[xsize*ysize]);
+    uint16_t* tmp = tmp_ptr.get();
 
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
@@ -130,9 +131,12 @@ void ae_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         ae_stat_hw_core(tmp, xsize, ysize, bayer_pattern, ae_stat_reg, stat_out);
     }
 
-    uint32_t* r_mean = new uint32_t[1024];
-    uint32_t* g_mean = new uint32_t[1024];
-    uint32_t* b_mean = new uint32_t[1024];
+    std::unique_ptr<uint32_t[]> r_mean_ptr(new uint32_t[1024]);
+    uint32_t* r_mean = r_mean_ptr.get();
+    std::unique_ptr<uint32_t[]> g_mean_ptr(new uint32_t[1024]);
+    uint32_t* g_mean = g_mean_ptr.get();
+    std::unique_ptr<uint32_t[]> b_mean_ptr(new uint32_t[1024]);
+    uint32_t* b_mean = b_mean_ptr.get();
     for (int32_t i = 0; i < 1024; i++)
     {
         r_mean[i] = stat_out->ae_stat.r_sum[i] / stat_out->ae_stat.r_cnt[i];
@@ -144,17 +148,11 @@ void ae_stat::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_array("ae_stat g:\n", "%5d, ", g_mean, 1024, 32);
     log_array("ae_stat b:\n", "%5d, ", b_mean, 1024, 32);
 
-    delete[] r_mean;
-    delete[] g_mean;
-    delete[] b_mean;
-
-    delete[] tmp;
-
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);
 }
 
-void ae_stat::init()
+void ae_stat::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -168,17 +166,17 @@ void ae_stat::init()
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
-        this->cfgList.push_back(config[i]);
+        this->hwCfgList.push_back(config[i]);
     }
 
-    hw_base::init();
+    hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
 
 ae_stat::~ae_stat()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
-    if (ae_stat_reg != NULL)
+    if (ae_stat_reg != nullptr)
     {
         delete ae_stat_reg;
     }
