@@ -4,6 +4,16 @@
 #include <stdio.h>
 #include <string.h>
 #include "log.h"
+#include "meta_data.h"
+
+typedef struct global_ref_out_s
+{
+    double wp_x;
+    double wp_y;
+    double ccm[9];
+    double FM[9];
+    dng_md_t* meta_data;
+}global_ref_out_t;
 
 enum bayer_type_t {
     BAYER_UNSUPPORT = -1,

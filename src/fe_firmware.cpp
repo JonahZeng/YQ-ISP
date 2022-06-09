@@ -9,14 +9,6 @@
 
 extern dng_md_t g_dng_all_md;
 
-typedef struct global_ref_out_s
-{
-    double wp_x;
-    double wp_y;
-    double ccm[9];
-    double FM[9];
-}global_ref_out_t;
-
 fe_firmware::fe_firmware(uint32_t inpins, uint32_t outpins, const char* inst_name) :hw_base(inpins, outpins, inst_name)
 {
     bypass = 0;
@@ -1033,6 +1025,8 @@ void fe_firmware::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     gamma_reg_calc(reg_ptr->gamma_reg);
     rgb2yuv_reg_calc(reg_ptr->rgb2yuv_reg);
     yuv422_conv_reg_calc(reg_ptr->yuv422_conv_reg);
+
+    reg_ptr->demosaic_reg.bypass = 0;
 
     hw_base::hw_run(stat_out, frame_cnt);
 

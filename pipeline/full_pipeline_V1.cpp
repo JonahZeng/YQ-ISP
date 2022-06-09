@@ -106,4 +106,7 @@ void test_V1_pipeline(pipeline_manager* manager)
     manager->connect_port(yuv422_conv_hw_inst, 0, yuv_encode_hw_inst, 0); //y
     manager->connect_port(yuv422_conv_hw_inst, 1, yuv_encode_hw_inst, 1); //u
     manager->connect_port(yuv422_conv_hw_inst, 2, yuv_encode_hw_inst, 2); //v
+
+    //TODO: fw manager
+    //TODO: algo module fw implement
 }

@@ -1,8 +1,8 @@
 ﻿#include "hw_base.h"
 #include <typeinfo>
+#include <memory>
+#include <stdexcept>
 #include "fileRead.h"
-
-#include "meta_data.h"
 
 hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name) :
     in(inpins), out(outpins), previous_hw(inpins), outport_of_previous_hw(inpins),
@@ -421,5 +421,4 @@ hw_base::~hw_base()
         log_info("deinit module %s\n", name);
         delete[] name;
     }
-    return;
 }

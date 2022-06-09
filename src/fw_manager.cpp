@@ -1,58 +1,94 @@
-﻿#include "pipeline_manager.h"
-#include "meta_data.h"
+#include "fw_manager.h"
+#include "fe_firmware.h"
 #include "libxml/parser.h"
 #include "libxml/tree.h"
-#include <string>
-#include <list>
-#include <typeinfo>
-#include "fileRead.h"
 
-using std::list;
-using std::vector;
-
-dng_md_t g_dng_all_md;
-
-pipeline_manager::pipeline_manager():hw_list(), cfg_file_name(nullptr)
+fw_manager::fw_manager(uint32_t inpins, uint32_t outpins, const char *inst_name) : hw_base(inpins, outpins, inst_name), fw_list()
 {
-    stat_addr = new statistic_info_t;
-    global_ref_out = new global_ref_out_t;
-    if (stat_addr == nullptr || global_ref_out == nullptr)
-    {
-        log_error("alloc memory for statistc_info/global ref fail\n");
-    }
-    g_dng_all_md.meta_data_valid = false;
-    global_ref_out->meta_data = &g_dng_all_md;
+    bypass = 0;
 }
 
-pipeline_manager::~pipeline_manager()
+void fw_manager::hw_run(statistic_info_t *stat_out, uint32_t frame_cnt)
 {
-    for (vector<hw_base*>::iterator it = hw_list.begin(); it != hw_list.end(); it++)
+    log_info("%s run start\n", __FUNCTION__);
+
+    for (uint32_t i = 0; i < inpins; i++)
     {
-        delete (*it);
+        data_buffer *input_raw = in[i];
+        bayer_type_t bayer_pattern = input_raw->bayer_pattern;
+
+        uint32_t xsize = input_raw->width;
+        uint32_t ysize = input_raw->height;
+
+        char out_name[64] = {0};
+        sprintf(out_name, "%s_out%d", name, i);
+
+        data_buffer *output_data = new data_buffer(xsize, ysize, input_raw->data_type, input_raw->bayer_pattern, out_name);
+
+        out[i] = output_data;
+
+        uint16_t *out_ptr = output_data->data_ptr;
+
+        for (uint32_t sz = 0; sz < xsize * ysize; sz++)
+        {
+            out_ptr[sz] = input_raw->data_ptr[sz];
+        }
     }
-    //statistic_info_t
-    if (stat_addr != nullptr)
+
+    size_t reg_len = sizeof(fe_module_reg_t) / sizeof(uint16_t);
+    if (reg_len * sizeof(uint16_t) < sizeof(fe_module_reg_t))
     {
-        delete stat_addr;
+        reg_len += 1;
     }
-    if (global_ref_out != nullptr)
+    data_buffer *output_reg = new data_buffer((uint32_t)reg_len, 1, DATA_TYPE_RAW, BAYER_UNSUPPORT, "fw_manager_out_reg");
+    fe_module_reg_t *reg_ptr = (fe_module_reg_t *)output_reg->data_ptr;
+
+    out[outpins - 1] = output_reg;
+
+    for(auto md: fw_list)
     {
-        delete global_ref_out;
+        md->fw_exec(stat_out, global_ref_out, frame_cnt, (void*)reg_ptr);
     }
+
+    this->write_pic = false;
+    hw_base::hw_run(stat_out, frame_cnt);
+    log_info("%s run end\n", __FUNCTION__);
 }
 
-void pipeline_manager::register_hw_module(hw_base* hw_module)
+void fw_manager::hw_init()
 {
-    hw_list.push_back(hw_module);
+    log_info("%s init run start\n", name);
+    cfgEntry_t config[] = {
+        {"bypass", UINT_32, &this->bypass}};
+    for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
+    {
+        this->hwCfgList.push_back(config[i]);
+    }
+
+    for(auto md: fw_list)
+    {
+        md->fw_init();
+    }
+
+    hw_base::hw_init();
+    log_info("%s init run end\n", name);
 }
 
-void pipeline_manager::init()
+fw_manager::~fw_manager()
 {
-    size_t hw_cnt = hw_list.size();
-    for (size_t i = 0; i < hw_cnt; i++)
-    {
-        hw_list.at(i)->hw_init();
-    }
+    log_info("%s module deinit start\n", __FUNCTION__);
+
+    log_info("%s module deinit end\n", __FUNCTION__);
+}
+
+void fw_manager::regsiter_fw_modules(fw_base *fw_md)
+{
+    fw_list.push_back(fw_md);
+}
+
+void fw_manager::set_glb_ref(global_ref_out_t *global_ref_out)
+{
+    this->global_ref_out = global_ref_out;
 }
 
 
@@ -95,7 +131,8 @@ static void delete_space_in_string(xmlChar* str)
     str[i] = '\0';
 }
 
-static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
+
+static void exampleFunc(const char *filename, std::vector<fw_base*>* module_array) {
     xmlParserCtxtPtr ctxt;
     xmlDocPtr doc;
 
@@ -165,11 +202,11 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                 xmlChar* text = xmlNodeGetContent(detail_node);
                 delete_space_in_string(text);
                 log_info("tag name:%s text:%s\n", detail_node->name, text);
-                size_t cfg_len = module_array->at(i)->hwCfgList.size();
+                size_t cfg_len = module_array->at(i)->fwCfgList.size();
                 size_t j = 0;
                 for (; j < cfg_len; j++)
                 {
-                    if (xmlStrcmp(detail_node->name, (const xmlChar*)module_array->at(i)->hwCfgList[j].tagName) == 0)
+                    if (xmlStrcmp(detail_node->name, (const xmlChar*)module_array->at(i)->fwCfgList[j].tagName) == 0)
                     {
                         int res_bool;
                         int str_len;
@@ -180,45 +217,45 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                         const char s[2] = ",";
                         char *token;
                         char *next_token = nullptr;
-                        switch (module_array->at(i)->hwCfgList[j].type)
+                        switch (module_array->at(i)->fwCfgList[j].type)
                         {
                         case BOOL_T:
                             res_bool = std::stoi((char*)text);
                             if (res_bool == 0) {
-                                *(bool*)module_array->at(i)->hwCfgList[j].targetAddr = false;
+                                *(bool*)module_array->at(i)->fwCfgList[j].targetAddr = false;
                             }
                             else {
-                                *(bool*)module_array->at(i)->hwCfgList[j].targetAddr = true;
+                                *(bool*)module_array->at(i)->fwCfgList[j].targetAddr = true;
                             }
                             break;
                         case STRING:
                             str_len = xmlStrlen(text);
-                            dst_len = (int)module_array->at(i)->hwCfgList[j].max_len-1;
+                            dst_len = (int)module_array->at(i)->fwCfgList[j].max_len-1;
                             if (str_len > dst_len)
                             {
 #ifdef _MSC_VER
-                                memcpy_s(module_array->at(i)->hwCfgList[j].targetAddr, dst_len, text, dst_len);
+                                memcpy_s(module_array->at(i)->fwCfgList[j].targetAddr, dst_len, text, dst_len);
 #else
                                 memcpy(module_array->at(i)->hwCfgList[j].targetAddr, text, dst_len);
 #endif
-                                ((char*)(module_array->at(i)->hwCfgList[j].targetAddr))[dst_len] = '\0';
+                                ((char*)(module_array->at(i)->fwCfgList[j].targetAddr))[dst_len] = '\0';
                             }
                             else {
 #ifdef _MSC_VER
-                                memcpy_s(module_array->at(i)->hwCfgList[j].targetAddr, str_len, text, str_len);
+                                memcpy_s(module_array->at(i)->fwCfgList[j].targetAddr, str_len, text, str_len);
 #else
                                 memcpy(module_array->at(i)->hwCfgList[j].targetAddr, text, str_len);
 #endif
-                                ((char*)(module_array->at(i)->hwCfgList[j].targetAddr))[str_len] = '\0';
+                                ((char*)(module_array->at(i)->fwCfgList[j].targetAddr))[str_len] = '\0';
                             }
                             break;
                         case INT_32:
                             res_int = std::stoi((char*)text);
-                            *(int*)module_array->at(i)->hwCfgList[j].targetAddr = res_int;
+                            *(int*)module_array->at(i)->fwCfgList[j].targetAddr = res_int;
                             break;
                         case UINT_32:
                             res_li = std::stol((char*)text);
-                            *(uint32_t*)module_array->at(i)->hwCfgList[j].targetAddr = (uint32_t)res_li;
+                            *(uint32_t*)module_array->at(i)->fwCfgList[j].targetAddr = (uint32_t)res_li;
                             break;
                         case VECT_INT32:
 #ifdef _MSC_VER
@@ -227,12 +264,12 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                             token = strtok((char*)text, s);
 #endif
                             m = 0;
-                            while (token != nullptr && m< (module_array->at(i)->hwCfgList[j].max_len)) {
+                            while (token != nullptr && m< (module_array->at(i)->fwCfgList[j].max_len)) {
                                 int vect_int = std::stoi(token);
-                                if (m >= ((vector<int32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->size())
-                                    ((vector<int32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->push_back(vect_int);
+                                if (m >= ((std::vector<int32_t>*)(module_array->at(i)->fwCfgList[j].targetAddr))->size())
+                                    ((std::vector<int32_t>*)(module_array->at(i)->fwCfgList[j].targetAddr))->push_back(vect_int);
                                 else
-                                    ((vector<int32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->at(m) = vect_int;
+                                    ((std::vector<int32_t>*)(module_array->at(i)->fwCfgList[j].targetAddr))->at(m) = vect_int;
                                 m++;
 #ifdef _MSC_VER
                                 token = strtok_s(nullptr, s, &next_token);
@@ -248,12 +285,12 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
                             token = strtok((char*)text, s);
 #endif
                             m = 0;
-                            while (token != nullptr && m < (module_array->at(i)->hwCfgList[j].max_len)) {
+                            while (token != nullptr && m < (module_array->at(i)->fwCfgList[j].max_len)) {
                                 long int vect_lint = std::stol(token);
-                                if (m >= ((vector<int32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->size())
-                                    ((vector<uint32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->push_back((uint32_t)vect_lint);
+                                if (m >= ((std::vector<int32_t>*)(module_array->at(i)->fwCfgList[j].targetAddr))->size())
+                                    ((std::vector<uint32_t>*)(module_array->at(i)->fwCfgList[j].targetAddr))->push_back((uint32_t)vect_lint);
                                 else
-                                    ((vector<uint32_t>*)(module_array->at(i)->hwCfgList[j].targetAddr))->at(m) = (uint32_t)vect_lint;
+                                    ((std::vector<uint32_t>*)(module_array->at(i)->fwCfgList[j].targetAddr))->at(m) = (uint32_t)vect_lint;
                                 m++;
 #ifdef _MSC_VER
                                 token = strtok_s(nullptr, s, &next_token);
@@ -302,12 +339,11 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
     xmlFreeParserCtxt(ctxt);
 }
 
-void pipeline_manager::read_xml_cfg(char* xmlFileName)
+void fw_manager::read_xml_cfg(char *xmlFileName)
 {
-    this->cfg_file_name = xmlFileName;
     LIBXML_TEST_VERSION
 
-    exampleFunc(xmlFileName, &this->hw_list);
+    exampleFunc(xmlFileName, &this->fw_list);
 
     /*
      * Cleanup function for the XML library.
@@ -317,67 +353,4 @@ void pipeline_manager::read_xml_cfg(char* xmlFileName)
      * this is to debug memory for regression tests
      */
     xmlMemoryDump();
-}
-
-void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
-{
-    size_t hw_size = hw_list.size();
-    list<hw_base*> not_run_list(hw_list.begin(), hw_list.end());
-    
-    for (size_t i = 0; i < hw_size; i++)
-    {
-        hw_list.at(i)->reset_hw_cnt_of_outport();
-    }
-
-    size_t cycle_time = 0;
-    while (not_run_list.size() != 0)
-    {
-        for (list<hw_base*>::iterator it = not_run_list.begin(); it != not_run_list.end(); it++)
-        {
-            if ((*it)->prepare_input())
-            {
-                log_info("run module %s\n", (*it)->name);
-                (*it)->hw_run(stat_out, frame_cnt);
-                not_run_list.remove(*it);
-                break;
-            }
-        }
-
-        cycle_time++;
-        if (cycle_time > 2 * hw_size)
-        {
-            log_error("can't find module to run\n");
-            exit(1);
-        }
-    }
-
-    for (size_t i = 0; i < hw_size; i++)
-    {
-        hw_base* m = hw_list.at(i);
-        if (typeid(*m) == typeid(fileRead))
-        {
-            if (frame_cnt == frames - 1)
-            {
-                m->release_output_memory();
-            }
-        }
-        else 
-        {
-            m->release_output_memory();
-        }
-    }
-}
-
-void pipeline_manager::connect_port(hw_base* pre_hw, uint32_t out_port, hw_base* next_hw, uint32_t in_port)
-{
-    if (out_port >= pre_hw->outpins || in_port >= next_hw->inpins)
-    {
-        throw std::out_of_range("port out of range");
-    }
-    else {
-        pre_hw->next_hw_of_outport[out_port].push_back(next_hw);
-        pre_hw->next_hw_cnt_of_outport[out_port]++;
-        next_hw->previous_hw[in_port] = pre_hw;
-        next_hw->outport_of_previous_hw[in_port] = out_port;
-    }
 }

@@ -398,6 +398,8 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         negative->GetLinearizationInfo()->fWhiteLevel[2],
         negative->GetLinearizationInfo()->fWhiteLevel[3]);
 
+    g_dng_all_md.meta_data_valid = true;
+
     get_blc_md_from_dng(blc_dim_x, blc_dim_y, negative, bayer_tp, g_dng_all_md);
 
     get_ae_md_from_dng(exif, g_dng_all_md);

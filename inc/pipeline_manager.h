@@ -17,4 +17,6 @@ public:
     std::vector<hw_base*> hw_list;
     uint32_t frames;
     statistic_info_t* stat_addr;
+    global_ref_out_t* global_ref_out;
+    char* cfg_file_name;
 };

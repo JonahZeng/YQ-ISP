@@ -100,4 +100,5 @@ typedef struct dng_md_s
     cc_dng_md_t cc_md;
     ae_comp_md_t ae_comp_md;
     hsv_lut_md_t hsv_lut_md;
+    bool meta_data_valid;
 }dng_md_t;
