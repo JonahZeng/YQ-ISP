@@ -65,7 +65,7 @@ static int32_t yuv_encode_core(const char* out_name, uint32_t y_width, uint32_t 
         return EXIT_FAILURE;
     }
 
-    jpeg_set_quality(&cinfo, 100, FALSE);
+    jpeg_set_quality(&cinfo, 95, FALSE);
 
     JSAMPARRAY yuvbuffer[3];
     JSAMPARRAY y_ptr;

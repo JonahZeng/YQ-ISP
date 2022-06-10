@@ -1,6 +1,5 @@
 ﻿#include <stdio.h>
 #include <string>
-#include <crtdbg.h>
 #include "pipeline_manager.h"
 
 extern void test_V1_pipeline(pipeline_manager* manager);
@@ -78,7 +77,5 @@ int main(int argc, char* argv[])
         isp_pipe_manager.run(isp_pipe_manager.stat_addr, fm);
     }
 
-    _CrtDumpMemoryLeaks();
-
-    return 0;
+    return EXIT_SUCCESS;
 }
