@@ -205,6 +205,10 @@ static void demosaic_hw_core(uint16_t* indata, uint16_t* r_out, uint16_t* g_out,
                 r_3 = indata[(y_ + 1)*(xsize + EXT_X) + x_ + 1];
                 r_out[row*xsize + col] = (4*(r_0 + r_1 + r_2 + r_3) + 12*b_c - 3*(b_0+b_1+b_2+b_3) + 8)>>4;
             }
+
+            r_out[row * xsize + col] = (r_out[row * xsize + col] > 16383) ? 16383 : r_out[row * xsize + col];
+            g_out[row * xsize + col] = (g_out[row * xsize + col] > 16383) ? 16383 : g_out[row * xsize + col];
+            b_out[row * xsize + col] = (b_out[row * xsize + col] > 16383) ? 16383 : b_out[row * xsize + col];
         }
     }
 }
