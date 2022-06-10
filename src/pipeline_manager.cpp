@@ -12,7 +12,7 @@ using std::vector;
 
 dng_md_t g_dng_all_md;
 
-pipeline_manager::pipeline_manager():hw_list(), cfg_file_name(nullptr)
+pipeline_manager::pipeline_manager():hw_list(), cfg_file_name()
 {
     stat_addr = new statistic_info_t;
     global_ref_out = new global_ref_out_t;
@@ -302,12 +302,11 @@ static void exampleFunc(const char *filename, vector<hw_base*>* module_array) {
     xmlFreeParserCtxt(ctxt);
 }
 
-void pipeline_manager::read_xml_cfg(char* xmlFileName)
+void pipeline_manager::read_xml_cfg()
 {
-    this->cfg_file_name = xmlFileName;
     LIBXML_TEST_VERSION
 
-    exampleFunc(xmlFileName, &this->hw_list);
+    exampleFunc(cfg_file_name.c_str(), &this->hw_list);
 
     /*
      * Cleanup function for the XML library.

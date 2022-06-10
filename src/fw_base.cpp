@@ -1,6 +1,6 @@
 #include "fw_base.h"
 
-fw_base::fw_base(uint32_t inpins, uint32_t outpins, const char* inst_name):fwCfgList(0)
+fw_base::fw_base(uint32_t inpins, uint32_t outpins, const char* inst_name):fwCfgList(0), name(new char[64])
 {
     this->inpins = inpins;
     this->outpins = outpins;
@@ -17,16 +17,6 @@ fw_base::fw_base(uint32_t inpins, uint32_t outpins, const char* inst_name):fwCfg
         }
     }
 }
-
-// void fw_base::fw_init()
-// {
-//     //must override
-// }
-
-// void fw_base::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out, uint32_t frame_cnt, void* pipe_regs)
-// {
-//     //must override
-// }
 
 fw_base::~fw_base()
 {

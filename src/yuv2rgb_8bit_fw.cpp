@@ -1,5 +1,5 @@
 #include "yuv2rgb_8bit_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 
 yuv2rgb_8b_fw::yuv2rgb_8b_fw(uint32_t inpins, uint32_t outpins, const char* inst_name):fw_base(inpins, outpins, inst_name)
 {
@@ -33,5 +33,5 @@ void yuv2rgb_8b_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_
 
 yuv2rgb_8b_fw::~yuv2rgb_8b_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

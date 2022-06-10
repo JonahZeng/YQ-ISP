@@ -1,5 +1,6 @@
 ﻿#include <stdio.h>
 #include <string>
+#include <crtdbg.h>
 #include "pipeline_manager.h"
 
 extern void test_V1_pipeline(pipeline_manager* manager);
@@ -68,13 +69,16 @@ int main(int argc, char* argv[])
     isp_pipe_manager.frames = frame_end;
     pipelines[pipe_id].f(&isp_pipe_manager);
 
+    isp_pipe_manager.cfg_file_name = std::string(cfg_file_name);
     isp_pipe_manager.init();
-    isp_pipe_manager.read_xml_cfg(cfg_file_name);
+    isp_pipe_manager.read_xml_cfg();
 
     for (int fm = 0; fm < frame_end; fm++)
     {
         isp_pipe_manager.run(isp_pipe_manager.stat_addr, fm);
     }
+
+    _CrtDumpMemoryLeaks();
 
     return 0;
 }

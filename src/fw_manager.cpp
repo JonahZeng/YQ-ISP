@@ -1,5 +1,5 @@
 #include "fw_manager.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 #include "libxml/parser.h"
 #include "libxml/tree.h"
 
@@ -59,7 +59,8 @@ void fw_manager::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
-        {"bypass", UINT_32, &this->bypass}};
+        {"bypass", UINT_32, &this->bypass}
+    };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
         this->hwCfgList.push_back(config[i]);
@@ -70,6 +71,8 @@ void fw_manager::hw_init()
         md->fw_init();
     }
 
+    read_xml_cfg();
+
     hw_base::hw_init();
     log_info("%s init run end\n", name);
 }
@@ -77,6 +80,10 @@ void fw_manager::hw_init()
 fw_manager::~fw_manager()
 {
     log_info("%s module deinit start\n", __FUNCTION__);
+    for(auto md:fw_list)
+    {
+        delete md;
+    }
 
     log_info("%s module deinit end\n", __FUNCTION__);
 }
@@ -89,6 +96,11 @@ void fw_manager::regsiter_fw_modules(fw_base *fw_md)
 void fw_manager::set_glb_ref(global_ref_out_t *global_ref_out)
 {
     this->global_ref_out = global_ref_out;
+}
+
+void fw_manager::set_cfg_file_name(std::string* xmlCfgFile)
+{
+    this->cfg_file_name = xmlCfgFile;
 }
 
 
@@ -339,11 +351,11 @@ static void exampleFunc(const char *filename, std::vector<fw_base*>* module_arra
     xmlFreeParserCtxt(ctxt);
 }
 
-void fw_manager::read_xml_cfg(char *xmlFileName)
+void fw_manager::read_xml_cfg()
 {
     LIBXML_TEST_VERSION
 
-    exampleFunc(xmlFileName, &this->fw_list);
+    exampleFunc(cfg_file_name->c_str(), &this->fw_list);
 
     /*
      * Cleanup function for the XML library.

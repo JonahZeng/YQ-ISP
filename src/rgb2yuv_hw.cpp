@@ -1,4 +1,4 @@
-﻿#include "fe_firmware.h"
+﻿#include "pipe_register.h"
 
 rgb2yuv_hw::rgb2yuv_hw(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name), rgb2yuv_coeff(9, 0)
 {

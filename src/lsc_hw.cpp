@@ -1,4 +1,4 @@
-﻿#include "fe_firmware.h"
+﻿#include "pipe_register.h"
 
 lsc_hw::lsc_hw(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name),luma_gain(LSC_GRID_ROWS * LSC_GRID_COLS)
 {

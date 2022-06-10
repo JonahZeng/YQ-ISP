@@ -1,5 +1,5 @@
 #include "ae_stat_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 
 ae_stat_fw::ae_stat_fw(uint32_t inpins, uint32_t outpins, const char* inst_name):fw_base(inpins, outpins, inst_name)
 {
@@ -66,5 +66,5 @@ void ae_stat_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref
 
 ae_stat_fw::~ae_stat_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

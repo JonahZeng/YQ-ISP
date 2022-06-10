@@ -1,5 +1,5 @@
 #include "blc_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 
 blc_fw::blc_fw(uint32_t inpins, uint32_t outpins, const char* inst_name):fw_base(inpins, outpins, inst_name)
 {
@@ -39,5 +39,5 @@ void blc_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out
 
 blc_fw::~blc_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

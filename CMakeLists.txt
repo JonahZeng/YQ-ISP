@@ -21,7 +21,7 @@ source_group("cfg" FILES ${CFG_FILES})
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
-add_executable(isp_emulation ${SRC_FILES} ${INC_FILES} ${PIPELINE_FILES} ${CFG_FILES} ${CALIB_FILES})
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${INC_FILES} ${PIPELINE_FILES} ${CFG_FILES} ${CALIB_FILES})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
     set(DNG_SDK_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Release.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Debug.lib")
@@ -34,7 +34,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(XML_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2d.lib" 
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib" 
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dll.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dlld.lib")
-    target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;"
+    target_compile_definitions(${PROJECT_NAME} PUBLIC "qDNGValidate=1;"
         "qDNGValidateTarget=1;"
         "$<$<CONFIG:Debug>:"
         "qDNGDebug=1;"
@@ -76,7 +76,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2_linux")
     set(XML_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_release.a" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2_debug.a"
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_release.a" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib_linux/libxml2mod_debug.a")
-    target_compile_definitions(isp_emulation PUBLIC "qDNGValidate=1;"
+    target_compile_definitions(${PROJECT_NAME} PUBLIC "qDNGValidate=1;"
         "qDNGValidateTarget=1;"
         "$<$<CONFIG:Debug>:"
         "qDNGDebug=1;"
@@ -109,9 +109,9 @@ endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/inc ${CMAKE_SOURCE_DIR}/calib ${DNG_SDK_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${XML_INCLUDE_DIR})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_link_libraries(isp_emulation ${DNG_SDK_LIBRARIES} ${XMP_LIBRARIES} ${JPEG_LIBRARIES} ${XML_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} ${DNG_SDK_LIBRARIES} ${XMP_LIBRARIES} ${JPEG_LIBRARIES} ${XML_LIBRARIES})
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(isp_emulation ${DNG_SDK_LIBRARIES} ${XMP_LIBRARIES} ${JPEG_LIBRARIES} ${XML_LIBRARIES} z lzma dl)
+    target_link_libraries(${PROJECT_NAME} ${DNG_SDK_LIBRARIES} ${XMP_LIBRARIES} ${JPEG_LIBRARIES} ${XML_LIBRARIES} z lzma dl)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

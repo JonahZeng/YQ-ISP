@@ -1,5 +1,5 @@
 #include "hsv_lut_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 #include "dng_tag_values.h"
 #include "dng_xy_coord.h"
 
@@ -120,5 +120,5 @@ void hsv_lut_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref
 
 hsv_lut_fw::~hsv_lut_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

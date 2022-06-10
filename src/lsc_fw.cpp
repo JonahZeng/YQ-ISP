@@ -1,5 +1,5 @@
 #include "lsc_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 #include "chromatix_lsc.h"
 
 typedef struct lsc_coeff_weight_s
@@ -259,5 +259,5 @@ void lsc_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out
 
 lsc_fw::~lsc_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

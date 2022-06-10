@@ -1,5 +1,5 @@
 #include "cc_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 #include "chromatix_cc.h"
 #include "dng_tag_values.h"
 #include "dng_xy_coord.h"
@@ -267,5 +267,5 @@ void cc_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out,
 
 cc_fw::~cc_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

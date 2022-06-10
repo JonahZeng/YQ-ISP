@@ -15,9 +15,11 @@ public:
 
     void regsiter_fw_modules(fw_base* fw_md);
     void set_glb_ref(global_ref_out_t* global_ref_out);
-    void read_xml_cfg(char* xmlFileName);
+    void set_cfg_file_name(std::string* xmlCfgFile);
+    void read_xml_cfg();
 private:
     global_ref_out_t* global_ref_out;
+    std::string* cfg_file_name;
     std::vector<fw_base*> fw_list;
     uint32_t bypass;
 };

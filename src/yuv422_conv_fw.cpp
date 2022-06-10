@@ -1,5 +1,5 @@
 #include "yuv422_conv_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 
 yuv422_conv_fw::yuv422_conv_fw(uint32_t inpins, uint32_t outpins, const char* inst_name):fw_base(inpins, outpins, inst_name)
 {
@@ -34,5 +34,5 @@ void yuv422_conv_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global
 
 yuv422_conv_fw::~yuv422_conv_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

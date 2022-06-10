@@ -1,5 +1,5 @@
 #include "demosaic_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 
 demosaic_fw::demosaic_fw(uint32_t inpins, uint32_t outpins, const char* inst_name):fw_base(inpins, outpins, inst_name)
 {
@@ -31,5 +31,5 @@ void demosaic_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_re
 
 demosaic_fw::~demosaic_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

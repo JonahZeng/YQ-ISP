@@ -1,5 +1,5 @@
 #include "prophoto2srgb_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 #include "mat3_3lf.h"
 
 prophoto2srgb_fw::prophoto2srgb_fw(uint32_t inpins, uint32_t outpins, const char* inst_name):fw_base(inpins, outpins, inst_name)
@@ -72,5 +72,5 @@ void prophoto2srgb_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* glob
 
 prophoto2srgb_fw::~prophoto2srgb_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

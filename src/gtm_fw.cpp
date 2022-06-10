@@ -1,5 +1,5 @@
 #include "gtm_fw.h"
-#include "fe_firmware.h"
+#include "pipe_register.h"
 
 gtm_fw::gtm_fw(uint32_t inpins, uint32_t outpins, const char* inst_name):fw_base(inpins, outpins, inst_name)
 {
@@ -272,5 +272,5 @@ void gtm_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out
 
 gtm_fw::~gtm_fw()
 {
-
+    log_info("%s deinit\n", name);
 }

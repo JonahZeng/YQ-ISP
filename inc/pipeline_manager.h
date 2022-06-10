@@ -9,7 +9,7 @@ public:
     ~pipeline_manager();
     void register_hw_module(hw_base* module);
     void init();
-    void read_xml_cfg(char* xmlFileName);
+    void read_xml_cfg();
     void run(statistic_info_t* stat_out, uint32_t frame_cnt);
     void connect_port(hw_base* pre_hw, uint32_t out_port, hw_base* next_hw, uint32_t in_port);
 
@@ -18,5 +18,5 @@ public:
     uint32_t frames;
     statistic_info_t* stat_addr;
     global_ref_out_t* global_ref_out;
-    char* cfg_file_name;
+    std::string cfg_file_name;
 };
