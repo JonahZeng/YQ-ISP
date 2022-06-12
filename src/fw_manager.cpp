@@ -248,7 +248,7 @@ static void exampleFunc(const char *filename, std::vector<fw_base*>* module_arra
 #ifdef _MSC_VER
                                 memcpy_s(module_array->at(i)->fwCfgList[j].targetAddr, dst_len, text, dst_len);
 #else
-                                memcpy(module_array->at(i)->hwCfgList[j].targetAddr, text, dst_len);
+                                memcpy(module_array->at(i)->fwCfgList[j].targetAddr, text, dst_len);
 #endif
                                 ((char*)(module_array->at(i)->fwCfgList[j].targetAddr))[dst_len] = '\0';
                             }
@@ -256,7 +256,7 @@ static void exampleFunc(const char *filename, std::vector<fw_base*>* module_arra
 #ifdef _MSC_VER
                                 memcpy_s(module_array->at(i)->fwCfgList[j].targetAddr, str_len, text, str_len);
 #else
-                                memcpy(module_array->at(i)->hwCfgList[j].targetAddr, text, str_len);
+                                memcpy(module_array->at(i)->fwCfgList[j].targetAddr, text, str_len);
 #endif
                                 ((char*)(module_array->at(i)->fwCfgList[j].targetAddr))[str_len] = '\0';
                             }
