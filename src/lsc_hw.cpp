@@ -14,6 +14,130 @@ lsc_hw::lsc_hw(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base
     lsc_reg = new lsc_reg_t;
 }
 
+static void lsc_hw_core_bicubic(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uint32_t ysize, const lsc_reg_t* lsc_reg)
+{
+    uint32_t luma_gain_ext[(LSC_GRID_ROWS + 2) * (LSC_GRID_COLS + 2)] = {0};
+    for(int32_t row=1; row<LSC_GRID_ROWS + 1; row++)
+    {
+        for(int32_t col=1; col<LSC_GRID_COLS + 1; col++)
+        {
+            luma_gain_ext[row*(LSC_GRID_COLS + 2) + col] = lsc_reg->luma_gain[(row-1)*LSC_GRID_COLS+(col-1)];
+        }
+    }
+    //left extend
+    for(int32_t row=1; row<LSC_GRID_ROWS + 1; row++)
+    {
+        int32_t f1 = (int32_t)luma_gain_ext[row*(LSC_GRID_COLS+2) + 1] - (int32_t)luma_gain_ext[row*(LSC_GRID_COLS+2) + 2];
+        int32_t f2 = (int32_t)luma_gain_ext[row*(LSC_GRID_COLS+2) + 2] - (int32_t)luma_gain_ext[row*(LSC_GRID_COLS+2) + 3];
+        int32_t f0 = 2*f1 - f2;
+        luma_gain_ext[row*(LSC_GRID_COLS + 2)] = (uint32_t)f0;
+    }
+    //right extend
+    for(int32_t row=1; row<LSC_GRID_ROWS + 1; row++)
+    {
+        int32_t f1 = (int32_t)luma_gain_ext[row*(LSC_GRID_COLS+2) + LSC_GRID_COLS] - (int32_t)luma_gain_ext[row*(LSC_GRID_COLS+2) + LSC_GRID_COLS - 1];
+        int32_t f2 = (int32_t)luma_gain_ext[row*(LSC_GRID_COLS+2) + LSC_GRID_COLS - 1] - (int32_t)luma_gain_ext[row*(LSC_GRID_COLS+2) + LSC_GRID_COLS - 2];
+        int32_t f0 = 2*f1 - f2;
+        luma_gain_ext[row*(LSC_GRID_COLS + 2) + LSC_GRID_COLS + 1] = (uint32_t)f0;
+    }
+    //top extend
+    for(int32_t col=0; col<LSC_GRID_COLS + 2; col++)
+    {
+        int32_t f1 = (int32_t)luma_gain_ext[LSC_GRID_COLS + 2 + col] - (int32_t)luma_gain_ext[2*(LSC_GRID_COLS + 2) + col];
+        int32_t f2 = (int32_t)luma_gain_ext[2*(LSC_GRID_COLS + 2) + col] - (int32_t)luma_gain_ext[3*(LSC_GRID_COLS + 2) + col];
+        int32_t f0 = 2*f1 - f2;
+        luma_gain_ext[col] = (uint32_t)f0;
+    }
+    //bottom extend
+    for(int32_t col=0; col<LSC_GRID_COLS + 2; col++)
+    {
+        int32_t f1 = (int32_t)luma_gain_ext[LSC_GRID_ROWS*(LSC_GRID_COLS + 2) + col] - (int32_t)luma_gain_ext[(LSC_GRID_ROWS-1)*(LSC_GRID_COLS + 2) + col];
+        int32_t f2 = (int32_t)luma_gain_ext[(LSC_GRID_ROWS-1)*(LSC_GRID_COLS + 2) + col] - (int32_t)luma_gain_ext[(LSC_GRID_ROWS-2)*(LSC_GRID_COLS + 2) + col];
+        int32_t f0 = 2*f1 - f2;
+        luma_gain_ext[(LSC_GRID_ROWS+1)*(LSC_GRID_COLS + 2) + col] = (uint32_t)f0;
+    }
+
+    uint32_t x_grad = (1U << 15) / lsc_reg->block_size_x;
+    uint32_t y_grad = (1U << 15) / lsc_reg->block_size_y;
+    uint32_t y_block = lsc_reg->block_start_y_idx + 1;
+    uint32_t y_offset = lsc_reg->block_start_y_oft;
+    for (uint32_t y = 0; y < ysize; y++)
+    {
+        if (y_offset >= lsc_reg->block_size_y)
+        {
+            y_block += 1;
+            y_block = (y_block > (LSC_GRID_ROWS - 1)) ? (LSC_GRID_ROWS-1) : y_block; //max y block 33-2 31
+            y_offset = 0;
+        }
+        double t_y = double(y_offset) / lsc_reg->block_size_y;
+        uint32_t x_block = lsc_reg->block_start_x_idx + 1;
+        uint32_t x_offset = lsc_reg->block_start_x_oft;
+        for (uint32_t x = 0; x < xsize; x++)
+        {
+            if (x_offset >= lsc_reg->block_size_x)
+            {
+                x_block += 1;
+                x_block = (x_block > (LSC_GRID_COLS-1)) ? (LSC_GRID_COLS-1) : x_block;
+                x_offset = 0;
+            }
+
+            double t_x = double(x_offset) / lsc_reg->block_size_x;
+
+            uint32_t y0 = y_block - 1;
+            uint32_t y1 = y_block;
+            uint32_t y2 = y_block + 1;
+            uint32_t y3 = y_block + 2;
+
+            uint32_t x0 = x_block - 1;
+            uint32_t x1 = x_block;
+            uint32_t x2 = x_block + 1;
+            uint32_t x3 = x_block + 2;
+
+            int32_t l0 = luma_gain_ext[y0 * (LSC_GRID_COLS + 2) + x0];
+            int32_t l1 = luma_gain_ext[y0 * (LSC_GRID_COLS + 2) + x1];
+            int32_t l2 = luma_gain_ext[y0 * (LSC_GRID_COLS + 2) + x2];
+            int32_t l3 = luma_gain_ext[y0 * (LSC_GRID_COLS + 2) + x3];
+
+            double k0 = 2*l1 + t_x*(l2 - l0) + t_x*t_x*(2*l0-5*l1+4*l2-l3) + t_x*t_x*t_x*(3*l1-l0-3*l2+l3);
+            k0 = k0/2.0;
+
+            l0 = luma_gain_ext[y1 * (LSC_GRID_COLS + 2) + x0];
+            l1 = luma_gain_ext[y1 * (LSC_GRID_COLS + 2) + x1];
+            l2 = luma_gain_ext[y1 * (LSC_GRID_COLS + 2) + x2];
+            l3 = luma_gain_ext[y1 * (LSC_GRID_COLS + 2) + x3];
+
+            double k1 = 2*l1 + t_x*(l2 - l0) + t_x*t_x*(2*l0-5*l1+4*l2-l3) + t_x*t_x*t_x*(3*l1-l0-3*l2+l3);
+            k1 = k1/2.0;
+
+            l0 = luma_gain_ext[y2 * (LSC_GRID_COLS + 2) + x0];
+            l1 = luma_gain_ext[y2 * (LSC_GRID_COLS + 2) + x1];
+            l2 = luma_gain_ext[y2 * (LSC_GRID_COLS + 2) + x2];
+            l3 = luma_gain_ext[y2 * (LSC_GRID_COLS + 2) + x3];
+
+            double k2 = 2*l1 + t_x*(l2 - l0) + t_x*t_x*(2*l0-5*l1+4*l2-l3) + t_x*t_x*t_x*(3*l1-l0-3*l2+l3);
+            k2 = k2/2.0;
+
+            l0 = luma_gain_ext[y3 * (LSC_GRID_COLS + 2) + x0];
+            l1 = luma_gain_ext[y3 * (LSC_GRID_COLS + 2) + x1];
+            l2 = luma_gain_ext[y3 * (LSC_GRID_COLS + 2) + x2];
+            l3 = luma_gain_ext[y3 * (LSC_GRID_COLS + 2) + x3];
+
+            double k3 = 2*l1 + t_x*(l2 - l0) + t_x*t_x*(2*l0-5*l1+4*l2-l3) + t_x*t_x*t_x*(3*l1-l0-3*l2+l3);
+            k3 = k3/2.0;
+
+            double k = 2*k1 + t_y*(k2 - k0) + t_y*t_y*(2*k0-5*k1+4*k2-k3) + t_y*t_y*t_y*(3*k1-k0-3*k2+k3);
+
+            int32_t gain = (int32_t)round(k);
+            uint32_t tmp = (indata[y*xsize + x] * (uint32_t)gain + 512) >> 10;
+            tmp = (tmp > 16383) ? 16383 : tmp;
+            outdata[y*xsize + x] = (uint16_t)tmp;
+
+            x_offset++;
+        }
+        y_offset++;
+    }
+}
+
 static void lsc_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize, uint32_t ysize, const lsc_reg_t* lsc_reg)
 {
     uint32_t x_grad = (1U << 15) / lsc_reg->block_size_x;
@@ -108,7 +232,7 @@ void lsc_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     if (lsc_reg->bypass == 0)
     {
-        lsc_hw_core(tmp, out0_ptr, xsize, ysize, lsc_reg);
+        lsc_hw_core_bicubic(tmp, out0_ptr, xsize, ysize, lsc_reg);
     }
 
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
