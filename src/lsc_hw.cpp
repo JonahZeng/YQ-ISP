@@ -126,6 +126,7 @@ static void lsc_hw_core_bicubic(uint16_t* indata, uint16_t* outdata, uint32_t xs
             k3 = k3/2.0;
 
             double k = 2*k1 + t_y*(k2 - k0) + t_y*t_y*(2*k0-5*k1+4*k2-k3) + t_y*t_y*t_y*(3*k1-k0-3*k2+k3);
+            k = k / 2.0;
 
             int32_t gain = (int32_t)round(k);
             uint32_t tmp = (indata[y*xsize + x] * (uint32_t)gain + 512) >> 10;

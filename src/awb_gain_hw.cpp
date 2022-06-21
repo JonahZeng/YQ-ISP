@@ -57,7 +57,6 @@ static void awbgain_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize,
             uint32_t gain = gain_val[channel];
 
             pix = (pix * gain + 512) >> 10;
-            //pix = (pix < 0) ? 0 : ((pix > 16383) ? 16383 : pix);
 
             pix = (pix * awbgain_reg->ae_compensat_gain + 512) >> 10;
             pix = (pix < 0) ? 0 : ((pix > 16383) ? 16383 : pix);
@@ -71,10 +70,10 @@ static void awbgain_hw_core(uint16_t* indata, uint16_t* outdata, uint32_t xsize,
 void awbgain_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
     log_info("%s run start\n", __FUNCTION__);
-    data_buffer* input_raw = in[0];
-    bayer_type_t bayer_pattern = input_raw->bayer_pattern;
+    data_buffer* input_raw = in[0]; //前一个模块的输出raw
+    bayer_type_t bayer_pattern = input_raw->bayer_pattern; //bayer pattern
 
-    if (in.size() > 1)
+    if (in.size() > 1) //第二个输入，软件管理器的寄存器输入
     {
         fe_module_reg_t* fe_reg = (fe_module_reg_t*)(in[1]->data_ptr);
         memcpy(awbgain_reg, &fe_reg->awbgain_reg, sizeof(awbgain_reg_t));
@@ -90,32 +89,32 @@ void awbgain_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         awbgain_reg->ae_compensat_gain = ae_compensat_gain;
     }
 
-    checkparameters(awbgain_reg);
+    checkparameters(awbgain_reg); //检查寄存器位宽
 
     uint32_t xsize = input_raw->width;
     uint32_t ysize = input_raw->height;
-
+    //创建本模块的输出
     data_buffer* output0 = new data_buffer(xsize, ysize, input_raw->data_type, input_raw->bayer_pattern, "awbgain_out0");
     uint16_t* out0_ptr = output0->data_ptr;
     out[0] = output0;
-
+    //临时内存
     std::unique_ptr<uint16_t[]> tmp_ptr(new uint16_t[xsize*ysize]);
     uint16_t* tmp = tmp_ptr.get();
-
+    //从输入raw取值，需右移到指定的位宽
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
-        tmp[sz] = input_raw->data_ptr[sz] >> (16 - 14); //nikon d610 14bit capture raw, right shift to 14bit precision
+        tmp[sz] = input_raw->data_ptr[sz] >> (16 - 14);
         out0_ptr[sz] = tmp[sz];
     }
-
+    //C model入口
     if (awbgain_reg->bypass == 0)
     {
         awbgain_hw_core(tmp, out0_ptr, xsize, ysize, bayer_pattern, awbgain_reg);
     }
-
+    //输出数据回到高位
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
-        out0_ptr[sz] = out0_ptr[sz] << (16 - 14); //nikon d610 14bit capture raw, back to high bits
+        out0_ptr[sz] = out0_ptr[sz] << (16 - 14);
     }
 
     hw_base::hw_run(stat_out, frame_cnt);

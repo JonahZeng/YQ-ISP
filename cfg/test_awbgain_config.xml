@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-16" ?>
+<pipeline_config>
+  <component>
+    <inst_name>raw_in</inst_name>
+    <bayer_type>RGGB</bayer_type>
+    <bit_depth>14</bit_depth>
+    <file_type>DNG</file_type>
+    <file_name>../raw_image/_ATM8478.dng</file_name>
+    <img_width>6034</img_width>
+    <img_height>4028</img_height>
+  </component>
+
+  <component>
+    <inst_name>awbgain_hw</inst_name>
+    <bypass>0</bypass>
+    <xmlConfigValid>1</xmlConfigValid>
+    <r_gain>1024</r_gain>
+    <gr_gain>1024</gr_gain>
+    <gb_gain>1024</gb_gain>
+    <b_gain>1024</b_gain>
+    <write_pic>1</write_pic>
+    <write_pic_src_pin>0</write_pic_src_pin>
+    <write_pic_format>RAW</write_pic_format>
+    <write_pic_path>./_awb_dump.raw</write_pic_path>
+    <write_pic_bits>8</write_pic_bits>
+  </component>
+
+</pipeline_config>

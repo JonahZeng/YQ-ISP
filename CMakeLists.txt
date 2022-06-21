@@ -31,8 +31,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(JPEG_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib/libjpeg.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/lib/libjpeg_d.lib")
     set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2")
     set(XML_BIN_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/bin")
-    set(XML_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2d.lib" 
-    optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib" 
+    set(XML_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2d.lib"
+    optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib"
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dll.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dlld.lib")
     target_compile_definitions(${PROJECT_NAME} PUBLIC "qDNGValidate=1;"
         "qDNGValidateTarget=1;"
@@ -115,7 +115,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E 
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E
 	copy "${XML_BIN_DIR}/$<$<CONFIG:Release>:libxml2.dll>$<$<CONFIG:Debug>:libxml2d.dll>"  "${EXECUTABLE_OUTPUT_PATH}/$<$<CONFIG:Release>:Release>$<$<CONFIG:Debug>:Debug>/libxml2.dll")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
