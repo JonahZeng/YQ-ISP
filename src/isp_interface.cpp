@@ -1,5 +1,4 @@
 ﻿#include <stdio.h>
-#include <string>
 #include "pipeline_manager.h"
 
 extern void test_V1_pipeline(pipeline_manager* manager);
@@ -17,68 +16,45 @@ pipeline_collection pipelines[] = {
     {"test_awbgain_pipeline", test_awbgain_pipeline} //2
 };
 
-// -p pipe_number -cfg xml_file -f frame_end 
-int main(int argc, char* argv[])
+static void print_usage()
+{
+    log_info("========================usage========================\n");
+    log_info("-p   [pipe id],       select pipeline:\n");
+    for(int32_t i=0; i<sizeof(pipelines)/sizeof(pipeline_collection); i++)
+    {
+        log_info("%d <-------> %s\n", i, pipelines[i].pipeline_name);
+    }
+    log_info("-cfg [cfg xml],       pipeline config file(.xml) path\n");
+    log_info("-f   [frame number],  run pipeline times\n");
+    log_info("-log [log file path], log2file\n");
+    log_info("=====================================================\n");
+}
+
+bool run_isp(int32_t pipe_id, const char* log_fn, const char* cfg_file_name, int32_t frame_end)
 {
     set_log_level(LOG_TRACE_LEVEL);
-    int32_t pipe_id = -1;
-    char* cfg_file_name = nullptr;
-    int32_t frame_end = -1;
-    char* log_fn = nullptr;
-
-    for (int32_t i = 1; i < argc; i++)
-    {
-        if (strcmp("-p", argv[i]) == 0 && i < (argc - 1))
-        {
-            pipe_id = atoi(argv[i + 1]);
-        }
-        if (strcmp("-cfg", argv[i]) == 0 && i < (argc - 1))
-        {
-            cfg_file_name = argv[i + 1];
-        }
-        if (strcmp("-f", argv[i]) == 0 && i < (argc - 1))
-        {
-            frame_end = atoi(argv[i + 1]);
-        }
-         if (strcmp("-log", argv[i]) == 0 && i < (argc - 1))
-        {
-            log_fn = argv[i + 1];
-        }
-    }
-
-    if (argc < 7) {
-        log_error("input param number must >= 5\n");
-        return 0;
-    }
-    if(log_fn)
-    {
-        open_log_file(log_fn);
-    }
-
-    log_info("run command:\n");
-
-    std::string cmd_str;
-    for (int i = 0; i < argc; i++)
-    {
-        cmd_str.append(argv[i]);
-        cmd_str.append(" ");
-    }
-    log_info("%s\n", cmd_str.c_str());
-
-    
     if (pipe_id < 0 || frame_end < 0 || cfg_file_name == nullptr)
     {
         log_info("param error\n");
-        return 0;
+        print_usage();
+        return false;
     }
 
     if (pipe_id >= sizeof(pipelines) / sizeof(pipeline_collection))
     {
         log_error("pipe_id out of range\n");
-        return 0;
+        print_usage();
+        return false;
     }
 
-    pipeline_manager* isp_pipe_manager = new pipeline_manager();
+    if(log_fn)
+    {
+        open_log_file(log_fn);
+    }
+
+    log_info("run command: -p %d -cfg %s -f %d -log %s\n", pipe_id, cfg_file_name, frame_end, log_fn);
+
+    pipeline_manager* isp_pipe_manager = new pipeline_manager(); //use heap just for log2file, log pipeline destruct
     isp_pipe_manager->frames = frame_end;
     pipelines[pipe_id].f(isp_pipe_manager);
 
@@ -95,5 +71,5 @@ int main(int argc, char* argv[])
     log_info("========process end.=========\n");
     close_log_file();
 
-    return EXIT_SUCCESS;
+    return true;
 }

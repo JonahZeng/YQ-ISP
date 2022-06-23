@@ -12,9 +12,7 @@ bin/Release/*.dll
 build/.vs
 build/x64
 build/CMakeFiles
-build/Debug
-build/Release
-build/isp_emulation.dir
+build/src
 build/Makefile
 *.obj
 *.tlog
@@ -28,3 +26,5 @@ build/CMakeCache.txt
 build/cmake_install.cmake
 build/.cmake
 build/compile_commands.json
+build/src
+lib
