@@ -6,5 +6,12 @@ set(CMAKE_CXX_STANDARD 11)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/console_main)
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/console_main)
+
+set(wxWidgets_ROOT_DIR "D:/wxWidgets317")
+find_package(wxWidgets)
+if(wxWidgets_FOUND)
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/UI_main)
+endif()

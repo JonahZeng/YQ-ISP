@@ -33,7 +33,13 @@ static void print_usage()
 bool run_isp(int32_t pipe_id, const char* log_fn, const char* cfg_file_name, int32_t frame_end)
 {
     set_log_level(LOG_TRACE_LEVEL);
-    if (pipe_id < 0 || frame_end < 0 || cfg_file_name == nullptr)
+    if (pipe_id < 0 || frame_end < 0 || cfg_file_name == nullptr || strlen(cfg_file_name) == 0)
+    {
+        log_info("param error\n");
+        print_usage();
+        return false;
+    }
+    if (strlen(cfg_file_name) == 0)
     {
         log_info("param error\n");
         print_usage();
@@ -47,7 +53,7 @@ bool run_isp(int32_t pipe_id, const char* log_fn, const char* cfg_file_name, int
         return false;
     }
 
-    if(log_fn)
+    if(log_fn && strlen(log_fn) > 0)
     {
         open_log_file(log_fn);
     }
