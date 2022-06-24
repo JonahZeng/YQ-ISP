@@ -24,7 +24,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib"
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dll.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dlld.lib")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(ISP_LIBRARIES optimized "${LIBRARY_OUTPUT_PATH}/isp_core.a" debug "${LIBRARY_OUTPUT_PATH}/isp_core.a")
+    set(ISP_LIBRARIES optimized "${LIBRARY_OUTPUT_PATH}/libisp_core.a" debug "${LIBRARY_OUTPUT_PATH}/libisp_core.a")
     set(DNG_SDK_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_release.a" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_debug.a")
     set(XMP_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreRelease.ar" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreDebug.ar"
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesRelease.ar" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesDebug.ar")
@@ -38,7 +38,7 @@ include_directories(${CMAKE_SOURCE_DIR}/inc)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_link_libraries(${CURRENT_TARGET_NAME} ${DNG_SDK_LIBRARIES} ${XMP_LIBRARIES} ${JPEG_LIBRARIES} ${XML_LIBRARIES} ${ISP_LIBRARIES})
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(${CURRENT_TARGET_NAME} ${DNG_SDK_LIBRARIES} ${XMP_LIBRARIES} ${JPEG_LIBRARIES} ${XML_LIBRARIES} ${ISP_LIBRARIES} z lzma dl)
+    target_link_libraries(${CURRENT_TARGET_NAME} ${ISP_LIBRARIES} ${DNG_SDK_LIBRARIES} ${XMP_LIBRARIES} ${JPEG_LIBRARIES} ${XML_LIBRARIES} z lzma dl)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

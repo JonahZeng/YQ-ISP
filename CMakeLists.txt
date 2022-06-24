@@ -11,7 +11,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/console_main)
 add_dependencies(isp_console isp_core)
 
-set(wxWidgets_ROOT_DIR "D:/wxWidgets317")
+#set(wxWidgets_ROOT_DIR "D:/wxWidgets317")
 find_package(wxWidgets)
 if(wxWidgets_FOUND)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/UI_main)

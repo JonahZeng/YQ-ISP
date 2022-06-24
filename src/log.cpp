@@ -50,7 +50,7 @@ static FILE* g_log_fp = nullptr;
     tm *ltm = gmtime(&now);\
     timeval start_time;\
     gettimeofday(&start_time, nullptr);\
-    fprintf(log_fp, "[%d-%02d-%02d %02d:%02d:%02d:%03ld] ", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour,\
+    fprintf(g_log_fp, "[%d-%02d-%02d %02d:%02d:%02d:%03ld] ", ltm->tm_year + 1900, ltm->tm_mon + 1, ltm->tm_mday, ltm->tm_hour,\
         ltm->tm_min, ltm->tm_sec, start_time.tv_usec / 1000);}
 #define LOG_COLOR_LEVEL(level) { if(strcmp(level, "[info] ")==0 || strcmp(level, "[trace] ")==0 || strcmp(level, "[debug] ")==0){printf("\033[32m%s\033[0m", level);}\
     else if(strcmp(level, "[warn] ")==0 || strcmp(level, "[error] ")==0 || strcmp(level, "[critical] ")==0){printf("\033[31m%s\033[0m", level);}\
