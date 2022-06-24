@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
-
-set(CURRENT_TARGET_NAME isp_emulation)
+project(isp_core LANGUAGES CXX)
+set(CURRENT_TARGET_NAME isp_core)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CONFIGURATION_TYPE Release;Debug)
@@ -22,7 +22,7 @@ source_group("cfg" FILES ${CFG_FILES})
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 
-add_library(isp_emulation ${SRC_FILES} ${PIPELINE_FILES})
+add_library(isp_core ${SRC_FILES} ${PIPELINE_FILES} ${CFG_FILES} ${CALIB_FILES} ${INC_FILES})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
-# project(isp_console LANGUAGES CXX)
+project(isp_console LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CONFIGURATION_TYPE Release;Debug)
@@ -14,7 +14,7 @@ file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 add_executable(${CURRENT_TARGET_NAME} ${SRC_FILES})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(ISP_LIBRARIES optimized "${LIBRARY_OUTPUT_PATH}/Release/isp_emulation.lib" debug "${LIBRARY_OUTPUT_PATH}/Debug/isp_emulation.lib")
+    set(ISP_LIBRARIES optimized "${LIBRARY_OUTPUT_PATH}/Release/isp_core.lib" debug "${LIBRARY_OUTPUT_PATH}/Debug/isp_core.lib")
     set(DNG_SDK_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Release.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/dng_sdk_x64_Debug.lib")
     set(XMP_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPCoreStaticRelease.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPCoreStaticDebug.lib"
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPFilesStaticRelease.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/XMPFilesStaticDebug.lib")
@@ -24,7 +24,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_ad.lib"
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dll.lib" debug "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/lib/libxml2_a_dlld.lib")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(ISP_LIBRARIES optimized "${LIBRARY_OUTPUT_PATH}/isp_emulation.a" debug "${LIBRARY_OUTPUT_PATH}/isp_emulation.a")
+    set(ISP_LIBRARIES optimized "${LIBRARY_OUTPUT_PATH}/isp_core.a" debug "${LIBRARY_OUTPUT_PATH}/isp_core.a")
     set(DNG_SDK_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_release.a" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/libdng_sdk_debug.a")
     set(XMP_LIBRARIES optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreRelease.ar" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPCoreDebug.ar"
     optimized "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesRelease.ar" debug "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/lib/staticXMPFilesDebug.ar")

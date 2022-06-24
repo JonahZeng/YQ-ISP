@@ -291,10 +291,11 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
     negative->Parse(host, stream, info);
     negative->PostParse(host, stream, info);
     negative->ReadStage1Image(host, stream, info);
-    if (info.fMaskIndex != -1)
-    {
-        negative->ReadStage1Image(host, stream, info);
-    }
+
+    //if (info.fMaskIndex != -1)
+    //{
+    //    negative->ReadStage1Image(host, stream, info);
+    //}
     negative->ValidateRawImageDigest(host);
     const dng_mosaic_info* mosaic_info = negative->GetMosaicInfo();
     int32_t xdim = mosaic_info->fCFAPatternSize.h;
