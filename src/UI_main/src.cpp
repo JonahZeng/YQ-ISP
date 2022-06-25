@@ -64,6 +64,7 @@ private:
     wxComboBox* pipeID_list;
     wxComboBox* frameCnt_list;
     wxStaticText* isp_status;
+    wxBoxSizer* verLayout;
 protected:
     MyThread *m_pThread;
     wxCriticalSection m_pThreadCS;    // protects the m_pThread pointer
@@ -137,9 +138,8 @@ mainFrame::mainFrame(const wxString& title)
     //SetIcon(wxIcon("./human_brain.ico", wxBITMAP_TYPE_ICO));
     SetIcon(wxIcon(aaa));
     wxPanel* mainPanel = new wxPanel(this);
-    wxBoxSizer* verLayout = new wxBoxSizer(wxVERTICAL);
+    verLayout = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer* horLayout = new wxBoxSizer(wxHORIZONTAL);
-    wxBoxSizer* horLayout1 = new wxBoxSizer(wxHORIZONTAL);
 
     wxStaticText* pipeID_text = new wxStaticText(mainPanel, wxID_ANY, wxString("pipe ID:"), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
     wxString pipe_id_strings[3] = {"0", "1", "2"};
@@ -166,22 +166,20 @@ mainFrame::mainFrame(const wxString& title)
     horLayout->Add(logFile_path, 1, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     horLayout->Add(logFile_button, 1, wxALL|wxALIGN_CENTER_VERTICAL, 5);
 
-    wxButton* run_button = new wxButton(mainPanel, ID_RUN_BUTTON, wxString("run"));
-    horLayout1->AddStretchSpacer();
-    horLayout1->Add(run_button, 1, wxALL|wxALIGN_CENTER_VERTICAL, 5);
-    horLayout1->AddStretchSpacer();
+    wxButton* run_button = new wxButton(mainPanel, ID_RUN_BUTTON, wxString("run"));//, wxDefaultPosition, wxDefaultSize, wxSTRETCH_NOT);
 
     wxStaticLine* splitLine = new wxStaticLine(mainPanel, wxID_ANY, wxPoint(0, 0), wxSize(460,2));
 
-    isp_status = new wxStaticText(mainPanel, ID_ISP_STATUS, wxString("ISP NOT RUN"),  wxPoint(0, 0), wxSize(400, 200), wxALIGN_CENTRE_HORIZONTAL|wxEXPAND, wxString::FromAscii(wxStaticTextNameStr));
+    isp_status = new wxStaticText(mainPanel, ID_ISP_STATUS, wxString("ISP NOT RUN"));//,  wxDefaultPosition, wxDefaultSize, 
+        //wxALIGN_CENTRE_HORIZONTAL|wxBORDER_STATIC, wxString::FromAscii(wxStaticTextNameStr));
     wxFont cur_font = isp_status->GetFont();
     cur_font.SetPointSize(36);
     isp_status->SetFont(cur_font);
 
     verLayout->Add(horLayout, 1, 0);
     verLayout->Add(splitLine, 0, wxEXPAND, 8);
-    verLayout->Add(horLayout1, 1, 0);
-    verLayout->Add(isp_status, 4, wxEXPAND, 0);
+    verLayout->Add(run_button, 1, wxALIGN_CENTER_HORIZONTAL, 0);
+    verLayout->Add(isp_status, 4, wxALIGN_CENTER_HORIZONTAL, 0);
     // verLayout->AddStretchSpacer(4);
 
     mainPanel->SetSizer(verLayout);
@@ -191,7 +189,7 @@ mainFrame::mainFrame(const wxString& title)
     Connect(ID_CFG_FILE_BUTTON, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mainFrame::OnSelectXmlClick));
     Connect(ID_LOG_FILE_BUTTON, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mainFrame::OnSelectLogClick));
 
-    SetMinSize(wxSize(640, 480));
+    SetMinSize(wxSize(800, 480));
 }
 
 void mainFrame::OnRunClick(wxCommandEvent& event)
@@ -229,6 +227,8 @@ void mainFrame::OnRunClick(wxCommandEvent& event)
         delete m_pThread;
         m_pThread = nullptr;
         isp_status->SetLabel("Error");
+        wxSize minsize = verLayout->CalcMin();
+        verLayout->RepositionChildren(minsize);
         return;
     }
     if(m_pThread->Run() != wxTHREAD_NO_ERROR)
@@ -237,6 +237,8 @@ void mainFrame::OnRunClick(wxCommandEvent& event)
         delete m_pThread;
         m_pThread = nullptr;
         isp_status->SetLabel("Error");
+        wxSize minsize = verLayout->CalcMin();
+        verLayout->RepositionChildren(minsize);
         return;
     }
     isp_status->SetLabel("Running");
@@ -244,7 +246,7 @@ void mainFrame::OnRunClick(wxCommandEvent& event)
 
 void mainFrame::OnSelectXmlClick(wxCommandEvent &event)
 {
-    wxString wildcard = wxT("xml files (*.xml)|*.XML");
+    wxString wildcard = wxT("xml files (*.xml)|*.xml|*.XML");
     wxString defaultDir = wxGetCwd();
     wxString defaultFilename = wxEmptyString;
     wxFileDialog dialog(this, wxT("Choose a file"), defaultDir, defaultFilename, wildcard, wxFD_OPEN|wxFD_FILE_MUST_EXIST);
@@ -256,7 +258,7 @@ void mainFrame::OnSelectXmlClick(wxCommandEvent &event)
 
 void mainFrame::OnSelectLogClick(wxCommandEvent& event)
 {
-    wxString wildcard = wxT("log files (*.txt)|*.TXT");
+    wxString wildcard = wxT("log files (*.txt)|*.txt|*.TXT");
     wxString defaultDir = wxGetCwd();
     wxString defaultFilename = wxEmptyString;
     wxFileDialog dialog(this, wxT("Choose or create a file"), defaultDir, defaultFilename, wildcard, wxFD_OPEN|wxFD_FILE_MUST_EXIST);
@@ -271,9 +273,13 @@ void mainFrame::OnThreadCompletion(wxCommandEvent& event)
     if(event.GetInt())
     {
         isp_status->SetLabel("Success");
+        wxSize minsize = verLayout->CalcMin();
+        verLayout->RepositionChildren(minsize);
     }
     else{
-         isp_status->SetLabel("Fail");
+        isp_status->SetLabel("Fail");
+        wxSize minsize = verLayout->CalcMin();
+        verLayout->RepositionChildren(minsize);
     }
 }
  
