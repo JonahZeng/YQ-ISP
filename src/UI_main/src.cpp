@@ -66,6 +66,7 @@ private:
     wxComboBox* pipeID_list;
     wxComboBox* frameCnt_list;
     wxStaticText* isp_status;
+    wxBoxSizer* horLayout;
     wxBoxSizer* verLayout;
 protected:
     MyThread *m_pThread;
@@ -142,7 +143,7 @@ mainFrame::mainFrame(const wxString& title)
 #endif
     wxPanel* mainPanel = new wxPanel(this);
     verLayout = new wxBoxSizer(wxVERTICAL);
-    wxBoxSizer* horLayout = new wxBoxSizer(wxHORIZONTAL);
+    horLayout = new wxBoxSizer(wxHORIZONTAL);
 
     wxStaticText* pipeID_text = new wxStaticText(mainPanel, wxID_ANY, wxString("pipe ID:"), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
     wxString pipe_id_strings[3] = {"0", "1", "2"};
@@ -152,10 +153,10 @@ mainFrame::mainFrame(const wxString& title)
     wxString frame_cnt_strings[4] = {"1", "2", "3", "4"};
     frameCnt_list = new wxComboBox(mainPanel, ID_FRAME_CNT_COMBOX,  wxString(""), wxDefaultPosition, wxDefaultSize, 4, frame_cnt_strings);
 
-    cfgFile_path = new wxTextCtrl(mainPanel, ID_CFG_FILE_TEXT, wxString(wxT("  ")));
+    cfgFile_path = new wxTextCtrl(mainPanel, ID_CFG_FILE_TEXT, wxString(wxT("")));
     wxButton* cfgFile_button = new wxButton(mainPanel, ID_CFG_FILE_BUTTON, wxString("select xml"));
 
-    logFile_path = new wxTextCtrl(mainPanel, ID_LOG_FILE_TEXT, wxString(wxT("  ")));
+    logFile_path = new wxTextCtrl(mainPanel, ID_LOG_FILE_TEXT, wxString(wxT("")));
     wxButton* logFile_button = new wxButton(mainPanel, ID_LOG_FILE_BUTTON, wxString("select log"));
 
     horLayout->Add(pipeID_text, 1, wxALL|wxALIGN_CENTER_VERTICAL, 5);
@@ -257,7 +258,12 @@ void mainFrame::OnSelectXmlClick(wxCommandEvent &event)
     wxFileDialog dialog(this, wxT("Choose a file"), defaultDir, defaultFilename, wildcard, wxFD_OPEN|wxFD_FILE_MUST_EXIST);
     if (dialog.ShowModal() == wxID_OK)
     {
+        cfgFile_path->SetEditable(false);
+#ifdef _MSC_VER
         cfgFile_path->SetLabelText(dialog.GetPath());
+#else
+        cfgFile_path->ChangeValue(dialog.GetPath());
+#endif
     }
 }
 
@@ -269,7 +275,12 @@ void mainFrame::OnSelectLogClick(wxCommandEvent& event)
     wxFileDialog dialog(this, wxT("Choose or create a file"), defaultDir, defaultFilename, wildcard, wxFD_OPEN|wxFD_FILE_MUST_EXIST);
     if (dialog.ShowModal() == wxID_OK)
     {
+        logFile_path->SetEditable(false);
+#ifdef _MSC_VER
         logFile_path->SetLabelText(dialog.GetPath());
+#else
+        logFile_path->ChangeValue(dialog.GetPath());
+#endif
     }
 }
 
