@@ -3,7 +3,7 @@ project(isp_core LANGUAGES CXX)
 set(CURRENT_TARGET_NAME isp_core)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(CMAKE_CONFIGURATION_TYPE Release;Debug)
+    set(CMAKE_CONFIGURATION_TYPES Release;Debug)
 elseif(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
