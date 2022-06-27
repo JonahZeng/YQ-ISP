@@ -24,11 +24,12 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 
 add_library(isp_core ${SRC_FILES} ${PIPELINE_FILES} ${CFG_FILES} ${CALIB_FILES} ${INC_FILES})
 
+set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
+set(JPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/include")
+set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2")
+set(XML_BIN_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/bin")
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
-    set(JPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/include")
-    set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2")
-    set(XML_BIN_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/bin")
     target_compile_definitions(${CURRENT_TARGET_NAME} PUBLIC "qDNGValidate=1;"
         "qDNGValidateTarget=1;"
         "$<$<CONFIG:Debug>:"
@@ -62,9 +63,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         "qDNGPreferGPSMetadataFromXMP=1;"
         "_CRT_SECURE_NO_WARNINGS")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(DNG_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/dng_sdk/include")
-    set(JPEG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libjpeg9c/include_linux")
-    set(XML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/libxml2/include/libxml2_linux")
     target_compile_definitions(${CURRENT_TARGET_NAME} PUBLIC "qDNGValidate=1;"
         "qDNGValidateTarget=1;"
         "$<$<CONFIG:Debug>:"

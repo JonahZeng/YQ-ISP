@@ -27,4 +27,4 @@ build/cmake_install.cmake
 build/.cmake
 build/compile_commands.json
 build/src
-lib
+./lib

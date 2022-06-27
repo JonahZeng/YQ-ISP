@@ -1,0 +1,2 @@
+aicon ICON "human_brain.ico"
+#include "wx/msw/wx.rc"

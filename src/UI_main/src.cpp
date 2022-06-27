@@ -2,7 +2,7 @@
  * @Author: Jonah Zeng zengyangqiao@qq.com
  * @Date: 2022-06-22 16:41:44
  * @LastEditors: Jonah Zeng zengyangqiao@qq.com
- * @LastEditTime: 2022-06-24 16:13:21
+ * @LastEditTime: 2022-06-27 14:59:31
  * @FilePath: \hello_world\src.cpp
  * @Description: 
  * 
@@ -16,7 +16,9 @@
 #endif
 
 #include <wx/statline.h>
+#ifndef _MSC_VER
 #include "human_brain.xpm"
+#endif
 
 #include "isp_interface.h"
 
@@ -133,10 +135,11 @@ enum {
 };
 
 mainFrame::mainFrame(const wxString& title)
-       : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(640, 480)), m_pThread(nullptr)
+       : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(800, 480)), m_pThread(nullptr)
 {
-    //SetIcon(wxIcon("./human_brain.ico", wxBITMAP_TYPE_ICO));
+#ifndef _MSC_VER
     SetIcon(wxIcon(aaa));
+#endif
     wxPanel* mainPanel = new wxPanel(this);
     verLayout = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer* horLayout = new wxBoxSizer(wxHORIZONTAL);
@@ -241,7 +244,9 @@ void mainFrame::OnRunClick(wxCommandEvent& event)
         verLayout->RepositionChildren(minsize);
         return;
     }
-    isp_status->SetLabel("Running");
+    isp_status->SetLabel("Running...");
+    wxSize minsize = verLayout->CalcMin();
+    verLayout->RepositionChildren(minsize);
 }
 
 void mainFrame::OnSelectXmlClick(wxCommandEvent &event)
