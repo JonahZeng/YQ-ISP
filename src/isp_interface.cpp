@@ -1,4 +1,12 @@
-﻿#include <stdio.h>
+﻿/*
+ * @Author: Jonah Zeng zengyangqiao@qq.com
+ * @Date: 2022-06-08 15:51:42
+ * @LastEditors: Jonah Zeng zengyangqiao@qq.com
+ * @LastEditTime: 2022-06-29 14:23:16
+ * @FilePath: \YQ-ISP\src\isp_interface.cpp
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
+#include <stdio.h>
 #include "pipeline_manager.h"
 
 extern void test_V1_pipeline(pipeline_manager* manager);
@@ -39,7 +47,7 @@ bool run_isp(int32_t pipe_id, const char* log_fn, const char* cfg_file_name, int
         print_usage();
         return false;
     }
-    if (strlen(cfg_file_name) == 0)
+    if (log_fn && strlen(log_fn) == 0)
     {
         log_info("param error\n");
         print_usage();

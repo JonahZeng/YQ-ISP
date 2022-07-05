@@ -269,7 +269,7 @@ static int32_t estimate_dia2_cd(uint16_t *head, int32_t *filter, uint32_t width)
     return ret;
 }
 
-static double calc_east_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+static int32_t calc_east_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
                             uint32_t x_, uint32_t y_)
 {
     int32_t filter[5] = {1, -3, 4, -3, 1};
@@ -284,7 +284,7 @@ static double calc_east_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, ui
     int32_t cd2 = estimate_hor_cd(indata + y_ * (xsize + EXT_X) + x_ + 2, filter);
     int32_t cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line0_eig = ci_e + alpha * cd_e;
+    int32_t line0_eig = ci_e + (int32_t)(alpha * cd_e);
 
     d1 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ + 2]);
     d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ + 1]);
@@ -295,7 +295,7 @@ static double calc_east_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, ui
     cd2 = estimate_hor_cd(indata + (y_ - 1) * (xsize + EXT_X) + x_ + 2, filter);
     cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line_n1_eig = ci_e + alpha * cd_e;
+    int32_t line_n1_eig = ci_e + (int32_t)(alpha * cd_e);
 
     d1 = abs((int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ + 2]);
     d2 = abs((int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ + 1]);
@@ -306,13 +306,13 @@ static double calc_east_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, ui
     cd2 = estimate_hor_cd(indata + (y_ + 1) * (xsize + EXT_X) + x_ + 2, filter);
     cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line_p1_eig = ci_e + alpha * cd_e;
-    double e_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
+    int32_t line_p1_eig = ci_e + (int32_t)(alpha * cd_e);
+    int32_t e_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
 
     return e_eig;
 }
 
-static double calc_west_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+static int32_t calc_west_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
                             uint32_t x_, uint32_t y_)
 {
     int32_t filter[5] = {1, -3, 4, -3, 1};
@@ -327,7 +327,7 @@ static double calc_west_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, ui
     int32_t cd2 = estimate_hor_cd(indata + y_ * (xsize + EXT_X) + x_ - 2, filter);
     int32_t cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line0_eig = ci_e + alpha * cd_e;
+    int32_t line0_eig = ci_e + (int32_t)(alpha * cd_e);
 
     d1 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ - 2]);
     d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ + 1]);
@@ -338,7 +338,7 @@ static double calc_west_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, ui
     cd2 = estimate_hor_cd(indata + (y_ - 1) * (xsize + EXT_X) + x_ - 2, filter);
     cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line_n1_eig = ci_e + alpha * cd_e;
+    int32_t line_n1_eig = ci_e + (int32_t)(alpha * cd_e);
 
     d1 = abs((int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ - 2]);
     d2 = abs((int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ + 1]);
@@ -349,13 +349,13 @@ static double calc_west_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, ui
     cd2 = estimate_hor_cd(indata + (y_ + 1) * (xsize + EXT_X) + x_ - 2, filter);
     cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line_p1_eig = ci_e + alpha * cd_e;
-    double w_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
+    int32_t line_p1_eig = ci_e + (int32_t)(alpha * cd_e);
+    int32_t w_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
 
     return w_eig;
 }
 
-static double calc_north_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+static int32_t calc_north_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
                              uint32_t x_, uint32_t y_)
 {
     int32_t filter[5] = {1, -3, 4, -3, 1};
@@ -370,7 +370,7 @@ static double calc_north_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, u
     int32_t cd2 = estimate_ver_cd(indata + (y_ - 2) * (xsize + EXT_X) + x_, filter, xsize + EXT_X);
     int32_t cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line0_eig = ci_e + alpha * cd_e;
+    int32_t line0_eig = ci_e + (int32_t)(alpha * cd_e);
 
     d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ - 2) * (xsize + EXT_X) + x_ - 1]);
     d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ - 1]);
@@ -381,7 +381,7 @@ static double calc_north_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, u
     cd2 = estimate_ver_cd(indata + (y_ - 2) * (xsize + EXT_X) + x_ - 1, filter, xsize + EXT_X);
     cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line_n1_eig = ci_e + alpha * cd_e;
+    int32_t line_n1_eig = ci_e + (int32_t)(alpha * cd_e);
 
     d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ + 1] - (int16_t)indata[(y_ - 2) * (xsize + EXT_X) + x_ + 1]);
     d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ + 1] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ + 1]);
@@ -392,13 +392,13 @@ static double calc_north_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, u
     cd2 = estimate_ver_cd(indata + (y_ - 2) * (xsize + EXT_X) + x_ + 1, filter, xsize + EXT_X);
     cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line_p1_eig = ci_e + alpha * cd_e;
-    double n_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
+    int32_t line_p1_eig = ci_e + (int32_t)(alpha * cd_e);
+    int32_t n_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
 
     return n_eig;
 }
 
-static double calc_south_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+static int32_t calc_south_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
                              uint32_t x_, uint32_t y_)
 {
     int32_t filter[5] = {1, -3, 4, -3, 1};
@@ -413,7 +413,7 @@ static double calc_south_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, u
     int32_t cd2 = estimate_ver_cd(indata + (y_ + 2) * (xsize + EXT_X) + x_, filter, xsize + EXT_X);
     int32_t cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line0_eig = ci_e + alpha * cd_e;
+    int32_t line0_eig = ci_e + (int32_t)(alpha * cd_e);
 
     d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ + 2) * (xsize + EXT_X) + x_ - 1]);
     d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ - 1]);
@@ -424,7 +424,7 @@ static double calc_south_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, u
     cd2 = estimate_ver_cd(indata + (y_ + 2) * (xsize + EXT_X) + x_ - 1, filter, xsize + EXT_X);
     cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line_n1_eig = ci_e + alpha * cd_e;
+    int32_t line_n1_eig = ci_e + (int32_t)(alpha * cd_e);
 
     d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ + 1] - (int16_t)indata[(y_ + 2) * (xsize + EXT_X) + x_ + 1]);
     d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ + 1] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ + 1]);
@@ -435,102 +435,102 @@ static double calc_south_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, u
     cd2 = estimate_ver_cd(indata + (y_ + 2) * (xsize + EXT_X) + x_ + 1, filter, xsize + EXT_X);
     cd_e = (abs(cd0 + cd1) + abs(cd1 + cd2)) / 2;
 
-    double line_p1_eig = ci_e + alpha * cd_e;
-    double s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
+    int32_t line_p1_eig = ci_e + (int32_t)(alpha * cd_e);
+    int32_t s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
 
     return s_eig;
 }
 
-static double calc_east_north_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+static int32_t calc_east_north_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
                                   uint32_t x_, uint32_t y_)
 {
     int32_t d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ - 2) * (xsize + EXT_X) + x_ + 2]);
     int32_t d2 = abs((int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ + 1]);
 
-    double line0_eig = (d1 + d2) / 2.0;
+    int32 line0_eig = (d1 + d2 + 1) / 2;
 
     d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ - 2) * (xsize + EXT_X) + x_ + 1]);
     d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ - 3) * (xsize + EXT_X) + x_ + 2]);
 
-    double line_n1_eig = (d1 + d2) / 2.0;
+    int32_t line_n1_eig = (d1 + d2 + 1) / 2;
 
     d1 = abs((int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ + 2]);
     d2 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ + 1] - (int16_t)indata[(y_ - 2) * (xsize + EXT_X) + x_ + 3]);
 
-    double line_p1_eig = (d1 + d2) / 2.0;
-    double s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
+    int32_t line_p1_eig = (d1 + d2 + 1) / 2;
+    int32_t  s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
 
     return s_eig;
 }
 
-static double calc_west_north_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+static int32_t calc_west_north_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
                                   uint32_t x_, uint32_t y_)
 {
     int32_t d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ - 2) * (xsize + EXT_X) + x_ - 2]);
     int32_t d2 = abs((int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ + 1] - (int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ - 1]);
 
-    double line0_eig = (d1 + d2) / 2.0;
+    int32_t line0_eig = (d1 + d2 + 1) / 2;
 
     d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ + 1] - (int16_t)indata[(y_ - 2) * (xsize + EXT_X) + x_ - 1]);
     d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ - 3) * (xsize + EXT_X) + x_ - 2]);
 
-    double line_n1_eig = (d1 + d2) / 2.0;
+    int32_t line_n1_eig = (d1 + d2 + 1) / 2;
 
     d1 = abs((int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ - 2]);
     d2 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ - 2) * (xsize + EXT_X) + x_ - 3]);
 
-    double line_p1_eig = (d1 + d2) / 2.0;
-    double s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
+    int32_t line_p1_eig = (d1 + d2 + 1) / 2;
+    int32_t s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
 
     return s_eig;
 }
 
-static double calc_west_south_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+static int32_t calc_west_south_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
                                   uint32_t x_, uint32_t y_)
 {
     int32_t d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ + 2) * (xsize + EXT_X) + x_ - 2]);
     int32_t d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ + 1] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ - 1]);
 
-    double line0_eig = (d1 + d2) / 2.0;
+    int32_t line0_eig = (d1 + d2 + 1) / 2;
 
     d1 = abs((int16_t)indata[(y_-1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ +1) * (xsize + EXT_X) + x_ - 2]);
     d2 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_-1] - (int16_t)indata[(y_ + 2) * (xsize + EXT_X) + x_ - 3]);
 
-    double line_n1_eig = (d1 + d2) / 2.0;
+    int32_t line_n1_eig = (d1 + d2 + 1) / 2;
 
     d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ + 1] - (int16_t)indata[(y_ + 2) * (xsize + EXT_X) + x_ - 1]);
     d2 = abs((int16_t)indata[(y_+1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ + 3) * (xsize + EXT_X) + x_ - 2]);
 
-    double line_p1_eig = (d1 + d2) / 2.0;
-    double s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
+    int32_t line_p1_eig = (d1 + d2 + 1) / 2;
+    int32_t s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
 
     return s_eig;
 }
 
-static double calc_east_south_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+static int32_t calc_east_south_eig(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
                                   uint32_t x_, uint32_t y_)
 {
     int32_t d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ + 2) * (xsize + EXT_X) + x_ + 2]);
     int32_t d2 = abs((int16_t)indata[(y_ - 1) * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ + 1) * (xsize + EXT_X) + x_ + 1]);
 
-    double line0_eig = (d1 + d2) / 2.0;
+    int32_t line0_eig = (d1 + d2 + 1) / 2;
 
     d1 = abs((int16_t)indata[(y_-1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ +1) * (xsize + EXT_X) + x_ + 2]);
     d2 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_+1] - (int16_t)indata[(y_ + 2) * (xsize + EXT_X) + x_ + 3]);
 
-    double line_n1_eig = (d1 + d2) / 2.0;
+    int32_t line_n1_eig = (d1 + d2 + 1) / 2;
 
     d1 = abs((int16_t)indata[y_ * (xsize + EXT_X) + x_ - 1] - (int16_t)indata[(y_ + 2) * (xsize + EXT_X) + x_ + 1]);
     d2 = abs((int16_t)indata[(y_+1) * (xsize + EXT_X) + x_] - (int16_t)indata[(y_ + 3) * (xsize + EXT_X) + x_ + 2]);
 
-    double line_p1_eig = (d1 + d2) / 2.0;
-    double s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
+    int32_t line_p1_eig = (d1 + d2 + 1) / 2;
+    int32_t s_eig = 2 * line0_eig + line_n1_eig + line_p1_eig;
 
     return s_eig;
 }
 
-static int16_t estimate_final_g_for_rb(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
-                                       uint32_t x_, uint32_t y_, double east_eig, double west_eig, double south_eig, double north_eig)
+static uint16_t estimate_final_g_for_rb(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+                                       uint32_t x_, uint32_t y_, int32_t east_eig, int32_t west_eig, int32_t south_eig, int32_t north_eig)
 {
     double T = 1.9;
     int32_t T_cd = 6;
@@ -553,10 +553,33 @@ static int16_t estimate_final_g_for_rb(uint16_t *indata, uint32_t xsize, uint32_
     int32_t g_north_estimate = p_up1 + (p - p_up2) / 2 + (p_up3 - 2 * p_up1 + p_down1) / 8;
     int32_t g_south_estimate = p_down1 + (p - p_down2) / 2 + (p_up1 - 2 * p_down1 + p_down3) / 8;
 
-    double g_hor_estimate = (g_east_estimate * west_eig + g_west_estimate * east_eig) / (west_eig + east_eig);
-    double g_ver_estimate = (g_north_estimate * south_eig + g_south_estimate * north_eig) / (south_eig + north_eig);
-    double g_dia_estimate = (g_north_estimate / north_eig + g_south_estimate / south_eig + g_east_estimate / east_eig + g_west_estimate / west_eig) /
-                            (1.0 / north_eig + 1.0 / south_eig + 1.0 / east_eig + 1.0 / west_eig);
+    double g_hor_estimate = 0.0;
+    if(west_eig + east_eig == 0)
+    {
+         g_hor_estimate = (g_east_estimate + g_west_estimate + 1) / 2;
+    }
+    else{
+        g_hor_estimate = (g_east_estimate * west_eig + g_west_estimate * east_eig) / (west_eig + east_eig);
+    }
+    double g_ver_estimate = 0.0;
+    if(south_eig + north_eig == 0)
+    {
+        g_ver_estimate = (g_north_estimate + g_south_estimate + 1) / 2;
+    }
+    else{
+        g_ver_estimate = (g_north_estimate * south_eig + g_south_estimate * north_eig) / (south_eig + north_eig);
+    }
+    // double g_dia_estimate = (g_north_estimate / north_eig + g_south_estimate / south_eig + g_east_estimate / east_eig + g_west_estimate / west_eig) /
+    //                         (1.0 / north_eig + 1.0 / south_eig + 1.0 / east_eig + 1.0 / west_eig);
+    double g_dia_estimate = 0.0;
+    if(west_eig + east_eig + south_eig + north_eig == 0)
+    {
+        g_dia_estimate = (g_hor_estimate + g_ver_estimate + 1) / 2;
+    }
+    else
+    {
+        g_dia_estimate = (g_hor_estimate * (south_eig + north_eig) + g_ver_estimate * (west_eig + east_eig)) / (west_eig + east_eig + south_eig + north_eig);
+    }
 
     g_hor_estimate = CLIP3(g_hor_estimate, 0.0, 16383.0);
     g_ver_estimate = CLIP3(g_ver_estimate, 0.0, 16383.0);
@@ -619,8 +642,8 @@ static int16_t estimate_final_g_for_rb(uint16_t *indata, uint32_t xsize, uint32_
     return out;
 }
 
-static int16_t estimate_final_rb_for_br(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
-                                      uint32_t x_, uint32_t y_, double en_eig, double wn_eig, double es_eig, double ws_eig)
+static uint16_t estimate_final_rb_for_br(uint16_t *indata, uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y,
+                                      uint32_t x_, uint32_t y_, int32_t en_eig, int32_t wn_eig, int32_t es_eig, int32_t ws_eig)
 {
     double T = 1.9;
     int32_t T_cd = 6;
@@ -647,10 +670,31 @@ static int16_t estimate_final_rb_for_br(uint16_t *indata, uint32_t xsize, uint32
     int32_t r_es_estimate = p_es1 + (p - p_es2) / 2 + (p_wn1 - 2 * p_es1 + p_es3) / 8;
     int32_t r_ws_estimate = p_ws1 + (p - p_ws2) / 2 + (p_en1 - 2 * p_ws1 + p_ws3) / 8;
 
-    double r_dia1_estimate = (r_en_estimate * ws_eig + r_ws_estimate * en_eig) / (ws_eig + en_eig);
-    double r_dia2_estimate = (r_wn_estimate * es_eig + r_es_estimate * wn_eig) / (es_eig + wn_eig);
-    double r_dia_estimate = (r_en_estimate / en_eig + r_wn_estimate / wn_eig + r_es_estimate / es_eig + r_ws_estimate / ws_eig) /
-                            (1.0 / en_eig + 1.0 / wn_eig + 1.0 / es_eig + 1.0 / ws_eig);
+    double r_dia1_estimate = 0.0;
+    if(ws_eig + en_eig == 0)
+    {
+        r_dia1_estimate = (r_en_estimate + r_ws_estimate + 1) / 2;
+    }
+    else{
+        r_dia1_estimate = (r_en_estimate * ws_eig + r_ws_estimate * en_eig) / (ws_eig + en_eig);
+    }
+    double r_dia2_estimate = 0.0;
+    if(es_eig + wn_eig == 0){
+        r_dia2_estimate = (r_wn_estimate + r_es_estimate  + 1) / 2;
+    }
+    else{
+        r_dia2_estimate = (r_wn_estimate * es_eig + r_es_estimate * wn_eig) / (es_eig + wn_eig);
+    }
+    // double r_dia_estimate = (r_en_estimate / en_eig + r_wn_estimate / wn_eig + r_es_estimate / es_eig + r_ws_estimate / ws_eig) /
+    //                         (1.0 / en_eig + 1.0 / wn_eig + 1.0 / es_eig + 1.0 / ws_eig);
+     double r_dia_estimate = 0.0;
+     if(ws_eig + en_eig + es_eig + wn_eig == 0)
+     {
+        r_dia_estimate = (r_dia1_estimate + r_dia2_estimate + 1) / 2;
+     }
+     else{
+        r_dia_estimate = (r_dia1_estimate *(es_eig + wn_eig) + r_dia2_estimate * (ws_eig + en_eig)) / (ws_eig + en_eig + es_eig + wn_eig);
+     }
 
     r_dia1_estimate = CLIP3(r_dia1_estimate, 0.0, 16383.0);
     r_dia2_estimate = CLIP3(r_dia2_estimate, 0.0, 16383.0);
@@ -928,10 +972,32 @@ static uint16_t estimate_final_rb_for_g(uint16_t *indata, uint32_t xsize, uint32
     int32_t north_estimate = p_up + (p - p_up2) / 2 + (p_up3 - 2 * p_up1 + p_down1) / 8;
     int32_t south_estimate = p_down + (p - p_down2) / 2 + (p_up1 - 2 * p_down1 + p_down3) / 8;
 
-    double hor_estimate = (east_estimate * west_eig + west_estimate * east_eig) / (west_eig + east_eig);
-    double ver_estimate = (north_estimate * south_eig + south_estimate * north_eig) / (south_eig + north_eig);
-    double dia_estimate = (north_estimate / north_eig + south_estimate / south_eig + east_estimate / east_eig + west_estimate / west_eig) /
-                            (1.0 / north_eig + 1.0 / south_eig + 1.0 / east_eig + 1.0 / west_eig);
+    double hor_estimate = 0.0;
+    if(west_eig + east_eig == 0)
+    {
+        hor_estimate = (east_estimate + west_estimate + 1) / 2;
+    }
+    else{
+        hor_estimate = (east_estimate * west_eig + west_estimate * east_eig) / (west_eig + east_eig);
+    }
+    double ver_estimate = 0.0;
+    if(south_eig + north_eig == 0)
+    {
+        ver_estimate = (north_estimate + south_estimate + 1) / 2;
+    }
+    else{
+        ver_estimate = (north_estimate * south_eig + south_estimate * north_eig) / (south_eig + north_eig);
+    }
+    // double dia_estimate = (north_estimate / north_eig + south_estimate / south_eig + east_estimate / east_eig + west_estimate / west_eig) /
+    //                         (1.0 / north_eig + 1.0 / south_eig + 1.0 / east_eig + 1.0 / west_eig);
+    double dia_estimate = 0.0;
+    if(west_eig + east_eig + south_eig + north_eig == 0)
+    {
+        dia_estimate = (hor_estimate + ver_estimate + 1) / 2;
+    }
+    else{
+        dia_estimate = (hor_estimate * (south_eig + north_eig) + ver_estimate * (west_eig + east_eig)) / (west_eig + east_eig + south_eig + north_eig);
+    }
 
     hor_estimate = CLIP3(hor_estimate, 0.0, 16383.0);
     ver_estimate = CLIP3(ver_estimate, 0.0, 16383.0);
@@ -994,6 +1060,35 @@ static uint16_t estimate_final_rb_for_g(uint16_t *indata, uint32_t xsize, uint32
     return out;
 }
 
+static int32_t calc_patch_similarity(uint16* indata, int32_t pch_top, int32_t pch_left,  uint16_t (*src_val)[3], int32_t width)
+{
+    int32_t wei[9] = {1, 2, 1, 2, 4, 2, 1, 2, 1};
+    int32_t similar = 0;
+    for(int32_t j=0; j<3; j++)
+    {
+        for(int32_t i=0; i<3; i++)
+        {
+            int32_t diff = abs((int32_t)src_val[j][i] - (int32_t)indata[(pch_top+j)*width + pch_left + i]);
+            similar += diff * wei[j*3+i]; //14 + 2 + 4
+        }
+    }
+    return similar / 16;
+}
+
+static inline int32_t flip_board(int32_t x, int32_t xsize)
+{
+    if(x<0)
+    {
+        return abs(x);
+    }
+    else if(x>xsize-1)
+    {
+        return (2*xsize - 2 - x);
+    }
+    else
+        return x;
+}
+
 static void demosaic_hw_core(uint16_t *indata, uint16_t *r_out, uint16_t *g_out, uint16_t *b_out,
                              uint32_t xsize, uint32_t ysize, uint32_t EXT_X, uint32_t EXT_Y, bayer_type_t by, const demosaic_reg_t *demosiac_reg)
 {
@@ -1010,14 +1105,14 @@ static void demosaic_hw_core(uint16_t *indata, uint16_t *r_out, uint16_t *g_out,
 
             if (pix_type == PIX_R)
             {
-                double east_eig = calc_east_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double west_eig = calc_west_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double north_eig = calc_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double south_eig = calc_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double en_eig = calc_east_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double wn_eig = calc_west_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double es_eig = calc_east_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double ws_eig = calc_west_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t east_eig = calc_east_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t west_eig = calc_west_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t north_eig = calc_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t south_eig = calc_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t en_eig = calc_east_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t wn_eig = calc_west_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t es_eig = calc_east_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t ws_eig = calc_west_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
 
                 r_out[row * xsize + col] = indata[y_ * (xsize + EXT_X) + x_];
 
@@ -1028,10 +1123,10 @@ static void demosaic_hw_core(uint16_t *indata, uint16_t *r_out, uint16_t *g_out,
             }
             else if (pix_type == PIX_GR)
             {
-                double east_eig = calc_east_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double west_eig = calc_west_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double north_eig = calc_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double south_eig = calc_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t east_eig = calc_east_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t west_eig = calc_west_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t north_eig = calc_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t south_eig = calc_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
 
                 g_out[row * xsize + col] = indata[y_ * (xsize + EXT_X) + x_];
 
@@ -1053,10 +1148,10 @@ static void demosaic_hw_core(uint16_t *indata, uint16_t *r_out, uint16_t *g_out,
             }
             else if (pix_type == PIX_GB)
             {
-                double east_eig = calc_east_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double west_eig = calc_west_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double north_eig = calc_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double south_eig = calc_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t east_eig = calc_east_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t west_eig = calc_west_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t north_eig = calc_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t south_eig = calc_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
 
                 g_out[row * xsize + col] = indata[y_ * (xsize + EXT_X) + x_];
 
@@ -1065,6 +1160,7 @@ static void demosaic_hw_core(uint16_t *indata, uint16_t *r_out, uint16_t *g_out,
                 int32_t r_up = indata[(y_-1)*(xsize+EXT_X) + x_];
                 int32_t r_down = indata[(y_+1)*(xsize+EXT_X) + x_];
                 estimate_r_left_right_for_Gb(indata, r_out, x_, y_, row, col, xsize,  EXT_X, &r_left, &r_right);
+
                 r_out[row * xsize + col] = estimate_final_rb_for_g(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_, 
                     east_eig, west_eig, south_eig, north_eig, r_up, r_down, r_left, r_right);
 
@@ -1073,20 +1169,21 @@ static void demosaic_hw_core(uint16_t *indata, uint16_t *r_out, uint16_t *g_out,
                 int32_t b_left = indata[y_ * (xsize + EXT_X) + x_ - 1];
                 int32_t b_right = indata[y_ * (xsize + EXT_X) + x_ + 1];
                 estimate_b_up_down_for_Gb(indata, b_out, x_, y_, row, col, xsize,  EXT_X, &b_up, &b_down);
+
                 b_out[row * xsize + col] = estimate_final_rb_for_g(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_, 
                     east_eig, west_eig, south_eig, north_eig, b_up, b_down, b_left, b_right);
             }
             else if (pix_type == PIX_B)
             {
-                double east_eig = calc_east_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double west_eig = calc_west_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double north_eig = calc_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double south_eig = calc_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t east_eig = calc_east_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t west_eig = calc_west_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t north_eig = calc_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t south_eig = calc_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
 
-                double en_eig = calc_east_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double wn_eig = calc_west_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double es_eig = calc_east_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
-                double ws_eig = calc_west_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t en_eig = calc_east_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t wn_eig = calc_west_north_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t es_eig = calc_east_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
+                int32_t ws_eig = calc_west_south_eig(indata, xsize, ysize, EXT_X, EXT_Y, x_, y_);
 
                 b_out[row * xsize + col] = indata[y_ * (xsize + EXT_X) + x_];
 
@@ -1096,9 +1193,303 @@ static void demosaic_hw_core(uint16_t *indata, uint16_t *r_out, uint16_t *g_out,
                     en_eig, wn_eig, es_eig, ws_eig);
             }
 
+
             r_out[row * xsize + col] = (r_out[row * xsize + col] > 16383) ? 16383 : r_out[row * xsize + col];
             g_out[row * xsize + col] = (g_out[row * xsize + col] > 16383) ? 16383 : g_out[row * xsize + col];
             b_out[row * xsize + col] = (b_out[row * xsize + col] > 16383) ? 16383 : b_out[row * xsize + col];
+        }
+    }
+
+    //two pass
+    for (uint32_t row = 0; row < ysize; row++)
+    {
+        for (uint32_t col = 0; col < xsize; col++)
+        {
+            pix_type = get_pixel_bayer_type(row, col, by);
+            y_ = row + EXT_Y / 2;
+            x_ = col + EXT_X / 2;
+            uint16_t src_val[3][3] = {0};
+
+            if (pix_type == PIX_R)
+            {
+                // NLM b
+                src_val[0][0] = r_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[0][1] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + col];
+                src_val[0][2] = r_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[1][0] = g_out[row * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[1][1] = b_out[row * xsize + col];
+                src_val[1][2] = g_out[row * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[2][0] = r_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[2][1] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + col];
+                src_val[2][2] = r_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                double total_similar = 0.0;
+                double total_pix_b = 0.0;
+                for (int32_t j = 0; j < 4; j++)
+                {
+                    for (int32_t i = 0; i < 4; i++)
+                    {
+                        int32_t pch_top = (int32_t)row - 4 + 2 * j + EXT_Y/2;
+                        int32_t pch_left = (int32_t)col - 4 + 2 * i + EXT_X/2;
+
+                        int32_t differ = calc_patch_similarity(indata, pch_top, pch_left, src_val, xsize + EXT_X); //s15 u14
+                        
+                        double exp_similar = 1.0 / exp(differ / 64);
+
+                        total_similar += exp_similar;
+                        uint16_t know_b = indata[(pch_top+1)*(xsize+EXT_X)+pch_left+1];
+                        total_pix_b += know_b * exp_similar;
+                    }
+                }
+                total_pix_b += b_out[row * xsize + col];
+                total_similar += 1.0;
+                double mean_pix_b = total_pix_b / total_similar;
+                mean_pix_b = CLIP3(mean_pix_b, 0.0, 16383.0);
+                b_out[row * xsize + col] = (uint16_t)mean_pix_b;
+
+                //NLM Gr
+                src_val[0][0] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[0][1] = b_out[flip_board((int32_t)row - 1, ysize) * xsize + col];
+                src_val[0][2] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[1][0] = r_out[row * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[1][1] = g_out[row * xsize + col];
+                src_val[1][2] = r_out[row * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[2][0] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[2][1] = b_out[flip_board((int32_t)row + 1, ysize) * xsize + col];
+                src_val[2][2] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                total_similar = 0.0;
+                double total_pix_g = 0.0;
+                for (int32_t j = 0; j < 3; j++)
+                {
+                    for (int32_t i = 0; i < 4; i++)
+                    {
+                        int32_t pch_top = (int32_t)row - 3 + 2 * j + EXT_Y/2;
+                        int32_t pch_left = (int32_t)col - 4 + 2 * i + EXT_X/2;
+
+                        int32_t differ = calc_patch_similarity(indata, pch_top, pch_left, src_val, xsize + EXT_X); //s15 u14
+                        
+                        double exp_similar = 1.0 / exp(differ / 16);
+
+                        total_similar += exp_similar;
+                        uint16_t know_g = indata[(pch_top+1)*(xsize+EXT_X)+pch_left+1];
+                        total_pix_g += know_g * exp_similar;
+                    }
+                }
+                total_pix_g += g_out[row * xsize + col];
+                total_similar += 1.0;
+                double mean_pix_g = total_pix_g / total_similar;
+                mean_pix_g = CLIP3(mean_pix_g, 0.0, 16383.0);
+                g_out[row * xsize + col] = (uint16_t)mean_pix_g;
+            }
+            else if (pix_type == PIX_GR)
+            {
+                // NLM b
+                src_val[0][0] = r_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[0][1] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + col];
+                src_val[0][2] = r_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[1][0] = g_out[row * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[1][1] = b_out[row * xsize + col];
+                src_val[1][2] = g_out[row * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[2][0] = r_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[2][1] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + col];
+                src_val[2][2] = r_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                double total_similar = 0.0;
+                double total_pix_b = 0.0;
+                for (int32_t j = 0; j < 4; j++)
+                {
+                    for (int32_t i = 0; i < 3; i++)
+                    {
+                        int32_t pch_top = (int32_t)row - 4 + 2 * j + EXT_Y/2;
+                        int32_t pch_left = (int32_t)col - 3 + 2 * i + EXT_X/2;
+
+                        int32_t differ = calc_patch_similarity(indata, pch_top, pch_left, src_val, xsize + EXT_X); //s15 u14
+                        
+                        double exp_similar = 1.0 / exp(differ / 64);
+
+                        total_similar += exp_similar;
+                        uint16_t know_b = indata[(pch_top+1)*(xsize+EXT_X)+pch_left+1];
+                        total_pix_b += know_b * exp_similar;
+                    }
+                }
+                total_pix_b += b_out[row * xsize + col];
+                total_similar += 1.0;
+                double mean_pix_b = total_pix_b / total_similar;
+                mean_pix_b = CLIP3(mean_pix_b, 0.0, 16383.0);
+                b_out[row * xsize + col] = (uint16_t)mean_pix_b;
+
+
+                // NLM r
+                src_val[0][0] = b_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[0][1] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + col];
+                src_val[0][2] = b_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[1][0] = g_out[row * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[1][1] = r_out[row * xsize + col];
+                src_val[1][2] = g_out[row * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[2][0] = b_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[2][1] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + col];
+                src_val[2][2] = b_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+
+                total_similar = 0.0;
+                double total_pix_r = 0.0;
+                for (int32_t j = 0; j < 3; j++)
+                {
+                    for (int32_t i = 0; i < 4; i++)
+                    {
+                        int32_t pch_top = (int32_t)row - 3 + 2 * j + EXT_Y/2;
+                        int32_t pch_left = (int32_t)col - 4 + 2 * i + EXT_X/2;
+                        int32_t differ = calc_patch_similarity(indata, pch_top, pch_left, src_val, xsize + EXT_X); //s15 u14
+                        
+                        double exp_similar = 1.0 / exp(differ / 64);
+                        total_similar += exp_similar;
+                        uint16_t know_r = indata[(pch_top+1)*(xsize+EXT_X)+pch_left+1];
+                        total_pix_r += know_r * exp_similar;
+                    }
+                }
+                total_pix_r += r_out[row * xsize + col];
+                total_similar += 1.0;
+                double mean_pix_r = total_pix_r / total_similar;
+                mean_pix_r = CLIP3(mean_pix_r, 0.0, 16383.0);
+                r_out[row * xsize + col] = (uint16_t)mean_pix_r;
+            }
+            else if (pix_type == PIX_GB)
+            {
+                // NLM b
+                src_val[0][0] = r_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[0][1] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + col];
+                src_val[0][2] = r_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[1][0] = g_out[row * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[1][1] = b_out[row * xsize + col];
+                src_val[1][2] = g_out[row * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[2][0] = r_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[2][1] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + col];
+                src_val[2][2] = r_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                double total_similar = 0.0;
+                double total_pix_b = 0.0;
+                for (int32_t j = 0; j < 3; j++)
+                {
+                    for (int32_t i = 0; i < 4; i++)
+                    {
+                        int32_t pch_top = (int32_t)row - 3 + 2 * j + EXT_Y/2;
+                        int32_t pch_left = (int32_t)col - 4 + 2 * i + EXT_X/2;
+
+                        int32_t differ = calc_patch_similarity(indata, pch_top, pch_left, src_val, xsize + EXT_X); //s15 u14
+                        
+                        double exp_similar = 1.0 / exp(differ / 64);
+
+                        total_similar += exp_similar;
+                        uint16_t know_b = indata[(pch_top+1)*(xsize+EXT_X)+pch_left+1];
+                        total_pix_b += know_b * exp_similar;
+                    }
+                }
+                total_pix_b += b_out[row * xsize + col];
+                total_similar += 1.0;
+                double mean_pix_b = total_pix_b / total_similar;
+                mean_pix_b = CLIP3(mean_pix_b, 0.0, 16383.0);
+                b_out[row * xsize + col] = (uint16_t)mean_pix_b;
+
+
+                // NLM r
+                src_val[0][0] = b_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[0][1] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + col];
+                src_val[0][2] = b_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[1][0] = g_out[row * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[1][1] = r_out[row * xsize + col];
+                src_val[1][2] = g_out[row * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[2][0] = b_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[2][1] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + col];
+                src_val[2][2] = b_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+
+                total_similar = 0.0;
+                double total_pix_r = 0.0;
+                for (int32_t j = 0; j < 4; j++)
+                {
+                    for (int32_t i = 0; i < 3; i++)
+                    {
+                        int32_t pch_top = (int32_t)row - 4 + 2 * j + EXT_Y/2;
+                        int32_t pch_left = (int32_t)col - 3 + 2 * i + EXT_X/2;
+                        int32_t differ = calc_patch_similarity(indata, pch_top, pch_left, src_val, xsize + EXT_X); //s15 u14
+                        
+                        double exp_similar = 1.0 / exp(differ / 64);
+                        total_similar += exp_similar;
+                        uint16_t know_r = indata[(pch_top+1)*(xsize+EXT_X)+pch_left+1];
+                        total_pix_r += know_r * exp_similar;
+                    }
+                }
+                total_pix_r += r_out[row * xsize + col];
+                total_similar += 1.0;
+                double mean_pix_r = total_pix_r / total_similar;
+                mean_pix_r = CLIP3(mean_pix_r, 0.0, 16383.0);
+                r_out[row * xsize + col] = (uint16_t)mean_pix_r;
+            }
+            else if (pix_type == PIX_B)
+            {
+                // NLM r
+                src_val[0][0] = b_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[0][1] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + col];
+                src_val[0][2] = b_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[1][0] = g_out[row * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[1][1] = r_out[row * xsize + col];
+                src_val[1][2] = g_out[row * xsize + flip_board((int32_t)col + 1, xsize)];
+                src_val[2][0] = b_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                src_val[2][1] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + col];
+                src_val[2][2] = b_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+
+                double total_similar = 0.0;
+                double total_pix_r = 0.0;
+                for (int32_t j = 0; j < 4; j++)
+                {
+                    for (int32_t i = 0; i < 4; i++)
+                    {
+                        int32_t pch_top = (int32_t)row - 4 + 2 * j + EXT_Y/2;
+                        int32_t pch_left = (int32_t)col - 4 + 2 * i + EXT_X/2;
+
+                        int32_t differ = calc_patch_similarity(indata, pch_top, pch_left, src_val, xsize + EXT_X); //s15 u14
+                        
+                        double exp_similar = 1.0 / exp(differ / 64);
+                        total_similar += exp_similar;
+                        uint16_t know_r = indata[(pch_top+1)*(xsize+EXT_X)+pch_left+1];
+                        total_pix_r += know_r * exp_similar;
+                    }
+                }
+                total_pix_r += r_out[row * xsize + col];
+                total_similar += 1.0;
+                double mean_pix_r = total_pix_r / total_similar;
+                mean_pix_r = CLIP3(mean_pix_r, 0.0, 16383.0);
+                r_out[row * xsize + col] = (uint16_t)mean_pix_r;
+
+                //NLM Gb
+                // src_val[0][0] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                // src_val[0][1] = r_out[flip_board((int32_t)row - 1, ysize) * xsize + col];
+                // src_val[0][2] = g_out[flip_board((int32_t)row - 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                // src_val[1][0] = b_out[row * xsize + flip_board((int32_t)col - 1, xsize)];
+                // src_val[1][1] = g_out[row * xsize + col];
+                // src_val[1][2] = b_out[row * xsize + flip_board((int32_t)col + 1, xsize)];
+                // src_val[2][0] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col - 1, xsize)];
+                // src_val[2][1] = r_out[flip_board((int32_t)row + 1, ysize) * xsize + col];
+                // src_val[2][2] = g_out[flip_board((int32_t)row + 1, ysize) * xsize + flip_board((int32_t)col + 1, xsize)];
+                // total_similar = 0.0;
+                // double total_pix_g = 0.0;
+                // for (int32_t j = 0; j < 3; j++)
+                // {
+                //     for (int32_t i = 0; i < 4; i++)
+                //     {
+                //         int32_t pch_top = (int32_t)row - 3 + 2 * j + EXT_Y/2;
+                //         int32_t pch_left = (int32_t)col - 4 + 2 * i + EXT_X/2;
+
+                //         int32_t differ = calc_patch_similarity(indata, pch_top, pch_left, src_val, xsize + EXT_X); //s15 u14
+                        
+                //         double exp_similar = 1.0 / exp(differ / 64);
+
+                //         total_similar += exp_similar;
+                //         uint16_t know_g = indata[(pch_top+1)*(xsize+EXT_X)+pch_left+1];
+                //         total_pix_g += know_g * exp_similar;
+                //     }
+                // }
+                // total_pix_g += g_out[row * xsize + col];
+                // total_similar += 1.0;
+                // double mean_pix_g = total_pix_g / total_similar;
+                // mean_pix_g = CLIP3(mean_pix_g, 0.0, 16383.0);
+                // g_out[row * xsize + col] = (uint16_t)mean_pix_g;
+            }
         }
     }
 }
