@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<pipeline_config>
+  <component>
+    <inst_name>raw_in</inst_name>
+    <bayer_type>BGGIR</bayer_type>
+    <bit_depth>12</bit_depth>
+    <file_type>RAW</file_type>
+    <file_name>../raw_image/BGGY-IR.raw</file_name>
+    <img_width>6016</img_width>
+    <img_height>4016</img_height>
+  </component>
+
+  <component>
+    <inst_name>blc_hw</inst_name>
+    <bypass>1</bypass>
+    <xmlConfigValid>1</xmlConfigValid>
+    <blc_r>0</blc_r>
+    <blc_gr>0</blc_gr>
+    <blc_gb>0</blc_gb>
+    <blc_b>0</blc_b>
+    <normalize_en>0</normalize_en>
+    <white_level>16383</white_level>
+    <write_pic0>0</write_pic0>
+    <write_pic0_src_pin>0</write_pic0_src_pin>
+    <write_pic0_format>RAW</write_pic0_format>
+    <write_pic0_path>./_blc_dump.raw</write_pic0_path>
+    <write_pic0_bits>14</write_pic0_bits>
+  </component>
+
+  <component>
+    <inst_name>rgbir_remosaic_hw</inst_name>
+    <bypass>1</bypass>
+    <xmlConfigValid>1</xmlConfigValid>
+    <write_pic0>1</write_pic0>
+    <write_pic0_src_pin>0</write_pic0_src_pin>
+    <write_pic0_format>RAW</write_pic0_format>
+    <write_pic0_path>./_rgbir_rm_dump0.raw</write_pic0_path>
+    <write_pic0_bits>12</write_pic0_bits>
+    <write_pic1>1</write_pic1>
+    <write_pic1_src_pin>0</write_pic1_src_pin>
+    <write_pic1_format>RAW</write_pic1_format>
+    <write_pic1_path>./_rgbir_rm_dump1.raw</write_pic1_path>
+    <write_pic1_bits>12</write_pic1_bits>
+  </component>
+
+  <component>
+    <inst_name>demosaic_hw</inst_name>
+    <bypass>0</bypass>
+    <xmlConfigValid>1</xmlConfigValid>
+    <write_pic0>1</write_pic0>
+    <write_pic0_src_pin>0, 1, 2</write_pic0_src_pin>
+    <write_pic0_format>PNM</write_pic0_format>
+    <write_pic0_path>./_demosaic_dump.pnm</write_pic0_path>
+    <write_pic0_bits>14</write_pic0_bits>
+  </component>
+
+</pipeline_config>

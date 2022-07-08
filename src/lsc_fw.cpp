@@ -170,7 +170,7 @@ void lsc_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out
     uint32_t frame_cnt, void* pipe_regs)
 {
     fe_module_reg_t* regs = (fe_module_reg_t*)pipe_regs;
-    dng_md_t* all_dng_md = global_ref_out->meta_data;
+    dng_md_t* all_dng_md = &(global_ref_out->dng_meta_data);
     lsc_reg_t* lsc_reg = &(regs->lsc_reg);
 
     chromatix_lsc_t lsc_calib =

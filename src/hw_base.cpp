@@ -2,11 +2,12 @@
 #include <typeinfo>
 #include <memory>
 #include <stdexcept>
-#include "fileRead.h"
+#include "file_read.h"
 
 hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name) :
     in(inpins), out(outpins), previous_hw(inpins), outport_of_previous_hw(inpins),
-    next_hw_of_outport(outpins), next_hw_cnt_of_outport(outpins), name(new char[64]), write_pic_src_pin(), input_file_name(nullptr)
+    next_hw_of_outport(outpins), next_hw_cnt_of_outport(outpins), name(new char[64]), write_pic0_src_pin(), input_file_name(nullptr),
+    write_pic1_src_pin()
 {
     this->inpins = inpins;
     this->outpins = outpins;
@@ -38,25 +39,38 @@ hw_base::hw_base(uint32_t inpins, uint32_t outpins, const char* inst_name) :
         out[out_p] = nullptr;
     }
 
-    write_pic = false;
-    write_pic_bits = 0;
-    write_pic_format[0] = 'R';
-    write_pic_format[1] = 'A';
-    write_pic_format[2] = 'W';
-    write_pic_format[3] = '\0';
+    write_pic0 = false;
+    write_pic0_bits = 0;
+    write_pic0_format[0] = 'R';
+    write_pic0_format[1] = 'A';
+    write_pic0_format[2] = 'W';
+    write_pic0_format[3] = '\0';
 
-    memset(write_pic_path, 0, 256);
+    write_pic1 = false;
+    write_pic1_bits = 0;
+    write_pic1_format[0] = 'R';
+    write_pic1_format[1] = 'A';
+    write_pic1_format[2] = 'W';
+    write_pic1_format[3] = '\0';
+
+    memset(write_pic0_path, 0, 256);
+    memset(write_pic1_path, 0, 256);
 }
 
 void hw_base::hw_init()
 {
     cfgEntry_t config[] = {
         {"xmlConfigValid",     BOOL_T,           &this->xmlConfigValid             },
-        {"write_pic",          BOOL_T,           &this->write_pic                  },
-        {"write_pic_src_pin",  VECT_UINT32,      &this->write_pic_src_pin,        3},
-        {"write_pic_format",   STRING,           this->write_pic_format,         16},
-        {"write_pic_path",     STRING,           this->write_pic_path,          256},
-        {"write_pic_bits",     UINT_32,          &this->write_pic_bits,            },
+        {"write_pic0",         BOOL_T,           &this->write_pic0                 },
+        {"write_pic0_src_pin", VECT_UINT32,      &this->write_pic0_src_pin,       3},
+        {"write_pic0_format",  STRING,           this->write_pic0_format,        16},
+        {"write_pic0_path",    STRING,           this->write_pic0_path,         256},
+        {"write_pic0_bits",    UINT_32,          &this->write_pic0_bits,           },
+        {"write_pic1",         BOOL_T,           &this->write_pic1                 },
+        {"write_pic1_src_pin", VECT_UINT32,      &this->write_pic1_src_pin,       3},
+        {"write_pic1_format",  STRING,           this->write_pic1_format,        16},
+        {"write_pic1_path",    STRING,           this->write_pic1_path,         256},
+        {"write_pic1_bits",    UINT_32,          &this->write_pic1_bits,           }
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {
@@ -79,7 +93,7 @@ void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         {
             if (pre_hw->out[pre_hw_port] != nullptr)
             {
-                if (typeid(*pre_hw) != typeid(fileRead))
+                if (typeid(*pre_hw) != typeid(file_read))
                 {
                     delete pre_hw->out[pre_hw_port];
                     pre_hw->out[pre_hw_port] = nullptr;
@@ -88,10 +102,15 @@ void hw_base::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         }
     }
 
-    if (this->write_pic)
+    if (this->write_pic0)
     {
         input_file_name = &(stat_out->input_file_name);
-        write_pic_for_output();
+        write_pic0_for_output();
+    }
+    if (this->write_pic1)
+    {
+        input_file_name = &(stat_out->input_file_name);
+        write_pic1_for_output();
     }
 }
 
@@ -136,14 +155,26 @@ bool hw_base::prepare_input()
     return true;
 }
 
-void hw_base::write_raw_for_output(FILE* fp)
+void hw_base::write_raw_for_output(FILE* fp, int32_t pic_no)
 {
-    uint32_t port = write_pic_src_pin[0];
+    uint32_t port = 0;
+    uint32_t write_pic_bits = 0;
+    if(pic_no == 0)
+    {
+        port = write_pic0_src_pin[0];
+        write_pic_bits = write_pic0_bits;
+    }
+    else if(pic_no == 1)
+    {
+        port = write_pic1_src_pin[0];
+        write_pic_bits = write_pic1_bits;
+    }
     if (port >= out.size())
     {
         log_error("can't write pic because port = %s, all outport size = %ld\n", port, out.size());
         return;
     }
+    
     data_buffer* src_data = out[port];
     if (src_data != nullptr)
     {
@@ -170,11 +201,26 @@ void hw_base::write_raw_for_output(FILE* fp)
     }
 }
 
-void hw_base::write_pnm_for_output(FILE* fp)
+void hw_base::write_pnm_for_output(FILE* fp, int32_t pic_no)
 {
-    uint32_t port0 = write_pic_src_pin[0];
-    uint32_t port1 = write_pic_src_pin[1];
-    uint32_t port2 = write_pic_src_pin[2];
+    uint32_t write_pic_bits = 0;
+    uint32_t port0 = 0;
+    uint32_t port1 = 0;
+    uint32_t port2 = 0;
+    if(pic_no == 0)
+    {
+        port0 = write_pic0_src_pin[0];
+        port1 = write_pic0_src_pin[1];
+        port2 = write_pic0_src_pin[2];
+        write_pic_bits = write_pic0_bits;
+    }
+    else if(pic_no == 1)
+    {
+        port0 = write_pic1_src_pin[0];
+        port1 = write_pic1_src_pin[1];
+        port2 = write_pic1_src_pin[2];
+        write_pic_bits = write_pic1_bits;
+    }
     if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
     {
         log_error("can't write pic because port = %d %d %d, all outport size = %ld\n", port0, port1, port2, out.size());
@@ -235,11 +281,24 @@ void hw_base::write_pnm_for_output(FILE* fp)
     }
 }
 
-void hw_base::write_yuv422_for_output(FILE* fp)//UYVY
+void hw_base::write_yuv422_for_output(FILE* fp, int32_t pic_no)//UYVY
 {
-    uint32_t port0 = write_pic_src_pin[0];
-    uint32_t port1 = write_pic_src_pin[1];
-    uint32_t port2 = write_pic_src_pin[2];
+    uint32_t write_pic_bits = 0;
+    uint32_t port0 = 0;
+    uint32_t port1 = 0;
+    uint32_t port2 = 0;
+    if(pic_no == 0)
+    {
+        port0 = write_pic0_src_pin[0];
+        port1 = write_pic0_src_pin[1];
+        port2 = write_pic0_src_pin[2];
+    }
+    else if(pic_no == 1)
+    {
+        port0 = write_pic1_src_pin[0];
+        port1 = write_pic1_src_pin[1];
+        port2 = write_pic1_src_pin[2];
+    }
     if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
     {
         log_error("can't write pic because port = %d %d %d, all outport size = %ld\n", port0, port1, port2, out.size());
@@ -298,11 +357,24 @@ void hw_base::write_yuv422_for_output(FILE* fp)//UYVY
     }
 }
 
-void hw_base::write_yuv444_for_output(FILE* fp)//YUV
+void hw_base::write_yuv444_for_output(FILE* fp, int32_t pic_no)//YUV
 {
-    uint32_t port0 = write_pic_src_pin[0];
-    uint32_t port1 = write_pic_src_pin[1];
-    uint32_t port2 = write_pic_src_pin[2];
+    uint32_t write_pic_bits = 0;
+    uint32_t port0 = 0;
+    uint32_t port1 = 0;
+    uint32_t port2 = 0;
+    if(pic_no == 0)
+    {
+        port0 = write_pic0_src_pin[0];
+        port1 = write_pic0_src_pin[1];
+        port2 = write_pic0_src_pin[2];
+    }
+    else if(pic_no == 1)
+    {
+        port0 = write_pic1_src_pin[0];
+        port1 = write_pic1_src_pin[1];
+        port2 = write_pic1_src_pin[2];
+    }
     if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
     {
         log_error("can't write pic because port = %d %d %d, all outport size = %ld\n", port0, port1, port2, out.size());
@@ -343,16 +415,16 @@ void hw_base::write_yuv444_for_output(FILE* fp)//YUV
     }
 }
 
-void hw_base::write_pic_for_output()
+void hw_base::write_pic0_for_output()
 {
-    if (write_pic_src_pin.size() > out.size())
+    if (write_pic0_src_pin.size() > out.size())
     {
-        log_error("can't write pic because outpins = %ld, and xml config pins for pic = %ld\n", out.size(), write_pic_src_pin.size());
+        log_error("can't write pic because outpins = %ld, and xml config pins for pic = %ld\n", out.size(), write_pic0_src_pin.size());
         return;
     }
     FILE* fp = nullptr;
 
-    std::string write_pic_path_str(write_pic_path);
+    std::string write_pic0_path_str(write_pic0_path);
 
     if (input_file_name != nullptr && input_file_name->length() > 0)
     {
@@ -360,49 +432,120 @@ void hw_base::write_pic_for_output()
         size_t ridx2 = input_file_name->rfind('.');
         std::string input_raw_fn = input_file_name->substr(ridx1 + 1, ridx2 - ridx1 - 1);
 
-        ridx1 = write_pic_path_str.rfind('/');
-        write_pic_path_str.insert(ridx1 + 1, input_raw_fn.c_str(), input_raw_fn.size());
+        ridx1 = write_pic0_path_str.rfind('/');
+        write_pic0_path_str.insert(ridx1 + 1, input_raw_fn.c_str(), input_raw_fn.size());
     }
-    if (strcmp(write_pic_format, "RAW") == 0 && write_pic_src_pin.size() == 1)
+    if (strcmp(write_pic0_format, "RAW") == 0 && write_pic0_src_pin.size() == 1)
     {
-        fp = fopen(write_pic_path_str.c_str(), "wb");
+        fp = fopen(write_pic0_path_str.c_str(), "wb");
 
         if (fp == nullptr)
         {
-            log_error("open file %s fail\n", write_pic_path_str.c_str());
+            log_error("open file %s fail\n", write_pic0_path_str.c_str());
             return;
         }
-        write_raw_for_output(fp);
+        write_raw_for_output(fp, 0);
     }
-    else if (strcmp(write_pic_format, "PNM") == 0 && write_pic_src_pin.size() == 3)
+    else if (strcmp(write_pic0_format, "PNM") == 0 && write_pic0_src_pin.size() == 3)
     {
-        fp = fopen(write_pic_path_str.c_str(), "wb");
+        fp = fopen(write_pic0_path_str.c_str(), "wb");
         if (fp == nullptr)
         {
-            log_error("open file %s fail\n", write_pic_path_str.c_str());
+            log_error("open file %s fail\n", write_pic0_path_str.c_str());
             return;
         }
-        write_pnm_for_output(fp);
+        write_pnm_for_output(fp, 0);
     }
-    else if (strcmp(write_pic_format, "YUV422") == 0 && write_pic_src_pin.size() == 3)
+    else if (strcmp(write_pic0_format, "YUV422") == 0 && write_pic0_src_pin.size() == 3)
     {
-        fp = fopen(write_pic_path_str.c_str(), "wb");
+        fp = fopen(write_pic0_path_str.c_str(), "wb");
         if (fp == nullptr)
         {
-            log_error("open file %s fail\n", write_pic_path_str.c_str());
+            log_error("open file %s fail\n", write_pic0_path_str.c_str());
             return;
         }
-        write_yuv422_for_output(fp);
+        write_yuv422_for_output(fp, 0);
     }
-    else if (strcmp(write_pic_format, "YUV444") == 0 && write_pic_src_pin.size() == 3)
+    else if (strcmp(write_pic0_format, "YUV444") == 0 && write_pic0_src_pin.size() == 3)
     {
-        fp = fopen(write_pic_path_str.c_str(), "wb");
+        fp = fopen(write_pic0_path_str.c_str(), "wb");
         if (fp == nullptr)
         {
-            log_error("open file %s fail\n", write_pic_path_str.c_str());
+            log_error("open file %s fail\n", write_pic0_path_str.c_str());
             return;
         }
-        write_yuv444_for_output(fp);
+        write_yuv444_for_output(fp, 0);
+    }
+    else {
+        log_error("can't write pic, RAW:1, PNM:3, YUV:3\n");
+    }
+
+    if (fp)
+    {
+        fclose(fp);
+    }
+}
+
+void hw_base::write_pic1_for_output()
+{
+    if (write_pic1_src_pin.size() > out.size())
+    {
+        log_error("can't write pic1 because outpins = %ld, and xml config pins for pic = %ld\n", out.size(), write_pic1_src_pin.size());
+        return;
+    }
+    FILE* fp = nullptr;
+
+    std::string write_pic1_path_str(write_pic1_path);
+
+    if (input_file_name != nullptr && input_file_name->length() > 0)
+    {
+        size_t ridx1 = input_file_name->rfind('/');
+        size_t ridx2 = input_file_name->rfind('.');
+        std::string input_raw_fn = input_file_name->substr(ridx1 + 1, ridx2 - ridx1 - 1);
+
+        ridx1 = write_pic1_path_str.rfind('/');
+        write_pic1_path_str.insert(ridx1 + 1, input_raw_fn.c_str(), input_raw_fn.size());
+    }
+    if (strcmp(write_pic1_format, "RAW") == 0 && write_pic1_src_pin.size() == 1)
+    {
+        fp = fopen(write_pic1_path_str.c_str(), "wb");
+
+        if (fp == nullptr)
+        {
+            log_error("open file %s fail\n", write_pic1_path_str.c_str());
+            return;
+        }
+        write_raw_for_output(fp, 1);
+    }
+    else if (strcmp(write_pic1_format, "PNM") == 0 && write_pic1_src_pin.size() == 3)
+    {
+        fp = fopen(write_pic1_path_str.c_str(), "wb");
+        if (fp == nullptr)
+        {
+            log_error("open file %s fail\n", write_pic1_path_str.c_str());
+            return;
+        }
+        write_pnm_for_output(fp, 1);
+    }
+    else if (strcmp(write_pic1_format, "YUV422") == 0 && write_pic1_src_pin.size() == 3)
+    {
+        fp = fopen(write_pic1_path_str.c_str(), "wb");
+        if (fp == nullptr)
+        {
+            log_error("open file %s fail\n", write_pic1_path_str.c_str());
+            return;
+        }
+        write_yuv422_for_output(fp, 1);
+    }
+    else if (strcmp(write_pic1_format, "YUV444") == 0 && write_pic1_src_pin.size() == 3)
+    {
+        fp = fopen(write_pic1_path_str.c_str(), "wb");
+        if (fp == nullptr)
+        {
+            log_error("open file %s fail\n", write_pic1_path_str.c_str());
+            return;
+        }
+        write_yuv444_for_output(fp, 1);
     }
     else {
         log_error("can't write pic, RAW:1, PNM:3, YUV:3\n");

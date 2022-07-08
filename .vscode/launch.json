@@ -10,7 +10,7 @@
             "request": "launch",
             // Resolved by CMake Tools:
             "program": "${command:cmake.launchTargetPath}",
-            "args": ["-p", "0", "-cfg", "../cfg/V1_config.xml", "-f", "2"],
+            "args": ["-p", "3", "-cfg", "../cfg/test_bgrir_config.xml", "-f", "1"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
             "environment": [

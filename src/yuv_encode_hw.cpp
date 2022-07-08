@@ -4,8 +4,6 @@
 
 #include "meta_data.h"
 
-extern dng_md_t g_dng_all_md;
-
 yuv_encode_hw::yuv_encode_hw(uint32_t inpins, uint32_t outpins, const char* inst_name):hw_base(inpins, outpins, inst_name)
 {
     bypass = 0;
@@ -13,8 +11,6 @@ yuv_encode_hw::yuv_encode_hw(uint32_t inpins, uint32_t outpins, const char* inst
 
 static int32_t yuv_encode_core(const char* out_name, uint32_t y_width, uint32_t y_height, uint8_t* buffer_y, uint8_t* buffer_u, uint8_t* buffer_v)
 {
-    
-
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
     cinfo.err = jpeg_std_error(&jerr);
@@ -41,11 +37,11 @@ static int32_t yuv_encode_core(const char* out_name, uint32_t y_width, uint32_t 
     cinfo.raw_data_in = TRUE;
     cinfo.do_fancy_downsampling = FALSE;
 
-    cinfo.comp_info[0].h_samp_factor = 2;		//for Y
+    cinfo.comp_info[0].h_samp_factor = 2;       //for Y
     cinfo.comp_info[0].v_samp_factor = 1;
-    cinfo.comp_info[1].h_samp_factor = 1;		//for Cb
+    cinfo.comp_info[1].h_samp_factor = 1;       //for Cb
     cinfo.comp_info[1].v_samp_factor = 1;
-    cinfo.comp_info[2].h_samp_factor = 1;		//for Cr
+    cinfo.comp_info[2].h_samp_factor = 1;       //for Cr
     cinfo.comp_info[2].v_samp_factor = 1;
 
     log_info("block size=%d\n", cinfo.block_size);
@@ -168,7 +164,7 @@ void yuv_encode_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     if (bypass == 0)
     {
-        std::string* input_file_name = &g_dng_all_md.input_file_name;
+        std::string* input_file_name = &stat_out->input_file_name;
         std::string output_raw_fn;
         if (use_input_file_name > 0)
         {

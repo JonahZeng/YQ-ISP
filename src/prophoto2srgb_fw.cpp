@@ -25,7 +25,7 @@ void prophoto2srgb_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* glob
     uint32_t frame_cnt, void* pipe_regs)
 {
     fe_module_reg_t* regs = (fe_module_reg_t*)pipe_regs;
-    dng_md_t* all_dng_md = global_ref_out->meta_data;
+    dng_md_t* all_dng_md = &(global_ref_out->dng_meta_data);
     prophoto2srgb_reg_t* prophoto2srgb_reg = &(regs->prophoto2srgb_reg);
 
     Mat3_3lf XYZ2sRGB(

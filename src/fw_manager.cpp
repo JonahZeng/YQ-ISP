@@ -50,7 +50,8 @@ void fw_manager::hw_run(statistic_info_t *stat_out, uint32_t frame_cnt)
         md->fw_exec(stat_out, global_ref_out, frame_cnt, (void*)reg_ptr);
     }
 
-    this->write_pic = false;
+    this->write_pic0 = false;
+    this->write_pic1 = false;
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);
 }

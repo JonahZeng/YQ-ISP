@@ -16,6 +16,7 @@
 #include "yuv2rgb_8bit_hw.h"
 #include "hsv_lut_hw.h"
 #include "prophoto2srgb_hw.h"
+#include "rgbir_remosaic_hw.h"
 
 typedef struct fe_module_reg_s {
     blc_reg_t blc_reg;
@@ -34,4 +35,5 @@ typedef struct fe_module_reg_s {
     yuv2rgb_8b_reg_t yuv2rgb_8b_reg;
     hsv_lut_reg_t hsv_lut_reg;
     prophoto2srgb_reg_t prophoto2srgb_reg;
+    rgbir_remosaic_reg_t rgbir_remosaic_reg;
 }fe_module_reg_t;

@@ -19,4 +19,10 @@ public:
     statistic_info_t* stat_addr;
     global_ref_out_t* global_ref_out;
     std::string cfg_file_name;
+
+private:
+    static pipeline_manager* g_pipe_manager;
+public:
+    static pipeline_manager* get_current_pipe_manager();
+    static void set_current_pipe_manager(pipeline_manager* pipe_manager);
 };

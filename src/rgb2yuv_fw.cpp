@@ -24,7 +24,7 @@ void rgb2yuv_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref
     uint32_t frame_cnt, void* pipe_regs)
 {
     fe_module_reg_t* regs = (fe_module_reg_t*)pipe_regs;
-    //dng_md_t* all_dng_md = global_ref_out->meta_data;
+    //dng_md_t* all_dng_md = &(global_ref_out->dng_meta_data);
     rgb2yuv_reg_t* rgb2yuv_reg = &(regs->rgb2yuv_reg);
 
     rgb2yuv_reg->bypass = 0;

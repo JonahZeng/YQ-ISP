@@ -1,17 +1,10 @@
-﻿/*
- * @Author: Jonah Zeng zengyangqiao@qq.com
- * @Date: 2022-06-08 15:51:42
- * @LastEditors: Jonah Zeng zengyangqiao@qq.com
- * @LastEditTime: 2022-06-29 14:23:16
- * @FilePath: \YQ-ISP\src\isp_interface.cpp
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
-#include <stdio.h>
+﻿#include <stdio.h>
 #include "pipeline_manager.h"
 
 extern void test_V1_pipeline(pipeline_manager* manager);
 extern void test_purple_fringing_pipe(pipeline_manager* manager);
 extern void test_awbgain_pipeline(pipeline_manager* manager);
+extern void test_bgrir_pipeline(pipeline_manager* manager);
 
 typedef struct _pipeline_collection {
     const char* pipeline_name;
@@ -21,7 +14,8 @@ typedef struct _pipeline_collection {
 pipeline_collection pipelines[] = {
     {"test_V1_pipeline", test_V1_pipeline},//0
     {"test_purple_fringing_pipe", test_purple_fringing_pipe}, //1
-    {"test_awbgain_pipeline", test_awbgain_pipeline} //2
+    {"test_awbgain_pipeline", test_awbgain_pipeline}, //2
+    {"test_bgrir_pipeline", test_bgrir_pipeline} //3
 };
 
 static void print_usage()
@@ -69,6 +63,7 @@ bool run_isp(int32_t pipe_id, const char* log_fn, const char* cfg_file_name, int
     log_info("run command: -p %d -cfg %s -f %d -log %s\n", pipe_id, cfg_file_name, frame_end, log_fn);
 
     pipeline_manager* isp_pipe_manager = new pipeline_manager(); //use heap just for log2file, log pipeline destruct
+    pipeline_manager::set_current_pipe_manager(isp_pipe_manager);
     isp_pipe_manager->frames = frame_end;
     pipelines[pipe_id].f(isp_pipe_manager);
 

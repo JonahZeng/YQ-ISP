@@ -5,12 +5,12 @@
 #include <string>
 #include <list>
 #include <typeinfo>
-#include "fileRead.h"
+#include "file_read.h"
 
 using std::list;
 using std::vector;
 
-dng_md_t g_dng_all_md;
+pipeline_manager* pipeline_manager::g_pipe_manager = nullptr;
 
 pipeline_manager::pipeline_manager():hw_list(), cfg_file_name()
 {
@@ -20,8 +20,8 @@ pipeline_manager::pipeline_manager():hw_list(), cfg_file_name()
     {
         log_error("alloc memory for statistc_info/global ref fail\n");
     }
-    g_dng_all_md.meta_data_valid = false;
-    global_ref_out->meta_data = &g_dng_all_md;
+
+    global_ref_out->dng_meta_data.meta_data_valid = false;
 }
 
 pipeline_manager::~pipeline_manager()
@@ -353,7 +353,7 @@ void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
     for (size_t i = 0; i < hw_size; i++)
     {
         hw_base* m = hw_list.at(i);
-        if (typeid(*m) == typeid(fileRead))
+        if (typeid(*m) == typeid(file_read))
         {
             if (frame_cnt == frames - 1)
             {
@@ -371,7 +371,8 @@ void pipeline_manager::connect_port(hw_base* pre_hw, uint32_t out_port, hw_base*
 {
     if (out_port >= pre_hw->outpins || in_port >= next_hw->inpins)
     {
-        throw std::out_of_range("port out of range");
+        log_error("port out of range\n");
+        exit(EXIT_FAILURE);
     }
     else {
         pre_hw->next_hw_of_outport[out_port].push_back(next_hw);
@@ -379,4 +380,14 @@ void pipeline_manager::connect_port(hw_base* pre_hw, uint32_t out_port, hw_base*
         next_hw->previous_hw[in_port] = pre_hw;
         next_hw->outport_of_previous_hw[in_port] = out_port;
     }
+}
+
+pipeline_manager* pipeline_manager::get_current_pipe_manager()
+{
+    return g_pipe_manager;
+}
+
+void pipeline_manager::set_current_pipe_manager(pipeline_manager* pipe_manager)
+{
+    g_pipe_manager = pipe_manager;
 }

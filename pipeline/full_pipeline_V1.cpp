@@ -2,7 +2,7 @@
 pipeline construction
 */
 #include "pipeline_manager.h"
-#include "fileRead.h"
+#include "file_read.h"
 #include "pipe_register.h"
 #include "yuv_encode_hw.h"
 #include "fw_manager.h"
@@ -23,7 +23,7 @@ pipeline construction
 
 void test_V1_pipeline(pipeline_manager* manager)
 {
-    fileRead* raw_in = new fileRead(1, "raw_in");
+    file_read* raw_in = new file_read(1, "raw_in");
     fw_manager* fe_fw_manager = new fw_manager(1, 2, "fe_fw_manager");
     raw_crop_hw* raw_crop_hw_inst = new raw_crop_hw(2, 1, "raw_crop_hw");
     raw_crop_fw* raw_crop_fw_inst = new raw_crop_fw(1, 1, "raw_crop_fw");

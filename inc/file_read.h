@@ -3,13 +3,13 @@
 #include "hw_base.h"
 #include <stdint.h>
 
-class fileRead :public hw_base {
+class file_read :public hw_base {
 public:
-    fileRead()=delete;
-    fileRead(uint32_t outpins, const char* inst_name);
+    file_read()=delete;
+    file_read(uint32_t outpins, const char* inst_name);
     void hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) override;
     void hw_init() override;
-    ~fileRead();
+    ~file_read();
 private:
     bayer_type_t bayer;
     uint32_t bit_depth;

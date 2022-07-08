@@ -91,6 +91,16 @@ void blc_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) //input 2pin
         blc_reg->blc_gr = blc_gr;
         blc_reg->blc_gb = blc_gb;
         blc_reg->blc_b = blc_b;
+        blc_reg->white_level = white_level;
+        blc_reg->normalize_en = normalize_en;
+    }
+    else{
+        blc_r =  blc_reg->blc_r;
+        blc_gr =  blc_reg->blc_gr;
+        blc_gb =  blc_reg->blc_gb;
+        blc_b =  blc_reg->blc_b;
+        white_level =  blc_reg->white_level;
+        normalize_en =  blc_reg->normalize_en;
     }
 
     checkparameters(blc_reg);
@@ -107,7 +117,7 @@ void blc_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) //input 2pin
 
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
-        tmp[sz] = input_raw->data_ptr[sz] >> (16 - 14); //nikon d610 14bit capture raw, right shift to 14bit precision
+        tmp[sz] = input_raw->data_ptr[sz] >> (16 - 14);
         out0_ptr[sz] = tmp[sz];
     }
 
@@ -118,7 +128,7 @@ void blc_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt) //input 2pin
 
     for (uint32_t sz = 0; sz < xsize*ysize; sz++)
     {
-        out0_ptr[sz] = out0_ptr[sz] << (16 - 14); //nikon d610 14bit capture raw, back to high bits
+        out0_ptr[sz] = out0_ptr[sz] << (16 - 14);
     }
 
     hw_base::hw_run(stat_out, frame_cnt);

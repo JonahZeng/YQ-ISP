@@ -12,7 +12,7 @@ typedef struct global_ref_out_s
     double wp_y;
     double ccm[9];
     double FM[9];
-    dng_md_t* meta_data;
+    dng_md_t dng_meta_data;
 }global_ref_out_t;
 
 enum bayer_type_t {
@@ -20,14 +20,23 @@ enum bayer_type_t {
     RGGB = 0,
     GRBG = 1,
     GBRG = 2,
-    BGGR = 3
+    BGGR = 3,
+    RGGIR = 4,
+    GRIRG = 5,
+    BGGIR = 6,
+    GBIRG = 7,
+    IRGGR = 8,
+    GIRRG = 9,
+    IRGGB = 10,
+    GIRBG = 11
 };
 
 enum pixel_bayer_type{
     PIX_R = 0,
     PIX_GR = 1,
     PIX_GB = 2,
-    PIX_B = 3
+    PIX_B = 3,
+    PIX_Y = 4
 };
 
 enum data_type_t {

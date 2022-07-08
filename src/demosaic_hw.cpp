@@ -38,7 +38,7 @@ static pixel_bayer_type get_pixel_bayer_type(uint32_t y, uint32_t x, bayer_type_
         type[2] = PIX_R;
         type[3] = PIX_GR;
     }
-    else
+    else if (by == BGGR)
     {
         type[0] = PIX_B;
         type[1] = PIX_GB;

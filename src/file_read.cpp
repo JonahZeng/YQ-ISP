@@ -1,5 +1,5 @@
 ﻿#include <assert.h>
-#include "fileRead.h"
+#include "file_read.h"
 
 //#include "dng_color_space.h"
 #include "dng_camera_profile.h"
@@ -23,11 +23,11 @@
 //#include "dng_xmp.h"
 //#include "dng_xmp_sdk.h"
 
-#include "meta_data.h"
+// #include "meta_data.h"
+#include "pipeline_manager.h"
 
-extern dng_md_t g_dng_all_md;
 
-fileRead::fileRead(uint32_t outpins, const char* inst_name):hw_base(0, outpins, inst_name), file_name()
+file_read::file_read(uint32_t outpins, const char* inst_name):hw_base(0, outpins, inst_name), file_name()
 {
     bayer = RGGB;
     bit_depth = 10;
@@ -399,28 +399,30 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
         negative->GetLinearizationInfo()->fWhiteLevel[2],
         negative->GetLinearizationInfo()->fWhiteLevel[3]);
 
-    g_dng_all_md.meta_data_valid = true;
+    pipeline_manager* cur_pipe_manager = pipeline_manager::get_current_pipe_manager();
+    dng_md_t& dng_all_md = cur_pipe_manager->global_ref_out->dng_meta_data;
+    dng_all_md.meta_data_valid = true;
 
-    get_blc_md_from_dng(blc_dim_x, blc_dim_y, negative, bayer_tp, g_dng_all_md);
+    get_blc_md_from_dng(blc_dim_x, blc_dim_y, negative, bayer_tp, dng_all_md);
 
-    get_ae_md_from_dng(exif, g_dng_all_md);
+    get_ae_md_from_dng(exif, dng_all_md);
     
 
-    g_dng_all_md.ae_comp_md.BaselineExposure = info.fShared->fBaselineExposure.As_real64();
-    log_info("baseline exposure = %lf\n", g_dng_all_md.ae_comp_md.BaselineExposure);
+    dng_all_md.ae_comp_md.BaselineExposure = info.fShared->fBaselineExposure.As_real64();
+    log_info("baseline exposure = %lf\n", dng_all_md.ae_comp_md.BaselineExposure);
     
-    get_awb_md_from_dng(&info, g_dng_all_md);
+    get_awb_md_from_dng(&info, dng_all_md);
 
-    get_cc_md_from_dng(&info, g_dng_all_md);
+    get_cc_md_from_dng(&info, dng_all_md);
 
-    get_sensor_crop_info_from_dng(&info, g_dng_all_md);
+    get_sensor_crop_info_from_dng(&info, dng_all_md);
 
-    get_lsc_md_from_dng(exif, info.fIFD[info.fMainIndex], g_dng_all_md);
+    get_lsc_md_from_dng(exif, info.fIFD[info.fMainIndex], dng_all_md);
 
     
     uint32_t profile_cnt = negative->ProfileCount();
-    g_dng_all_md.hsv_lut_md.twoD_enable = 0;
-    g_dng_all_md.hsv_lut_md.threeD_enable = 0;
+    dng_all_md.hsv_lut_md.twoD_enable = 0;
+    dng_all_md.hsv_lut_md.threeD_enable = 0;
     for (uint32_t i = 0; i < profile_cnt; i++)
     {
         const dng_camera_profile& pf= negative->ProfileByIndex(i);
@@ -436,29 +438,31 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
             }
             if (pf.HasHueSatDeltas())
             {
-                g_dng_all_md.hsv_lut_md.twoD_enable = 1;
-                g_dng_all_md.hsv_lut_md.fHueSatMapEncoding = pf.HueSatMapEncoding();
-                g_dng_all_md.hsv_lut_md.fHueSatDeltas1 = pf.HueSatDeltas1();
-                g_dng_all_md.hsv_lut_md.fHueSatDeltas2 = pf.HueSatDeltas2();
-                g_dng_all_md.hsv_lut_md.fCalibrationIlluminant1 = pf.CalibrationIlluminant1();
-                g_dng_all_md.hsv_lut_md.fCalibrationIlluminant2 = pf.CalibrationIlluminant2();
+                dng_all_md.hsv_lut_md.twoD_enable = 1;
+                dng_all_md.hsv_lut_md.fHueSatMapEncoding = pf.HueSatMapEncoding();
+                dng_all_md.hsv_lut_md.fHueSatDeltas1 = pf.HueSatDeltas1();
+                dng_all_md.hsv_lut_md.fHueSatDeltas2 = pf.HueSatDeltas2();
+                dng_all_md.hsv_lut_md.fCalibrationIlluminant1 = pf.CalibrationIlluminant1();
+                dng_all_md.hsv_lut_md.fCalibrationIlluminant2 = pf.CalibrationIlluminant2();
 
                 if (pf.HasLookTable())
                 {
-                    g_dng_all_md.hsv_lut_md.threeD_enable = 1;
-                    g_dng_all_md.hsv_lut_md.fLookTable = pf.LookTable();
-                    g_dng_all_md.hsv_lut_md.fLookTableEncoding = pf.LookTableEncoding();
+                    dng_all_md.hsv_lut_md.threeD_enable = 1;
+                    dng_all_md.hsv_lut_md.fLookTable = pf.LookTable();
+                    dng_all_md.hsv_lut_md.fLookTableEncoding = pf.LookTableEncoding();
                 }
             }
         }
     }
 }
 
-void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
+void file_read::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
     log_info("%s run start frame %d\n", __FUNCTION__, frame_cnt);
     if (frame_cnt == 0)
     {
+        pipeline_manager* cur_pipe_manager = pipeline_manager::get_current_pipe_manager();
+        dng_md_t& dng_all_md = cur_pipe_manager->global_ref_out->dng_meta_data;
         if (strcmp(file_type_string, "RAW") == 0)
         {
             bayer_type_t raw_bayer;
@@ -478,6 +482,14 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             {
                 raw_bayer = BGGR;
             }
+            else if (strcmp(this->bayer_string, "RGGIR") == 0)
+            {
+                raw_bayer = RGGIR;
+            }
+            else if (strcmp(this->bayer_string, "BGGIR") == 0)
+            {
+                raw_bayer = BGGIR;
+            }
             data_buffer* out0 = new data_buffer(img_width, img_height, DATA_TYPE_RAW, raw_bayer, "raw_in out0");
             out[0] = out0;
 
@@ -487,8 +499,8 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             {
                 if (bit_depth > 8 && bit_depth <= 16)
                 {
-                    size_t read_cnt = fread(out0->data_ptr, sizeof(uint16_t), img_width*img_height, input_f);
-                    if (read_cnt != sizeof(uint16_t) * img_width * img_height)
+                    size_t read_cnt = fread(out0->data_ptr, sizeof(uint16_t), img_width * img_height, input_f);
+                    if (read_cnt != img_width * img_height)
                     {
                         log_error("read raw file bytes unexpected\n");
                     }
@@ -497,8 +509,26 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
                         out0->data_ptr[s] = out0->data_ptr[s] << (16 - bit_depth);
                     }
                 }
+                else if (bit_depth <= 8 && bit_depth > 0)
+                {
+                    uint8_t* mid_pos = reinterpret_cast<uint8_t*>(out0->data_ptr + (img_width * img_height)/2);
+                    size_t read_cnt = fread(mid_pos, sizeof(uint8_t), img_width * img_height, input_f);
+                    if (read_cnt != img_width * img_height)
+                    {
+                        log_error("read raw file bytes unexpected\n");
+                    }
+                    for (uint32_t s = 0; s < img_height*img_width; s++)
+                    {
+                        out0->data_ptr[s] = ((uint16_t)mid_pos[s]) << (16 - bit_depth);
+                    }
+                }
+                else{
+                    fclose(input_f);
+                    log_error("not support %u bits raw\n", bit_depth);
+                    exit(EXIT_FAILURE);
+                }
                 fclose(input_f);
-                g_dng_all_md.input_file_name = std::string(file_name);
+                dng_all_md.input_file_name = std::string(file_name);
                 stat_out->input_file_name = std::string(file_name);
             }
         }
@@ -507,7 +537,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
             data_buffer* out0 = nullptr;
             uint32_t bit_dep = 0;
             readDNG_by_adobe_sdk(file_name, &out0, &bit_dep);
-            g_dng_all_md.input_file_name = std::string(file_name);
+            dng_all_md.input_file_name = std::string(file_name);
             stat_out->input_file_name = std::string(file_name);
             out[0] = out0;
             img_width = out0->width;
@@ -531,7 +561,7 @@ void fileRead::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_info("%s run end frame %d\n", __FUNCTION__, frame_cnt);
 }
 
-void fileRead::hw_init()
+void file_read::hw_init()
 {
     log_info("%s init run start\n", name);
     cfgEntry_t config[] = {
@@ -551,7 +581,7 @@ void fileRead::hw_init()
     log_info("%s init run end\n", name);
 }
 
-fileRead::~fileRead()
+file_read::~file_read()
 {
     log_info("%s deinit start\n", __FUNCTION__);
     log_info("%s deinit end\n", __FUNCTION__);

@@ -2,13 +2,13 @@
 pipeline construction
 */
 #include "pipeline_manager.h"
-#include "fileRead.h"
+#include "file_read.h"
 #include "awb_gain_hw.h"
 
 
 void test_awbgain_pipeline(pipeline_manager* manager)
 {
-    fileRead* raw_in = new fileRead(1, "raw_in");
+    file_read* raw_in = new file_read(1, "raw_in");
     awbgain_hw* awbgain_hw_inst = new awbgain_hw(1, 1, "awbgain_hw");
 
     manager->register_hw_module(raw_in);

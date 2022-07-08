@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-16" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <pipeline_config>
   <component>
     <inst_name>raw_in</inst_name>
@@ -18,11 +18,11 @@
     <gr_gain>1024</gr_gain>
     <gb_gain>1024</gb_gain>
     <b_gain>1024</b_gain>
-    <write_pic>1</write_pic>
-    <write_pic_src_pin>0</write_pic_src_pin>
-    <write_pic_format>RAW</write_pic_format>
-    <write_pic_path>./_awb_dump.raw</write_pic_path>
-    <write_pic_bits>8</write_pic_bits>
+    <write_pic0>1</write_pic0>
+    <write_pic0_src_pin>0</write_pic0_src_pin>
+    <write_pic0_format>RAW</write_pic0_format>
+    <write_pic0_path>./_awb_dump.raw</write_pic0_path>
+    <write_pic0_bits>8</write_pic0_bits>
   </component>
 
 </pipeline_config>

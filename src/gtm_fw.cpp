@@ -24,7 +24,7 @@ void gtm_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out
     uint32_t frame_cnt, void* pipe_regs)
 {
     fe_module_reg_t* regs = (fe_module_reg_t*)pipe_regs;
-    dng_md_t* all_dng_md = global_ref_out->meta_data;
+    dng_md_t* all_dng_md = &(global_ref_out->dng_meta_data);
     gtm_reg_t* gtm_reg = &(regs->gtm_reg);
 
     //uint32_t rgb2y[3] = { 306, 601, 117 };

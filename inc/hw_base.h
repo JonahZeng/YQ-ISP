@@ -16,18 +16,25 @@ public:
     char* name;
     std::vector<cfgEntry_t> hwCfgList;
     bool xmlConfigValid;
-    bool write_pic;
-    std::vector<uint32_t> write_pic_src_pin;
-    char write_pic_format[16];
-    char write_pic_path[256];
-    uint32_t write_pic_bits;
+    bool write_pic0;
+    std::vector<uint32_t> write_pic0_src_pin;
+    char write_pic0_format[16];
+    char write_pic0_path[256];
+    uint32_t write_pic0_bits;
+
+    bool write_pic1;
+    std::vector<uint32_t> write_pic1_src_pin;
+    char write_pic1_format[16];
+    char write_pic1_path[256];
+    uint32_t write_pic1_bits;
 
     std::string* input_file_name;
     
     void reset_hw_cnt_of_outport();
     void release_output_memory();
     
-    void write_pic_for_output();
+    void write_pic0_for_output();
+    void write_pic1_for_output();
 
     uint32_t inpins;
     std::vector<hw_base*> previous_hw;
@@ -44,8 +51,8 @@ protected:
 public:
     bool prepare_input();
 private:
-    void write_raw_for_output(FILE* fp);
-    void write_pnm_for_output(FILE* fp);
-    void write_yuv422_for_output(FILE* fp);
-    void write_yuv444_for_output(FILE* fp);
+    void write_raw_for_output(FILE* fp, int32_t pic_no);
+    void write_pnm_for_output(FILE* fp, int32_t pic_no);
+    void write_yuv422_for_output(FILE* fp, int32_t pic_no);
+    void write_yuv444_for_output(FILE* fp, int32_t pic_no);
 };
