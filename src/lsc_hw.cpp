@@ -300,6 +300,6 @@ void lsc_hw::checkparameters(lsc_reg_t* reg)
     log_info("block_start_x_oft %d\n", reg->block_start_x_oft);
     log_info("block_start_y_idx %d\n", reg->block_start_y_idx);
     log_info("block_start_y_oft %d\n", reg->block_start_y_oft);
-    log_array("luma gain:\n", "%5d, ", reg->luma_gain, LSC_GRID_ROWS * LSC_GRID_COLS, LSC_GRID_COLS);
+    log_1d_array("luma gain:\n", "%5d, ", reg->luma_gain, LSC_GRID_ROWS * LSC_GRID_COLS, LSC_GRID_COLS);
     log_info("================= lsc reg=================\n");
 }

@@ -271,6 +271,6 @@ void prophoto2srgb_hw::checkparameters(prophoto2srgb_reg_t* reg)
     log_info("================= prophoto2srgb reg=================\n");
     log_info("bypass %d\n", reg->bypass);
     log_info("hlr_en %d\n", reg->hlr_en);
-    log_array("ccm:\n", "%5d, ", reg->ccm, 9, 3);
+    log_1d_array("ccm:\n", "%5d, ", reg->ccm, 9, 3);
     log_info("================= prophoto2srgb reg=================\n");
 }

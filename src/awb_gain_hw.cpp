@@ -72,6 +72,7 @@ void awbgain_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     log_info("%s run start\n", __FUNCTION__);
     data_buffer* input_raw = in[0]; //前一个模块的输出raw
     bayer_type_t bayer_pattern = input_raw->bayer_pattern; //bayer pattern
+    log_debug("awb input raw pattern %d\n", bayer_pattern);
 
     if (in.size() > 1) //第二个输入，软件管理器的寄存器输入
     {
@@ -86,7 +87,16 @@ void awbgain_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         awbgain_reg->gr_gain = gr_gain;
         awbgain_reg->gb_gain = gb_gain;
         awbgain_reg->b_gain = b_gain;
+
         awbgain_reg->ae_compensat_gain = ae_compensat_gain;
+    }
+    else{
+        r_gain = awbgain_reg->r_gain;
+        gr_gain = awbgain_reg->gr_gain;
+        gb_gain = awbgain_reg->gb_gain;
+        b_gain = awbgain_reg->b_gain;
+
+        ae_compensat_gain = awbgain_reg->ae_compensat_gain;
     }
 
     checkparameters(awbgain_reg); //检查寄存器位宽

@@ -34,6 +34,7 @@ file_read::file_read(uint32_t outpins, const char* inst_name):hw_base(0, outpins
     file_type = RAW_FORMAT;
     img_width = 0;
     img_height = 0;
+    big_endian = false;
 }
 
 
@@ -456,6 +457,486 @@ static void readDNG_by_adobe_sdk(char* file_name, data_buffer** out0, uint32_t* 
     }
 }
 
+static void read_pnm(const char* file_name, std::vector<data_buffer*> *out)
+{
+    FILE *input_f = fopen(file_name, "rb");
+
+    if (input_f == nullptr)
+    {
+        log_error("read pnm fail\n");
+        return;
+    }
+
+    char p6[4] = {0};
+    char width[8] = {0};
+    char height[8] = {0};
+    char max_val[12] = {0};
+    fscanf(input_f, "%s %s %s %s", p6, width, height, max_val);
+    if (ftell(input_f) % 2 == 1)
+    {
+        fseek(input_f, 1L, SEEK_CUR);
+    }
+    log_info("%s %s %s %s", p6, width, height, max_val);
+    if (strcmp(p6, "P6") != 0)
+    {
+        log_error("pnm must be P6\n");
+        fclose(input_f);
+        return;
+    }
+
+    int32_t pnm_w = atoi(width);
+    int32_t pnm_h = atoi(height);
+    int32_t max_v = atoi(max_val);
+
+    int32_t max_b = 0;
+    for (; max_b <= 16; max_b++)
+    {
+        if ((1U << max_b) - 1 >= (uint32_t)max_v)
+        {
+            log_info("pnm bit width %d\n", max_b);
+            break;
+        }
+    }
+    if (max_b == 0 || max_b > 16)
+    {
+        log_error("pnm read bit width fail\n");
+        return;
+    }
+    data_buffer *out0 = new data_buffer(pnm_w, pnm_h, DATA_TYPE_R, BAYER_UNSUPPORT, "raw_in out0");
+    data_buffer *out1 = new data_buffer(pnm_w, pnm_h, DATA_TYPE_G, BAYER_UNSUPPORT, "raw_in out1");
+    data_buffer *out2 = new data_buffer(pnm_w, pnm_h, DATA_TYPE_B, BAYER_UNSUPPORT, "raw_in out2");
+    (*out)[0] = out0;
+    (*out)[1] = out1;
+    (*out)[2] = out2;
+    uint16_t *r_buffer = out0->data_ptr;
+    uint16_t *g_buffer = out1->data_ptr;
+    uint16_t *b_buffer = out2->data_ptr;
+    if (max_b > 8)
+    {
+        std::unique_ptr<uint16_t[]> tmp_buffer(new uint16_t[pnm_w * pnm_h * 3]);
+        uint16_t *tmp_buffer_ptr = tmp_buffer.get();
+        size_t read_cnt = fread(tmp_buffer_ptr, sizeof(uint16_t), pnm_w * pnm_h * 3, input_f);
+        if (read_cnt != pnm_w * pnm_h * 3)
+        {
+            log_error("read pnm file bytes cnt error\n");
+            fclose(input_f);
+            return;
+        }
+        for (int32_t i = 0; i < pnm_h; i++)
+        {
+            for (int32_t j = 0; j < pnm_w * 3; j++)
+            {
+                tmp_buffer_ptr[i * pnm_w * 3 + j] = ((tmp_buffer_ptr[i * pnm_w * 3 + j] & 0x00ff) << 8) | ((tmp_buffer_ptr[i * pnm_w * 3 + j] & 0xff00) >> 8);
+            }
+        }
+        for (int32_t i = 0; i < pnm_h; i++)
+        {
+            for (int32_t j = 0; j < pnm_w; j++)
+            {
+                r_buffer[i * pnm_w + j] = tmp_buffer_ptr[i * pnm_w * 3 + j * 3 + 0] << (16 - max_b);
+                g_buffer[i * pnm_w + j] = tmp_buffer_ptr[i * pnm_w * 3 + j * 3 + 1] << (16 - max_b);
+                b_buffer[i * pnm_w + j] = tmp_buffer_ptr[i * pnm_w * 3 + j * 3 + 2] << (16 - max_b);
+            }
+        }
+    }
+    else
+    {
+        std::unique_ptr<uint8_t[]> tmp_buffer(new uint8_t[pnm_w * pnm_h * 3]);
+        uint8_t *tmp_buffer_ptr = tmp_buffer.get();
+        size_t read_cnt = fread(tmp_buffer_ptr, sizeof(uint8_t), pnm_w * pnm_h * 3, input_f);
+        if (read_cnt != pnm_w * pnm_h * 3)
+        {
+            log_error("read pnm file bytes cnt error\n");
+            fclose(input_f);
+            return;
+        }
+        for (int32_t i = 0; i < pnm_h; i++)
+        {
+            for (int32_t j = 0; j < pnm_w; j++)
+            {
+                r_buffer[i * pnm_w + j] = ((uint16_t)tmp_buffer_ptr[i * pnm_w * 3 + j * 3 + 0]) << (16 - max_b);
+                g_buffer[i * pnm_w + j] = ((uint16_t)tmp_buffer_ptr[i * pnm_w * 3 + j * 3 + 1]) << (16 - max_b);
+                b_buffer[i * pnm_w + j] = ((uint16_t)tmp_buffer_ptr[i * pnm_w * 3 + j * 3 + 2]) << (16 - max_b);
+            }
+        }
+    }
+    fclose(input_f);
+}
+
+static void read_raw(const char* file_name, const char* bayer_string, uint32_t img_width, uint32_t img_height, 
+    uint32_t bit_depth, bool big_endian, std::vector<data_buffer*> *out)
+{
+    bayer_type_t raw_bayer;
+    if (strcmp(bayer_string, "RGGB") == 0)
+    {
+        raw_bayer = RGGB;
+    }
+    else if (strcmp(bayer_string, "GRBG") == 0)
+    {
+        raw_bayer = GRBG;
+    }
+    else if (strcmp(bayer_string, "GBRG") == 0)
+    {
+        raw_bayer = GBRG;
+    }
+    else if (strcmp(bayer_string, "BGGR") == 0)
+    {
+        raw_bayer = BGGR;
+    }
+    else if (strcmp(bayer_string, "RGGIR") == 0)
+    {
+        raw_bayer = RGGIR;
+    }
+    else if (strcmp(bayer_string, "GRIRG") == 0)
+    {
+        raw_bayer = GRIRG;
+    }
+    else if (strcmp(bayer_string, "BGGIR") == 0)
+    {
+        raw_bayer = BGGIR;
+    }
+    else if (strcmp(bayer_string, "GBIRG") == 0)
+    {
+        raw_bayer = GBIRG;
+    }
+    else if (strcmp(bayer_string, "IRGGR") == 0)
+    {
+        raw_bayer = IRGGR;
+    }
+    else if (strcmp(bayer_string, "GIRRG") == 0)
+    {
+        raw_bayer = GIRRG;
+    }
+    else if (strcmp(bayer_string, "IRGGB") == 0)
+    {
+        raw_bayer = IRGGB;
+    }
+    else if (strcmp(bayer_string, "GIRBG") == 0)
+    {
+        raw_bayer = GIRBG;
+    }
+    data_buffer *out0 = new data_buffer(img_width, img_height, DATA_TYPE_RAW, raw_bayer, "raw_in out0");
+    (*out)[0] = out0;
+
+    FILE *input_f = fopen(file_name, "rb");
+
+    if (input_f != nullptr)
+    {
+        if (bit_depth > 8 && bit_depth <= 16)
+        {
+            size_t read_cnt = fread(out0->data_ptr, sizeof(uint16_t), img_width * img_height, input_f);
+            if (read_cnt != img_width * img_height)
+            {
+                log_error("read raw file bytes unexpected\n");
+            }
+            if(!big_endian)
+            {
+                for (uint32_t s = 0; s < img_height * img_width; s++)
+                {
+                    out0->data_ptr[s] = out0->data_ptr[s] << (16 - bit_depth);
+                }
+            }
+            else{
+                for (uint32_t s = 0; s < img_height * img_width; s++)
+                {
+                    uint16_t val = ((out0->data_ptr[s] & 0xff00) >> 8) | ((out0->data_ptr[s] & 0x00ff) << 8);
+                    out0->data_ptr[s] = val << (16 - bit_depth);
+                }
+            }
+        }
+        else if (bit_depth <= 8 && bit_depth > 0)
+        {
+            uint8_t *mid_pos = reinterpret_cast<uint8_t *>(out0->data_ptr + (img_width * img_height) / 2);
+            size_t read_cnt = fread(mid_pos, sizeof(uint8_t), img_width * img_height, input_f);
+            if (read_cnt != img_width * img_height)
+            {
+                log_error("read raw file bytes unexpected\n");
+            }
+            for (uint32_t s = 0; s < img_height * img_width; s++)
+            {
+                out0->data_ptr[s] = ((uint16_t)mid_pos[s]) << (16 - bit_depth);
+            }
+        }
+        else
+        {
+            fclose(input_f);
+            log_error("not support %u bits raw\n", bit_depth);
+            exit(EXIT_FAILURE);
+        }
+        fclose(input_f);
+    }
+    else{
+        log_error("open file %s fail\n", file_name);
+    }
+}
+
+static void read_yuv444(const char* file_name, const char* module_name, uint32_t img_width, uint32_t img_height, 
+    uint32_t bit_depth, bool big_endian, std::vector<data_buffer*> *out)
+{
+    std::string out_name(module_name);
+    std::string out0_name = out_name + " out0";
+    std::string out1_name = out_name + " out1";
+    std::string out2_name = out_name + " out2";
+
+    data_buffer *out0 = new data_buffer(img_width, img_height, DATA_TYPE_Y, BAYER_UNSUPPORT, out0_name.c_str());
+    (*out)[0] = out0;
+    data_buffer *out1 = new data_buffer(img_width, img_height, DATA_TYPE_U, BAYER_UNSUPPORT, out1_name.c_str());
+    (*out)[1] = out1;
+    data_buffer *out2 = new data_buffer(img_width, img_height, DATA_TYPE_V, BAYER_UNSUPPORT, out2_name.c_str());
+    (*out)[2] = out2;
+
+    FILE *input_f = fopen(file_name, "rb");
+
+    if (input_f != nullptr)
+    {
+        if (bit_depth > 8 && bit_depth <= 16)
+        {
+            std::unique_ptr<uint16_t[]> buffer_yuv(new uint16_t[img_width * img_height * 3]);
+            uint16_t* buffer_yuv_ptr = buffer_yuv.get();
+            size_t read_cnt = fread(buffer_yuv_ptr, sizeof(uint16_t), img_width * img_height * 3, input_f);
+            if (read_cnt != img_width * img_height * 3)
+            {
+                log_error("read raw file bytes unexpected\n");
+            }
+            if(!big_endian)
+            {
+                for (uint32_t s = 0; s < img_height * img_width; s++)
+                {
+                    out0->data_ptr[s] = buffer_yuv_ptr[s * 3 + 0] << (16 - bit_depth);
+                    out1->data_ptr[s] = buffer_yuv_ptr[s * 3 + 1] << (16 - bit_depth);
+                    out2->data_ptr[s] = buffer_yuv_ptr[s * 3 + 2] << (16 - bit_depth);
+                }
+            }
+            else{
+                for (uint32_t s = 0; s < img_height * img_width; s++)
+                {
+                    uint16_t val = ((buffer_yuv_ptr[s * 3 + 0] & 0xff00) >> 8) | ((buffer_yuv_ptr[s * 3 + 0] & 0x00ff) << 8);
+                    out0->data_ptr[s] = val << (16 - bit_depth);
+                    val = ((buffer_yuv_ptr[s * 3 + 1] & 0xff00) >> 8) | ((buffer_yuv_ptr[s * 3 + 1] & 0x00ff) << 8);
+                    out1->data_ptr[s] = val << (16 - bit_depth);
+                    val = ((buffer_yuv_ptr[s * 3 + 2] & 0xff00) >> 8) | ((buffer_yuv_ptr[s * 3 + 2] & 0x00ff) << 8);
+                    out2->data_ptr[s] = val << (16 - bit_depth);
+                }
+            }
+        }
+        else if (bit_depth <= 8 && bit_depth > 0)
+        {
+            std::unique_ptr<uint8_t[]> buffer_yuv(new uint8_t[img_width * img_height * 3]);
+            uint8_t* buffer_yuv_ptr = buffer_yuv.get();
+            size_t read_cnt = fread(buffer_yuv_ptr, sizeof(uint8_t), img_width * img_height * 3, input_f);
+            if (read_cnt != img_width * img_height * 3)
+            {
+                log_error("read raw file bytes unexpected\n");
+            }
+
+            for (uint32_t s = 0; s < img_height * img_width; s++)
+            {
+                out0->data_ptr[s] = ((uint16_t)buffer_yuv_ptr[s * 3 + 0]) << (16 - bit_depth);
+                out1->data_ptr[s] = ((uint16_t)buffer_yuv_ptr[s * 3 + 1]) << (16 - bit_depth);
+                out2->data_ptr[s] = ((uint16_t)buffer_yuv_ptr[s * 3 + 2]) << (16 - bit_depth);
+            }
+        }
+        else
+        {
+            fclose(input_f);
+            log_error("not support %u bits raw\n", bit_depth);
+            exit(EXIT_FAILURE);
+        }
+        fclose(input_f);
+    }
+    else{
+        log_error("open file %s fail\n", file_name);
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void read_yuv422(const char* file_name, const char* module_name, uint32_t img_width, uint32_t img_height, 
+    uint32_t bit_depth, bool big_endian, std::vector<data_buffer*> *out)
+{
+    //UYVY
+    std::string out_name(module_name);
+    std::string out0_name = out_name + " out0";
+    std::string out1_name = out_name + " out1";
+    std::string out2_name = out_name + " out2";
+
+    data_buffer *out0 = new data_buffer(img_width, img_height, DATA_TYPE_Y, BAYER_UNSUPPORT, out0_name.c_str());
+    (*out)[0] = out0;
+    data_buffer *out1 = new data_buffer(img_width/2, img_height, DATA_TYPE_U, BAYER_UNSUPPORT, out1_name.c_str());
+    (*out)[1] = out1;
+    data_buffer *out2 = new data_buffer(img_width/2, img_height, DATA_TYPE_V, BAYER_UNSUPPORT, out2_name.c_str());
+    (*out)[2] = out2;
+
+    FILE *input_f = fopen(file_name, "rb");
+
+    if (input_f != nullptr)
+    {
+        if (bit_depth > 8 && bit_depth <= 16)
+        {
+            std::unique_ptr<uint16_t[]> buffer_yuv(new uint16_t[img_width * img_height * 2]);
+            uint16_t* buffer_yuv_ptr = buffer_yuv.get();
+            size_t read_cnt = fread(buffer_yuv_ptr, sizeof(uint16_t), img_width * img_height * 2, input_f);
+            if (read_cnt != img_width * img_height * 2)
+            {
+                log_error("read raw file bytes unexpected\n");
+            }
+            if(!big_endian)
+            {
+                for (uint32_t s = 0; s < img_height * img_width; s++)
+                {
+                    out0->data_ptr[s] = buffer_yuv_ptr[s * 2 + 1] << (16 - bit_depth);
+                }
+                for (uint32_t s = 0; s < img_height * img_width / 2; s++)
+                {
+                    out1->data_ptr[s] = buffer_yuv_ptr[s * 4] << (16 - bit_depth);
+                    out2->data_ptr[s] = buffer_yuv_ptr[s * 4 + 2] << (16 - bit_depth);
+                }
+            }
+            else
+            {
+                for (uint32_t s = 0; s < img_height * img_width; s++)
+                {
+                    uint16_t val = ((buffer_yuv_ptr[s * 2 + 1] & 0xff00) >> 8) | ((buffer_yuv_ptr[s * 2 + 1] & 0x00ff) << 8);
+                    out0->data_ptr[s] = val << (16 - bit_depth);
+                }
+                for (uint32_t s = 0; s < img_height * img_width / 2; s++)
+                {
+                    uint16_t val = ((buffer_yuv_ptr[s * 4] & 0xff00) >> 8) | ((buffer_yuv_ptr[s * 4] & 0x00ff) << 8);
+                    out1->data_ptr[s] = val << (16 - bit_depth);
+                    val = ((buffer_yuv_ptr[s * 4 + 2] & 0xff00) >> 8) | ((buffer_yuv_ptr[s * 4 + 2] & 0x00ff) << 8);
+                    out2->data_ptr[s] = val << (16 - bit_depth);
+                }
+
+            }
+        }
+        else if (bit_depth <= 8 && bit_depth > 0)
+        {
+            std::unique_ptr<uint8_t[]> buffer_yuv(new uint8_t[img_width * img_height * 2]);
+            uint8_t* buffer_yuv_ptr = buffer_yuv.get();
+            size_t read_cnt = fread(buffer_yuv_ptr, sizeof(uint8_t), img_width * img_height * 2, input_f);
+            if (read_cnt != img_width * img_height * 2)
+            {
+                log_error("read raw file bytes unexpected\n");
+            }
+
+            for (uint32_t s = 0; s < img_height * img_width; s++)
+            {
+                out0->data_ptr[s] = ((uint16_t)buffer_yuv_ptr[s * 2 + 1]) << (16 - bit_depth);
+            }
+            for (uint32_t s = 0; s < img_height * img_width / 2; s++)
+            {
+                out1->data_ptr[s] = ((uint16_t)buffer_yuv_ptr[s * 4]) << (16 - bit_depth);
+                out2->data_ptr[s] = ((uint16_t)buffer_yuv_ptr[s * 4 + 2]) << (16 - bit_depth);
+            }
+        }
+        else
+        {
+            fclose(input_f);
+            log_error("not support %u bits raw\n", bit_depth);
+            exit(EXIT_FAILURE);
+        }
+        fclose(input_f);
+    }
+    else{
+        log_error("open file %s fail\n", file_name);
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void read_yuv420(const char* file_name, const char* module_name, uint32_t img_width, uint32_t img_height, 
+    uint32_t bit_depth, bool big_endian, std::vector<data_buffer*> *out)
+{
+    //NV12
+    std::string out_name(module_name);
+    std::string out0_name = out_name + " out0";
+    std::string out1_name = out_name + " out1";
+    std::string out2_name = out_name + " out2";
+
+    data_buffer *out0 = new data_buffer(img_width, img_height, DATA_TYPE_Y, BAYER_UNSUPPORT, out0_name.c_str());
+    (*out)[0] = out0;
+    data_buffer *out1 = new data_buffer(img_width/2, img_height/2, DATA_TYPE_U, BAYER_UNSUPPORT, out1_name.c_str());
+    (*out)[1] = out1;
+    data_buffer *out2 = new data_buffer(img_width/2, img_height/2, DATA_TYPE_V, BAYER_UNSUPPORT, out2_name.c_str());
+    (*out)[2] = out2;
+
+    FILE *input_f = fopen(file_name, "rb");
+
+    if (input_f != nullptr)
+    {
+        if (bit_depth > 8 && bit_depth <= 16)
+        {
+            std::unique_ptr<uint16_t[]> buffer_yuv(new uint16_t[img_width * img_height * 3 / 2]);
+            uint16_t* buffer_yuv_ptr = buffer_yuv.get();
+            size_t read_cnt = fread(buffer_yuv_ptr, sizeof(uint16_t), img_width * img_height * 3 / 2, input_f);
+            if (read_cnt != img_width * img_height * 3 / 2)
+            {
+                log_error("read raw file bytes unexpected\n");
+            }
+            if(!big_endian)
+            {
+                for (uint32_t s = 0; s < img_height * img_width; s++)
+                {
+                    out0->data_ptr[s] = buffer_yuv_ptr[s] << (16 - bit_depth);
+                }
+                uint32_t y_oft = img_height * img_width;
+                for (uint32_t s = 0; s < img_height * img_width / 4; s++)
+                {
+                    out1->data_ptr[s] = buffer_yuv_ptr[y_oft + s * 2] << (16 - bit_depth);
+                    out2->data_ptr[s] = buffer_yuv_ptr[y_oft + s * 2 + 1] << (16 - bit_depth);
+                }
+            }
+            else
+            {
+                for (uint32_t s = 0; s < img_height * img_width; s++)
+                {
+                    uint16_t val = ((buffer_yuv_ptr[s] & 0xff00) >> 8) | ((buffer_yuv_ptr[s] & 0x00ff) << 8);
+                    out0->data_ptr[s] = val << (16 - bit_depth);
+                }
+                uint32_t y_oft = img_height * img_width;
+                for (uint32_t s = 0; s < img_height * img_width / 4; s++)
+                {
+                    uint16_t val = ((buffer_yuv_ptr[y_oft + s * 2] & 0xff00) >> 8) | ((buffer_yuv_ptr[y_oft + s * 2] & 0x00ff) << 8);
+                    out1->data_ptr[s] = val << (16 - bit_depth);
+                    val = ((buffer_yuv_ptr[y_oft + s * 2 + 1] & 0xff00) >> 8) | ((buffer_yuv_ptr[y_oft + s * 2 + 1] & 0x00ff) << 8);
+                    out2->data_ptr[s] = val << (16 - bit_depth);
+                }
+
+            }
+        }
+        else if (bit_depth <= 8 && bit_depth > 0)
+        {
+            std::unique_ptr<uint8_t[]> buffer_yuv(new uint8_t[img_width * img_height * 3 / 2]);
+            uint8_t* buffer_yuv_ptr = buffer_yuv.get();
+            size_t read_cnt = fread(buffer_yuv_ptr, sizeof(uint8_t), img_width * img_height * 3 / 2, input_f);
+            if (read_cnt != img_width * img_height * 3 / 2)
+            {
+                log_error("read raw file bytes unexpected\n");
+            }
+
+            for (uint32_t s = 0; s < img_height * img_width; s++)
+            {
+                out0->data_ptr[s] = ((uint16_t)buffer_yuv_ptr[s]) << (16 - bit_depth);
+            }
+            uint32_t y_oft = img_height * img_width;
+            for (uint32_t s = 0; s < img_height * img_width / 4; s++)
+            {
+                out1->data_ptr[s] = ((uint16_t)buffer_yuv_ptr[y_oft + s * 2]) << (16 - bit_depth);
+                out2->data_ptr[s] = ((uint16_t)buffer_yuv_ptr[y_oft + s * 2 + 1]) << (16 - bit_depth);
+            }
+        }
+        else
+        {
+            fclose(input_f);
+            log_error("not support %u bits raw\n", bit_depth);
+            exit(EXIT_FAILURE);
+        }
+        fclose(input_f);
+    }
+    else{
+        log_error("open file %s fail\n", file_name);
+        exit(EXIT_FAILURE);
+    }
+}
+
 void file_read::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 {
     log_info("%s run start frame %d\n", __FUNCTION__, frame_cnt);
@@ -463,76 +944,13 @@ void file_read::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
     {
         pipeline_manager* cur_pipe_manager = pipeline_manager::get_current_pipe_manager();
         dng_md_t& dng_all_md = cur_pipe_manager->global_ref_out->dng_meta_data;
-        if (strcmp(file_type_string, "RAW") == 0)
+        if (strcmp(file_type_string, "RAW") == 0 || strcmp(file_type_string, "raw") == 0)
         {
-            bayer_type_t raw_bayer;
-            if (strcmp(this->bayer_string, "RGGB") == 0)
-            {
-                raw_bayer = RGGB;
-            }
-            else if (strcmp(this->bayer_string, "GRBG") == 0)
-            {
-                raw_bayer = GRBG;
-            }
-            else if (strcmp(this->bayer_string, "GBRG") == 0)
-            {
-                raw_bayer = GBRG;
-            }
-            else if (strcmp(this->bayer_string, "BGGR") == 0)
-            {
-                raw_bayer = BGGR;
-            }
-            else if (strcmp(this->bayer_string, "RGGIR") == 0)
-            {
-                raw_bayer = RGGIR;
-            }
-            else if (strcmp(this->bayer_string, "BGGIR") == 0)
-            {
-                raw_bayer = BGGIR;
-            }
-            data_buffer* out0 = new data_buffer(img_width, img_height, DATA_TYPE_RAW, raw_bayer, "raw_in out0");
-            out[0] = out0;
-
-            FILE* input_f = fopen(file_name, "rb");
-
-            if (input_f != nullptr)
-            {
-                if (bit_depth > 8 && bit_depth <= 16)
-                {
-                    size_t read_cnt = fread(out0->data_ptr, sizeof(uint16_t), img_width * img_height, input_f);
-                    if (read_cnt != img_width * img_height)
-                    {
-                        log_error("read raw file bytes unexpected\n");
-                    }
-                    for (uint32_t s = 0; s < img_height*img_width; s++)
-                    {
-                        out0->data_ptr[s] = out0->data_ptr[s] << (16 - bit_depth);
-                    }
-                }
-                else if (bit_depth <= 8 && bit_depth > 0)
-                {
-                    uint8_t* mid_pos = reinterpret_cast<uint8_t*>(out0->data_ptr + (img_width * img_height)/2);
-                    size_t read_cnt = fread(mid_pos, sizeof(uint8_t), img_width * img_height, input_f);
-                    if (read_cnt != img_width * img_height)
-                    {
-                        log_error("read raw file bytes unexpected\n");
-                    }
-                    for (uint32_t s = 0; s < img_height*img_width; s++)
-                    {
-                        out0->data_ptr[s] = ((uint16_t)mid_pos[s]) << (16 - bit_depth);
-                    }
-                }
-                else{
-                    fclose(input_f);
-                    log_error("not support %u bits raw\n", bit_depth);
-                    exit(EXIT_FAILURE);
-                }
-                fclose(input_f);
-                dng_all_md.input_file_name = std::string(file_name);
-                stat_out->input_file_name = std::string(file_name);
-            }
+            read_raw(file_name, bayer_string, img_width, img_height, bit_depth, big_endian, &out);
+            dng_all_md.input_file_name = std::string(file_name);
+            stat_out->input_file_name = std::string(file_name);
         }
-        else if (strcmp(file_type_string, "DNG") == 0)
+        else if (strcmp(file_type_string, "DNG") == 0 || strcmp(file_type_string, "dng") == 0)
         {
             data_buffer* out0 = nullptr;
             uint32_t bit_dep = 0;
@@ -550,6 +968,30 @@ void file_read::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
                     out0->data_ptr[s] = out0->data_ptr[s] << (16 - bit_depth);
                 }
             }
+        }
+        else if(strcmp(file_type_string, "YUV444") == 0 || strcmp(file_type_string, "yuv444") == 0)//YUVYUVYUV
+        {
+            read_yuv444(file_name, name, img_width, img_height, bit_depth, big_endian, &out);
+            dng_all_md.input_file_name = std::string(file_name);
+            stat_out->input_file_name = std::string(file_name);
+        }
+        else if(strcmp(file_type_string, "YUV422") == 0 || strcmp(file_type_string, "yuv422") == 0)//UYVY
+        {
+            read_yuv422(file_name, name, img_width, img_height, bit_depth, big_endian, &out);
+            dng_all_md.input_file_name = std::string(file_name);
+            stat_out->input_file_name = std::string(file_name);
+        }
+        else if(strcmp(file_type_string, "YUV420") == 0 || strcmp(file_type_string, "yuv420") == 0)//NV12
+        {
+            read_yuv420(file_name, name, img_width, img_height, bit_depth, big_endian, &out);
+            dng_all_md.input_file_name = std::string(file_name);
+            stat_out->input_file_name = std::string(file_name);
+        }
+        else if(strcmp(file_type_string, "PNM") == 0 || strcmp(file_type_string, "pnm") == 0)
+        {
+            read_pnm(file_name, &out);
+            dng_all_md.input_file_name = std::string(file_name);
+            stat_out->input_file_name = std::string(file_name);
         }
         else
         {
@@ -570,7 +1012,8 @@ void file_read::hw_init()
         {"file_type",      STRING,     this->file_type_string,  32},
         {"file_name",      STRING,     this->file_name,        256},
         {"img_width",      UINT_32,    &this->img_width           },
-        {"img_height",     UINT_32,    &this->img_height          }
+        {"img_height",     UINT_32,    &this->img_height          },
+        {"big_endian",     BOOL_T,     &this->big_endian          }
     };
     for (int i = 0; i < sizeof(config) / sizeof(cfgEntry_t); i++)
     {

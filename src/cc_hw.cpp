@@ -264,6 +264,6 @@ void cc_hw::checkparameters(cc_reg_t* reg)
 
     log_info("================= cc reg=================\n");
     log_info("bypass %d\n", reg->bypass);
-    log_array("ccm:\n", "%5d, ", reg->ccm, 9, 3);
+    log_1d_array("ccm:\n", "%5d, ", reg->ccm, 9, 3);
     log_info("================= cc reg=================\n");
 }

@@ -173,6 +173,6 @@ void gtm_hw::checkparameters(gtm_reg_t* reg)
     log_info("================= gtm reg=================\n");
     log_info("bypass %d\n", reg->bypass);
     log_info("rgb2y %d %d %d\n", reg->rgb2y[0], reg->rgb2y[1], reg->rgb2y[2]);
-    log_array("gain_lut:\n", "%6d, ", reg->gain_lut, 257, 16);
+    log_1d_array("gain_lut:\n", "%6d, ", reg->gain_lut, 257, 16);
     log_info("================= gtm reg=================\n");
 }

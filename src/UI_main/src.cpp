@@ -1,13 +1,3 @@
-/*
- * @Author: Jonah Zeng zengyangqiao@qq.com
- * @Date: 2022-06-22 16:41:44
- * @LastEditors: Jonah Zeng zengyangqiao@qq.com
- * @LastEditTime: 2022-06-27 14:59:31
- * @FilePath: \hello_world\src.cpp
- * @Description: 
- * 
- * Copyright (c) 2022 by Jonah Zeng zengyangqiao@qq.com, All Rights Reserved. 
- */
 #include <wx/wxprec.h>
 #include <wx/filesys.h>
  
@@ -16,9 +6,9 @@
 #endif
 
 #include <wx/statline.h>
-#ifndef _MSC_VER
+
 #include "human_brain.xpm"
-#endif
+
 
 #include "isp_interface.h"
 
@@ -138,9 +128,9 @@ enum {
 mainFrame::mainFrame(const wxString& title)
        : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(800, 480)), m_pThread(nullptr)
 {
-#ifndef _MSC_VER
+
     SetIcon(wxIcon(aaa));
-#endif
+
     wxPanel* mainPanel = new wxPanel(this);
     verLayout = new wxBoxSizer(wxVERTICAL);
     horLayout = new wxBoxSizer(wxHORIZONTAL);

@@ -58,9 +58,6 @@ static FILE* g_log_fp = nullptr;
 #endif
 
 
-#define LOG_MONO_LEVEL(level) printf(level)
-
-
 void set_log_level(int32_t level)
 {
     if(level >= LOG_TRACE_LEVEL && level <= LOG_NONE_LEVEL)
@@ -132,7 +129,7 @@ void log_debug(const char *fmt, ...)
         }
         else{
             LOG_TIME_2FILE();
-           fprintf(g_log_fp, "[debug] ");
+            fprintf(g_log_fp, "[debug] ");
             va_list marker;
             va_start(marker, fmt);
             vfprintf(g_log_fp, fmt, marker);

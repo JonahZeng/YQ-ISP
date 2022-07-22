@@ -4,6 +4,8 @@
 #include "statistic_info.h"
 #include <vector>
 
+class pipeline_manager;
+
 class hw_base {
 public:
     hw_base() = delete;
@@ -35,12 +37,14 @@ public:
     
     void write_pic0_for_output();
     void write_pic1_for_output();
+protected:
+    const uint32_t inpins;
+    const uint32_t outpins;
+private:
 
-    uint32_t inpins;
     std::vector<hw_base*> previous_hw;
     std::vector<uint32_t> outport_of_previous_hw;
 
-    uint32_t outpins;
     std::vector<std::vector<hw_base*>> next_hw_of_outport;
     std::vector<uint32_t> next_hw_cnt_of_outport;
 
@@ -53,6 +57,8 @@ public:
 private:
     void write_raw_for_output(FILE* fp, int32_t pic_no);
     void write_pnm_for_output(FILE* fp, int32_t pic_no);
-    void write_yuv422_for_output(FILE* fp, int32_t pic_no);
-    void write_yuv444_for_output(FILE* fp, int32_t pic_no);
+    void write_yuv420_for_output(FILE* fp, int32_t pic_no); //NV12
+    void write_yuv422_for_output(FILE* fp, int32_t pic_no); //UYVY
+    void write_yuv444_for_output(FILE* fp, int32_t pic_no); //YUVYUV interleaved
+    friend class pipeline_manager;
 };

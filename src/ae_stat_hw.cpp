@@ -144,9 +144,9 @@ void ae_stat_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
         b_mean[i] = stat_out->ae_stat.b_sum[i] / stat_out->ae_stat.b_cnt[i];
     }
 
-    log_array("ae_stat r:\n", "%5d, ", r_mean, 1024, 32);
-    log_array("ae_stat g:\n", "%5d, ", g_mean, 1024, 32);
-    log_array("ae_stat b:\n", "%5d, ", b_mean, 1024, 32);
+    log_1d_array("ae_stat r:\n", "%5d, ", r_mean, 1024, 32);
+    log_1d_array("ae_stat g:\n", "%5d, ", g_mean, 1024, 32);
+    log_1d_array("ae_stat b:\n", "%5d, ", b_mean, 1024, 32);
 
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);
@@ -202,7 +202,7 @@ void ae_stat_hw::checkparameters(ae_stat_reg_t* reg)
     log_info("block_height %d\n", reg->block_height);
     log_info("skip_step_x %d\n", reg->skip_step_x);
     log_info("skip_step_y %d\n", reg->skip_step_y);
-    log_array("start x:\n", "%5d, ", reg->start_x, 32, 8);
-    log_array("start y:\n", "%5d, ", reg->start_y, 32, 8);
+    log_1d_array("start x:\n", "%5d, ", reg->start_x, 32, 8);
+    log_1d_array("start y:\n", "%5d, ", reg->start_y, 32, 8);
     log_info("================= %s reg=================\n", name);
 }

@@ -1,4 +1,4 @@
-﻿#include <stdio.h>
+﻿// #include <stdio.h>
 #include "pipeline_manager.h"
 
 extern void test_V1_pipeline(pipeline_manager* manager);
@@ -71,7 +71,7 @@ bool run_isp(int32_t pipe_id, const char* log_fn, const char* cfg_file_name, int
     isp_pipe_manager->init();
     isp_pipe_manager->read_xml_cfg();
 
-    for (int fm = 0; fm < frame_end; fm++)
+    for (int32_t fm = 0; fm < frame_end; fm++)
     {
         isp_pipe_manager->run(isp_pipe_manager->stat_addr, fm);
     }

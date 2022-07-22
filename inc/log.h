@@ -3,12 +3,12 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define LOG_CRITICAL_LEVEL	5
-#define LOG_DEBUG_LEVEL 	1
-#define LOG_ERROR_LEVEL	    4
+#define LOG_CRITICAL_LEVEL  5
+#define LOG_DEBUG_LEVEL     1
+#define LOG_ERROR_LEVEL     4
 #define LOG_INFO_LEVEL      2
-#define LOG_NONE_LEVEL   	6
-#define LOG_TRACE_LEVEL 	0
+#define LOG_NONE_LEVEL      6
+#define LOG_TRACE_LEVEL     0
 #define LOG_WARNING_LEVEL   3
 
 int32_t get_log_level();
@@ -23,9 +23,9 @@ void log_info(const char *fmt, ...);
 void log_debug(const char *fmt, ...);
 void log_trace(const char *fmt, ...);
 
-#define log_array(info, fmt, arr_name, len, row_len) { FILE* log_fp = get_log_fp();\
+#define log_1d_array(info, fmt, arr_name, len, row_len) { FILE* log_fp = get_log_fp();\
     if(log_fp){\
-        fprintf(log_fp, info); \
+        fprintf(log_fp, info);\
         for(uint32_t i=0; i<len; i++){\
             fprintf(log_fp, fmt, arr_name[i]);\
             if(i % row_len == (row_len - 1)){\
@@ -41,6 +41,29 @@ void log_trace(const char *fmt, ...);
             if(i % row_len == (row_len - 1)){\
                 printf("\n");\
             }\
+        }\
+        printf("\n");\
+    }\
+}
+
+#define log_2d_array(info, fmt, arr_name, height, width, row_len) { FILE* log_fp = get_log_fp();\
+    if(log_fp){\
+        fprintf(log_fp, info);\
+        for(uint32_t i=0; i<height; i++){\
+            for(uint32_t j=0; j<width; j++){\
+                fprintf(log_fp, fmt, arr_name[i][j]);\
+            }\
+            fprintf(log_fp, "\n");\
+        }\
+        fprintf(log_fp, "\n");\
+    }\
+    else{\
+        printf(info);\
+        for(uint32_t i=0; i<height; i++){\
+            for(uint32_t j=0; j<width; j++){\
+                printf(fmt, arr_name[i][j]);\
+            }\
+            printf("\n");\
         }\
         printf("\n");\
     }\

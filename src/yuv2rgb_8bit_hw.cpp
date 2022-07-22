@@ -116,6 +116,6 @@ void yuv2rgb_8b_hw::checkparameters(yuv2rgb_8b_reg_t* reg)
 
     log_info("================= yuv2rgb 8b reg=================\n");
     log_info("bypass %d\n", reg->bypass);
-    log_array("yuv2rgb_coeff:\n", "%5d, ", reg->yuv2rgb_coeff, 9, 3);
+    log_1d_array("yuv2rgb_coeff:\n", "%5d, ", reg->yuv2rgb_coeff, 9, 3);
     log_info("================= yuv2rgb 8b reg=================\n");
 }

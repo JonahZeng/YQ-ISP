@@ -5,6 +5,9 @@
 typedef struct rgbir_remosaic_reg_s
 {
     uint32_t bypass;
+    int32_t ir_subtract_r[17];
+    int32_t ir_subtract_g[17];
+    int32_t ir_subtract_b[17];
 }rgbir_remosaic_reg_t;
 
 class rgbir_remosaic_hw :public hw_base {
@@ -21,4 +24,7 @@ private:
     void checkparameters(rgbir_remosaic_reg_t* reg);
     rgbir_remosaic_reg_t* rgbir_remosaic_reg;
     uint32_t bypass;
+    std::vector<int32_t> ir_subtract_r;
+    std::vector<int32_t> ir_subtract_g;
+    std::vector<int32_t> ir_subtract_b;
 };

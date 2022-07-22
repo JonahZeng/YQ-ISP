@@ -67,7 +67,7 @@ void prophoto2srgb_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* glob
     prophoto2srgb_reg->ccm[4] = 1024 - prophoto2srgb_reg->ccm[3] - prophoto2srgb_reg->ccm[5];
     prophoto2srgb_reg->ccm[8] = 1024 - prophoto2srgb_reg->ccm[6] - prophoto2srgb_reg->ccm[7];
 
-    log_array("prophoto2srgb ccm:\n", "%d, ", prophoto2srgb_reg->ccm, 9, 3);
+    log_1d_array("prophoto2srgb ccm:\n", "%d, ", prophoto2srgb_reg->ccm, 9, 3);
 }
 
 prophoto2srgb_fw::~prophoto2srgb_fw()

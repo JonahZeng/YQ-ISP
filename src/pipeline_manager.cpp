@@ -5,6 +5,7 @@
 #include <string>
 #include <list>
 #include <typeinfo>
+#include <algorithm>
 #include "file_read.h"
 
 using std::list;
@@ -43,7 +44,10 @@ pipeline_manager::~pipeline_manager()
 
 void pipeline_manager::register_hw_module(hw_base* hw_module)
 {
-    hw_list.push_back(hw_module);
+    if(std::find(hw_list.begin(), hw_list.end(), hw_module) == hw_list.end())
+    {
+        hw_list.push_back(hw_module);
+    }
 }
 
 void pipeline_manager::init()
@@ -369,6 +373,11 @@ void pipeline_manager::run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
 void pipeline_manager::connect_port(hw_base* pre_hw, uint32_t out_port, hw_base* next_hw, uint32_t in_port)
 {
+    if(std::find(hw_list.begin(), hw_list.end(), pre_hw) == hw_list.end() || 
+        std::find(hw_list.begin(), hw_list.end(), next_hw) == hw_list.end())
+    {
+        log_warning("%s or %s not in hw_list\n", pre_hw->name, next_hw->name);
+    }
     if (out_port >= pre_hw->outpins || in_port >= next_hw->inpins)
     {
         log_error("port out of range\n");

@@ -19,4 +19,5 @@ private:
     char file_name[256];
     char file_type_string[32];
     char bayer_string[32];
+    bool big_endian;
 };

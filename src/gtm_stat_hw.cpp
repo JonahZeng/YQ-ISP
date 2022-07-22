@@ -108,7 +108,7 @@ void gtm_stat_hw::hw_run(statistic_info_t* stat_out, uint32_t frame_cnt)
 
     memcpy(&stat_out->gtm_stat, stat_gtm, sizeof(gtm_stat_info_t));
 
-    log_array("luma hist[256]:\n", "%7d, ", stat_gtm->luma_hist, 256, 16);
+    log_1d_array("luma hist[256]:\n", "%7d, ", stat_gtm->luma_hist, 256, 16);
 
     hw_base::hw_run(stat_out, frame_cnt);
     log_info("%s run end\n", __FUNCTION__);

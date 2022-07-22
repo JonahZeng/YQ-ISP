@@ -112,6 +112,6 @@ void rgb2yuv_hw::checkparameters(rgb2yuv_reg_t* reg)
 
     log_info("================= rgb2yuv reg=================\n");
     log_info("bypass %d\n", reg->bypass);
-    log_array("rgb2yuv_coeff:\n", "%5d, ", reg->rgb2yuv_coeff, 9, 3);
+    log_1d_array("rgb2yuv_coeff:\n", "%5d, ", reg->rgb2yuv_coeff, 9, 3);
     log_info("================= rgb2yuv reg=================\n");
 }

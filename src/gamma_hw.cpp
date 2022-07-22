@@ -170,6 +170,6 @@ void Gamma_hw::checkparameters(gamma_reg_t* reg)
     }
     log_info("================= gamma reg=================\n");
     log_info("bypass %d\n", reg->bypass);
-    log_array("gamma_lut:\n", "%5d, ", reg->gamma_lut, 257, 16);
+    log_1d_array("gamma_lut:\n", "%5d, ", reg->gamma_lut, 257, 16);
     log_info("================= gamma reg=================\n");
 }

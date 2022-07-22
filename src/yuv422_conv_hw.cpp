@@ -136,7 +136,7 @@ yuv422_conv_hw::~yuv422_conv_hw()
 void yuv422_conv_hw::checkparameters(yuv422_conv_reg_t* reg)
 {
     log_info("================= yuv422_conv reg=================\n");
-    log_array("filter_coeff:\n", "%4d, ", reg->filter_coeff, 4, 4);
+    log_1d_array("filter_coeff:\n", "%4d, ", reg->filter_coeff, 4, 4);
     log_info("================= yuv422_conv reg=================\n");
 }
 

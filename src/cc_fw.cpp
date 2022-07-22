@@ -94,7 +94,7 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, Vector3lf 
     for (int32_t i = 0; i < 25; i++)
     {
         log_info("-----------loop %d, input xy = %.6lf %.6lf\n", i, input_x, input_y);
-        log_array("cameraNeutral:\n", "%.6lf, ", cameraNeutral.data, 3, 3);
+        log_1d_array("cameraNeutral:\n", "%.6lf, ", cameraNeutral.data, 3, 3);
         
 
         dist_1_x = abs(input_x - white_point1_xy[0]);
@@ -117,10 +117,10 @@ static void calc_xy_coordinate_by_cameraNeutral(double* x, double* y, Vector3lf 
         Mat3_3lf tmp_CM = CM_2 * weight_2 + CM_1 * weight_1;
         tmp_CM = tmp_CM.inv();
 
-        log_array("tmp_CM:\n", "%.6lf, ", tmp_CM.get(), 9, 3);
+        log_1d_array("tmp_CM:\n", "%.6lf, ", tmp_CM.get(), 9, 3);
 
         Vector3lf tmp_XYZ = tmp_CM.multiply(cameraNeutral);
-        log_array("tmp_XYZ:\n", "%.6lf, ", tmp_XYZ.data, 3, 3);
+        log_1d_array("tmp_XYZ:\n", "%.6lf, ", tmp_XYZ.data, 3, 3);
 
         double X = tmp_XYZ.data[0];
         double Y = tmp_XYZ.data[1];
@@ -211,7 +211,7 @@ void cc_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out,
         global_ref_out->wp_y = y;
 
         Mat3_3lf FM = FM_1 * weight1 + FM_2 * weight2;
-        log_array("camera2XYZ_mat\n", "%lf, ", FM.get(), 9, 3);
+        log_1d_array("camera2XYZ_mat\n", "%lf, ", FM.get(), 9, 3);
 
         for (int32_t i = 0; i < 9; i++)
         {
@@ -234,7 +234,7 @@ void cc_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out,
         //    0.0000000,  0.0000000,  1.3194581
         //    );
         //Mat3_3lf ccm = XYZ2RGB2020.multiply((D50_to_D65.multiply(FM));
-        log_array("sensor RGB to ProPhoto RGB ccm:\n", "%lf, ", ccm.get(), 9, 3);
+        log_1d_array("sensor RGB to ProPhoto RGB ccm:\n", "%lf, ", ccm.get(), 9, 3);
 
         double* ccm_ptr = ccm.get();
         double row0_sum = ccm_ptr[0] + ccm_ptr[1] + ccm_ptr[2];
@@ -261,7 +261,7 @@ void cc_fw::fw_exec(statistic_info_t* stat_in, global_ref_out_t* global_ref_out,
         cc_reg->ccm[4] = 1024 - cc_reg->ccm[3] - cc_reg->ccm[5];
         cc_reg->ccm[8] = 1024 - cc_reg->ccm[6] - cc_reg->ccm[7];
 
-        log_array("final ccm:\n", "%d, ", cc_reg->ccm, 9, 3);
+        log_1d_array("final ccm:\n", "%d, ", cc_reg->ccm, 9, 3);
     }
 }
 

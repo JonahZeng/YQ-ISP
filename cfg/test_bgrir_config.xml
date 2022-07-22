@@ -5,53 +5,74 @@
     <bayer_type>BGGIR</bayer_type>
     <bit_depth>12</bit_depth>
     <file_type>RAW</file_type>
-    <file_name>../raw_image/BGGY-IR.raw</file_name>
-    <img_width>6016</img_width>
-    <img_height>4016</img_height>
+    <file_name>../raw_image/rgb-ir/X3A2S_Office1.raw</file_name>
+    <img_width>1920</img_width>
+    <img_height>1280</img_height>
+    <big_endian>1</big_endian>
   </component>
 
   <component>
     <inst_name>blc_hw</inst_name>
-    <bypass>1</bypass>
+    <bypass>0</bypass>
     <xmlConfigValid>1</xmlConfigValid>
-    <blc_r>0</blc_r>
-    <blc_gr>0</blc_gr>
-    <blc_gb>0</blc_gb>
-    <blc_b>0</blc_b>
+    <blc_r>512</blc_r>
+    <blc_gr>512</blc_gr>
+    <blc_gb>512</blc_gb>
+    <blc_b>512</blc_b>
+    <blc_y>512</blc_y>
     <normalize_en>0</normalize_en>
     <white_level>16383</white_level>
-    <write_pic0>0</write_pic0>
+    <write_pic0>1</write_pic0>
     <write_pic0_src_pin>0</write_pic0_src_pin>
     <write_pic0_format>RAW</write_pic0_format>
     <write_pic0_path>./_blc_dump.raw</write_pic0_path>
-    <write_pic0_bits>14</write_pic0_bits>
+    <write_pic0_bits>8</write_pic0_bits>
   </component>
 
   <component>
     <inst_name>rgbir_remosaic_hw</inst_name>
     <bypass>1</bypass>
     <xmlConfigValid>1</xmlConfigValid>
+    <ir_subtract_r>512,512,512,128,64,32,0,0,0,0,0,0,0,0,0,0,0</ir_subtract_r>
+    <ir_subtract_g>512,512,512,128,64,32,0,0,0,0,0,0,0,0,0,0,0</ir_subtract_g>
+    <ir_subtract_b>512,512,512,128,64,32,0,0,0,0,0,0,0,0,0,0,0</ir_subtract_b>
     <write_pic0>1</write_pic0>
     <write_pic0_src_pin>0</write_pic0_src_pin>
     <write_pic0_format>RAW</write_pic0_format>
     <write_pic0_path>./_rgbir_rm_dump0.raw</write_pic0_path>
-    <write_pic0_bits>12</write_pic0_bits>
+    <write_pic0_bits>8</write_pic0_bits>
     <write_pic1>1</write_pic1>
-    <write_pic1_src_pin>0</write_pic1_src_pin>
+    <write_pic1_src_pin>1</write_pic1_src_pin>
     <write_pic1_format>RAW</write_pic1_format>
     <write_pic1_path>./_rgbir_rm_dump1.raw</write_pic1_path>
-    <write_pic1_bits>12</write_pic1_bits>
+    <write_pic1_bits>8</write_pic1_bits>
+  </component>
+
+  <component>
+    <inst_name>awb_gain_hw</inst_name>
+    <bypass>0</bypass>
+    <xmlConfigValid>1</xmlConfigValid>
+    <r_gain>2110</r_gain>
+    <gr_gain>1057</gr_gain>
+    <gb_gain>1057</gb_gain>
+    <b_gain>1562</b_gain>
+    <ae_compensat_gain>1024</ae_compensat_gain>
+    <write_pic0>1</write_pic0>
+    <write_pic0_src_pin>0</write_pic0_src_pin>
+    <write_pic0_format>RAW</write_pic0_format>
+    <write_pic0_path>./_awb_gain_dump0.raw</write_pic0_path>
+    <write_pic0_bits>8</write_pic0_bits>
   </component>
 
   <component>
     <inst_name>demosaic_hw</inst_name>
-    <bypass>0</bypass>
+    <bypass>2</bypass>
     <xmlConfigValid>1</xmlConfigValid>
     <write_pic0>1</write_pic0>
     <write_pic0_src_pin>0, 1, 2</write_pic0_src_pin>
     <write_pic0_format>PNM</write_pic0_format>
     <write_pic0_path>./_demosaic_dump.pnm</write_pic0_path>
-    <write_pic0_bits>14</write_pic0_bits>
+    <write_pic0_bits>8</write_pic0_bits>
   </component>
 
 </pipeline_config>

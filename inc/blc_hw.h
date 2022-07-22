@@ -10,6 +10,7 @@ typedef struct blc_reg_s
     int32_t blc_gr;
     int32_t blc_gb;
     int32_t blc_b;
+    int32_t blc_y; //for ir
 
     uint32_t normalize_en;
     uint32_t white_level;
@@ -32,6 +33,7 @@ private:
     int32_t blc_gr;
     int32_t blc_gb;
     int32_t blc_b;
+    int32_t blc_y;
     uint32_t normalize_en;
     uint32_t white_level;
 };
