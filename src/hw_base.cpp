@@ -290,12 +290,14 @@ void hw_base::write_yuv420_for_output(FILE* fp, int32_t pic_no)//NV12
         port0 = write_pic0_src_pin[0];
         port1 = write_pic0_src_pin[1];
         port2 = write_pic0_src_pin[2];
+        write_pic_bits = write_pic0_bits;
     }
     else if(pic_no == 1)
     {
         port0 = write_pic1_src_pin[0];
         port1 = write_pic1_src_pin[1];
         port2 = write_pic1_src_pin[2];
+        write_pic_bits = write_pic1_bits;
     }
     if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
     {
@@ -356,12 +358,14 @@ void hw_base::write_yuv422_for_output(FILE* fp, int32_t pic_no)//UYVY
         port0 = write_pic0_src_pin[0];
         port1 = write_pic0_src_pin[1];
         port2 = write_pic0_src_pin[2];
+        write_pic_bits = write_pic0_bits;
     }
     else if(pic_no == 1)
     {
         port0 = write_pic1_src_pin[0];
         port1 = write_pic1_src_pin[1];
         port2 = write_pic1_src_pin[2];
+        write_pic_bits = write_pic1_bits;
     }
     if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
     {
@@ -432,12 +436,14 @@ void hw_base::write_yuv444_for_output(FILE* fp, int32_t pic_no)//YUVYUVYUV
         port0 = write_pic0_src_pin[0];
         port1 = write_pic0_src_pin[1];
         port2 = write_pic0_src_pin[2];
+        write_pic_bits = write_pic0_bits;
     }
     else if(pic_no == 1)
     {
         port0 = write_pic1_src_pin[0];
         port1 = write_pic1_src_pin[1];
         port2 = write_pic1_src_pin[2];
+        write_pic_bits = write_pic1_bits;
     }
     if (port0 >= out.size() || port1 >= out.size() || port2 >= out.size())
     {
@@ -499,7 +505,7 @@ void hw_base::write_pic0_for_output()
         ridx1 = write_pic0_path_str.rfind('/');
         write_pic0_path_str.insert(ridx1 + 1, input_raw_fn.c_str(), input_raw_fn.size());
     }
-    if (strcmp(write_pic0_format, "RAW") == 0 && strcmp(write_pic0_format, "raw") == 0 && write_pic0_src_pin.size() == 1)
+    if ((strcmp(write_pic0_format, "RAW") == 0 || strcmp(write_pic0_format, "raw") == 0) && write_pic0_src_pin.size() == 1)
     {
         fp = fopen(write_pic0_path_str.c_str(), "wb");
 
@@ -510,7 +516,7 @@ void hw_base::write_pic0_for_output()
         }
         write_raw_for_output(fp, 0);
     }
-    else if (strcmp(write_pic0_format, "PNM") == 0 && strcmp(write_pic0_format, "pnm") == 0 &&write_pic0_src_pin.size() == 3)
+    else if ((strcmp(write_pic0_format, "PNM") == 0 || strcmp(write_pic0_format, "pnm") == 0) &&write_pic0_src_pin.size() == 3)
     {
         fp = fopen(write_pic0_path_str.c_str(), "wb");
         if (fp == nullptr)
@@ -520,7 +526,7 @@ void hw_base::write_pic0_for_output()
         }
         write_pnm_for_output(fp, 0);
     }
-    else if (strcmp(write_pic0_format, "YUV420") == 0 && strcmp(write_pic0_format, "yuv420") == 0 && write_pic0_src_pin.size() == 3)
+    else if ((strcmp(write_pic0_format, "YUV420") == 0 || strcmp(write_pic0_format, "yuv420") == 0) && write_pic0_src_pin.size() == 3)
     {
         fp = fopen(write_pic0_path_str.c_str(), "wb");
         if (fp == nullptr)
@@ -530,7 +536,7 @@ void hw_base::write_pic0_for_output()
         }
         write_yuv420_for_output(fp, 0);
     }
-    else if (strcmp(write_pic0_format, "YUV422") == 0 && strcmp(write_pic0_format, "yuv422") == 0 && write_pic0_src_pin.size() == 3)
+    else if ((strcmp(write_pic0_format, "YUV422") == 0 || strcmp(write_pic0_format, "yuv422") == 0) && write_pic0_src_pin.size() == 3)
     {
         fp = fopen(write_pic0_path_str.c_str(), "wb");
         if (fp == nullptr)
@@ -540,7 +546,7 @@ void hw_base::write_pic0_for_output()
         }
         write_yuv422_for_output(fp, 0);
     }
-    else if (strcmp(write_pic0_format, "YUV444") == 0 && strcmp(write_pic0_format, "yuv444") == 0 && write_pic0_src_pin.size() == 3)
+    else if ((strcmp(write_pic0_format, "YUV444") == 0 || strcmp(write_pic0_format, "yuv444") == 0) && write_pic0_src_pin.size() == 3)
     {
         fp = fopen(write_pic0_path_str.c_str(), "wb");
         if (fp == nullptr)
@@ -580,7 +586,7 @@ void hw_base::write_pic1_for_output()
         ridx1 = write_pic1_path_str.rfind('/');
         write_pic1_path_str.insert(ridx1 + 1, input_raw_fn.c_str(), input_raw_fn.size());
     }
-    if (strcmp(write_pic1_format, "RAW") == 0 && strcmp(write_pic1_format, "raw") == 0 && write_pic1_src_pin.size() == 1)
+    if ((strcmp(write_pic1_format, "RAW") == 0 || strcmp(write_pic1_format, "raw") == 0) && write_pic1_src_pin.size() == 1)
     {
         fp = fopen(write_pic1_path_str.c_str(), "wb");
 
@@ -591,7 +597,7 @@ void hw_base::write_pic1_for_output()
         }
         write_raw_for_output(fp, 1);
     }
-    else if (strcmp(write_pic1_format, "PNM") == 0 && strcmp(write_pic1_format, "pnm") == 0 && write_pic1_src_pin.size() == 3)
+    else if ((strcmp(write_pic1_format, "PNM") == 0 || strcmp(write_pic1_format, "pnm") == 0) && write_pic1_src_pin.size() == 3)
     {
         fp = fopen(write_pic1_path_str.c_str(), "wb");
         if (fp == nullptr)
@@ -601,7 +607,7 @@ void hw_base::write_pic1_for_output()
         }
         write_pnm_for_output(fp, 1);
     }
-    else if (strcmp(write_pic1_format, "YUV422") == 0 && strcmp(write_pic1_format, "yuv422") == 0 && write_pic1_src_pin.size() == 3)
+    else if ((strcmp(write_pic1_format, "YUV422") == 0 || strcmp(write_pic1_format, "yuv422") == 0) && write_pic1_src_pin.size() == 3)
     {
         fp = fopen(write_pic1_path_str.c_str(), "wb");
         if (fp == nullptr)
@@ -611,7 +617,7 @@ void hw_base::write_pic1_for_output()
         }
         write_yuv422_for_output(fp, 1);
     }
-    else if (strcmp(write_pic1_format, "YUV444") == 0 && strcmp(write_pic0_format, "yuv444") == 0 && write_pic1_src_pin.size() == 3)
+    else if ((strcmp(write_pic1_format, "YUV444") == 0 || strcmp(write_pic1_format, "yuv444") == 0) && write_pic1_src_pin.size() == 3)
     {
         fp = fopen(write_pic1_path_str.c_str(), "wb");
         if (fp == nullptr)
